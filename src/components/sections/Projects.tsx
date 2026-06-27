@@ -48,7 +48,7 @@ export function Projects() {
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-4 pt-1 border-t border-border">
+                  <div className="flex items-center gap-4 pt-[1em] border-t border-border">
                     <a
                       href={project.githubUrl}
                       target="_blank"
