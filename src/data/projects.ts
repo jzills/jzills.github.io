@@ -17,7 +17,7 @@ export interface Project {
 export const projects: Project[] = [
   {
     name: 'HmacManager',
-    description: 'Cross-platform HMAC authentication tooling for .NET — middleware, handlers, and validation utilities.',
+    description: 'Cross-platform HMAC authentication tooling for .NET — middleware, handlers, and validation utilities. Extends to Kubernetes via an Istio external authorizer, bringing HMAC validation into the service mesh.',
     tags: ['C#', '.NET', 'Security', 'Auth'],
     githubUrl: 'https://github.com/jzills/HmacManager',
     packages: [
