@@ -86,7 +86,6 @@ export function Hero() {
   return (
     <section id="hero" className="relative min-h-[100dvh] flex items-center overflow-hidden">
       <WaveformCanvas />
-
       <div className="relative max-w-[1100px] mx-auto px-6 w-full pt-20 pb-16">
         <motion.div
           initial={{ opacity: 0, y: 24 }}

@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import type React from 'react'
 import { motion, useInView } from 'framer-motion'
 import { ExternalLink } from 'lucide-react'
-import { GitHubIcon, NuGetIcon, NpmIcon, PyPIIcon } from '@/components/ui/BrandIcons'
+import { GitHubIcon, NuGetIcon, NpmIcon, PyPIIcon, DockerIcon, ArtifactHubIcon } from '@/components/ui/BrandIcons'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Card } from '@/components/ui/Card'
 import { Chip } from '@/components/ui/Chip'
@@ -10,9 +10,11 @@ import { projects } from '@/data/projects'
 import type { PackageRegistry } from '@/data/projects'
 
 const registryMeta: Record<PackageRegistry, { label: string; Icon: React.ComponentType<{ size?: number }> }> = {
-  nuget: { label: 'NuGet', Icon: NuGetIcon },
-  pypi:  { label: 'PyPI',  Icon: PyPIIcon  },
-  npm:   { label: 'npm',   Icon: NpmIcon   },
+  nuget:       { label: 'NuGet',       Icon: NuGetIcon       },
+  pypi:        { label: 'PyPI',        Icon: PyPIIcon        },
+  npm:         { label: 'npm',         Icon: NpmIcon         },
+  dockerhub:   { label: 'Docker Hub',  Icon: DockerIcon      },
+  artifacthub: { label: 'Artifact Hub', Icon: ArtifactHubIcon },
 }
 
 export function Projects() {
