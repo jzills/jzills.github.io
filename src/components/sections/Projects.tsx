@@ -50,7 +50,7 @@ export function Projects() {
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-4 pt-[1em] border-t border-border">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-[1em] border-t border-border">
                     <a
                       href={project.githubUrl}
                       target="_blank"

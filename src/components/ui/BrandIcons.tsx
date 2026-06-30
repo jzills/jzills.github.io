@@ -64,11 +64,14 @@ export function NpmIcon({ size = 16, className = '' }: IconProps) {
 }
 
 export function DockerIcon({ size = 16, className = '' }: IconProps) {
+  // Glyph only occupies the vertical middle of a 24x24 box, so a tightly
+  // cropped viewBox is used to keep it visually consistent in size with
+  // the other brand icons when rendered at the same height.
   return (
     <svg
-      width={size}
+      width={size * (24 / 18)}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="0 3 24 18"
       fill="currentColor"
       className={className}
       aria-hidden="true"
@@ -79,11 +82,13 @@ export function DockerIcon({ size = 16, className = '' }: IconProps) {
 }
 
 export function ArtifactHubIcon({ size = 16, className = '' }: IconProps) {
+  // Glyph leaves a sliver of empty space on each side of a 24x24 box, so
+  // crop the viewBox tighter to match the visual weight of the other icons.
   return (
     <svg
-      width={size}
+      width={size * (22.86 / 24)}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="0.57 0 22.86 24"
       fill="currentColor"
       className={className}
       aria-hidden="true"
