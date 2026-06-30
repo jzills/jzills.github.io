@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Play, Pause } from 'lucide-react'
 import { Chip } from '@/components/ui/Chip'
 import { useShaderRunner } from '@/lib/useShaderRunner'
