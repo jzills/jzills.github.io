@@ -16,10 +16,10 @@ export interface Project {
 
 export const projects: Project[] = [
   {
-    name: 'HmacManager',
+    name: 'hmac-manager',
     description: 'Cross-platform HMAC authentication tooling for .NET — middleware, handlers, and validation utilities. Extends to Kubernetes via an Istio external authorizer, bringing HMAC validation into the service mesh.',
     tags: ['C#', '.NET', 'Security', 'Auth'],
-    githubUrl: 'https://github.com/jzills/HmacManager',
+    githubUrl: 'https://github.com/jzills/hmac-manager',
     packages: [
       { registry: 'nuget',       url: 'https://www.nuget.org/packages/HmacManager/' },
       { registry: 'npm',         url: 'https://www.npmjs.com/package/hmac-manager' },
@@ -28,34 +28,34 @@ export const projects: Project[] = [
     ],
   },
   {
-    name: 'Kx',
+    name: 'kx',
     description: 'Kubectl workflow accelerator with index-based resource selection — eliminate repetitive name copying from kubectl output.',
     tags: ['Python', 'Kubernetes', 'CLI'],
-    githubUrl: 'https://github.com/jzills/Kx',
+    githubUrl: 'https://github.com/jzills/kx',
     packages: [
       { registry: 'pypi', url: 'https://pypi.org/project/kx-cli/' },
     ],
   },
   {
-    name: 'Serilog.Sinks.AspNetCore.App.SignalR',
+    name: 'serilog-sinks-aspnetcore-app-signalr',
     description: 'Serilog sink that pushes structured log events to SignalR hubs for real-time log streaming.',
     tags: ['C#', 'Serilog', 'SignalR', 'Logging'],
-    githubUrl: 'https://github.com/jzills/Serilog.Sinks.AspNetCore.App.SignalR',
+    githubUrl: 'https://github.com/jzills/serilog-sinks-aspnetcore-app-signalr',
     packages: [
       { registry: 'nuget', url: 'https://www.nuget.org/packages/Serilog.Sinks.AspNetCore.App.SignalR/' },
     ],
   },
   {
-    name: 'Claude Marketplace',
+    name: 'claude-marketplace',
     description: 'AI-powered development and DevOps automation tools built as marketplace extensions.',
     tags: ['TypeScript', 'AI', 'DevOps', 'Automation'],
-    githubUrl: 'https://github.com/jzills',
+    githubUrl: 'https://github.com/jzills/claude-marketplace',
   },
   {
-    name: 'ActionCache',
+    name: 'action-cache',
     description: 'Flexible caching library for ASP.NET Core with support for multiple cache providers and invalidation strategies.',
     tags: ['C#', '.NET', 'ASP.NET Core', 'Caching'],
-    githubUrl: 'https://github.com/jzills/ActionCache',
+    githubUrl: 'https://github.com/jzills/action-cache',
     packages: [
       { registry: 'nuget', url: 'https://www.nuget.org/packages/ActionCache/' },
     ],
