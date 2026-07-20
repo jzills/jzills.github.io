@@ -19,18 +19,18 @@ export function About() {
 
           <div className="max-w-2xl space-y-5 text-muted leading-relaxed">
             <p>
-              I'm a Senior DevOps Engineer and Software Developer with a focus on
-              platform engineering, cloud infrastructure, and developer experience.
-              My work centers on making engineering teams faster and more confident —
-              through reliable CI/CD pipelines, well-designed Kubernetes clusters,
-              and automation that gets out of the way.
+              I build the platforms engineering teams ship on. My work centers on
+              making teams faster and more confident — reliable CI/CD pipelines,
+              well-designed Kubernetes clusters, and automation that gets out of
+              the way.
             </p>
             <p>
-              Over the years I've led Kubernetes adoption across engineering organizations,
-              authored Helm chart libraries, built Terraform modules for Azure infrastructure,
-              and introduced GitOps workflows with ArgoCD. I also write software — primarily
-              in C# and TypeScript — and have published several open source libraries across
-              .NET and DevOps tooling.
+              I came to platform work from software development — years building
+              .NET applications before moving into infrastructure — and I still
+              write a lot of code across the stack. My open source
+              projects live where those worlds overlap: HMAC auth tooling that
+              extends into the service mesh, caching libraries for ASP.NET Core,
+              CLI utilities for Kubernetes workflows.
             </p>
             <p>
               Outside of platform work I'm drawn to creative coding: generative audio systems,

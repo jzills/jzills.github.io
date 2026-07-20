@@ -20,4 +20,8 @@ export const skillGroups: SkillGroup[] = [
     label: 'Tooling',
     skills: ['GitHub Actions', 'Azure DevOps', 'SonarCloud', 'Docker Scout'],
   },
+  {
+    label: 'AI',
+    skills: ['Claude Code', 'GitHub Copilot', 'Cursor', 'Agent SDKs', 'MCP'],
+  },
 ]

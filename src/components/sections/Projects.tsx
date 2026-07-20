@@ -32,7 +32,7 @@ export function Projects() {
           <SectionHeading
             label="Open Source"
             heading="Projects"
-            subheading="Libraries, tools, and utilities built for real engineering problems."
+            subheading="Libraries, tools, and utilities — born from problems I actually had."
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

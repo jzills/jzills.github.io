@@ -735,7 +735,7 @@ export const creativeItems: CreativeItem[] = [
   },
   {
     kind: 'shader',
-    title: 'Psuedo Fractal #5',
+    title: 'Pseudo Fractal #5',
     description: 'Procedural SDF generated through iterative coordinate folding, rotation, and domain repetition.',
     tags: ['GLSL', 'Ray Marching', 'Generative'],
     fragmentShader: rippleGrid,
