@@ -96,7 +96,7 @@ export function Hero() {
             Joshua Zillwood
           </h1>
           <p className="text-xl text-muted mb-4">
-            Senior DevOps Engineer &amp; Software Developer
+            DevOps &amp; Software Engineer
           </p>
           <p className="text-base text-muted/70 font-mono max-w-lg mb-10 leading-relaxed">
             Building developer platforms, cloud infrastructure, and automation systems.

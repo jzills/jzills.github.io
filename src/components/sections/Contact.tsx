@@ -19,8 +19,9 @@ export function Contact() {
           <p className="text-xs font-mono text-accent uppercase tracking-widest mb-4">Get in touch</p>
           <h2 className="text-3xl font-bold text-fg tracking-tight mb-4">Let's connect.</h2>
           <p className="text-muted leading-relaxed mb-10">
-            Interested in platform engineering, cloud infrastructure, developer tooling, or
-            creative technology? I'm always open to interesting conversations and opportunities.
+            Whether it's platform work, developer tooling, or something on the
+            creative side — I'm always up for a good conversation. Email is the
+            fastest way to reach me.
           </p>
 
           <div className="flex flex-wrap gap-4">
