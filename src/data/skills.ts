@@ -22,6 +22,6 @@ export const skillGroups: SkillGroup[] = [
   },
   {
     label: 'AI Tooling',
-    skills: ['Claude Code', 'GitHub Copilot', 'Cursor'],
+    skills: ['Claude Code', 'GitHub Copilot', 'Cursor', 'Agent SDKs', 'MCP'],
   },
 ]
