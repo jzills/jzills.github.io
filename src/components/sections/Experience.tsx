@@ -19,7 +19,7 @@ export function Experience() {
           <SectionHeading
             label="Career"
             heading="Experience"
-            subheading="Where I've worked and what I built there."
+            subheading="Where I've worked and what I've built there."
           />
           <Timeline entries={experience} />
         </motion.div>
