@@ -27,7 +27,7 @@ export function About() {
             <p>
               I came to platform work from software development — years building
               .NET applications before moving into infrastructure — and I still
-              write a lot of code, mostly C# and TypeScript. My open source
+              write a lot of code across the stack. My open source
               projects live where those worlds overlap: HMAC auth tooling that
               extends into the service mesh, caching libraries for ASP.NET Core,
               CLI utilities for Kubernetes workflows.
