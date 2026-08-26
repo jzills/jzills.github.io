@@ -11,6 +11,7 @@ export interface Project {
   tags: string[]
   githubUrl: string
   demoUrl?: string
+  docsUrl?: string
   packages?: PackageLink[]
 }
 
@@ -20,6 +21,7 @@ export const projects: Project[] = [
     description: 'Cross-platform HMAC authentication tooling for .NET — middleware, handlers, and validation utilities. Extends to Kubernetes via an Istio external authorizer, bringing HMAC validation into the service mesh.',
     tags: ['C#', '.NET', 'Security', 'Auth'],
     githubUrl: 'https://github.com/jzills/hmac-manager',
+    docsUrl: 'https://jzills.github.io/hmac-manager/',
     packages: [
       { registry: 'nuget',       url: 'https://www.nuget.org/packages/HmacManager/' },
       { registry: 'npm',         url: 'https://www.npmjs.com/package/hmac-manager' },
@@ -32,6 +34,7 @@ export const projects: Project[] = [
     description: 'Kubectl workflow accelerator with index-based resource selection — eliminate repetitive name copying from kubectl output.',
     tags: ['Python', 'Kubernetes', 'CLI'],
     githubUrl: 'https://github.com/jzills/kx',
+    docsUrl: 'https://jzills.github.io/kx/',
     packages: [
       { registry: 'pypi', url: 'https://pypi.org/project/kx-cli/' },
     ],
@@ -56,6 +59,7 @@ export const projects: Project[] = [
     description: 'Flexible caching library for ASP.NET Core with support for multiple cache providers and invalidation strategies.',
     tags: ['C#', '.NET', 'ASP.NET Core', 'Caching'],
     githubUrl: 'https://github.com/jzills/action-cache',
+    docsUrl: 'https://jzills.github.io/action-cache/',
     packages: [
       { registry: 'nuget', url: 'https://www.nuget.org/packages/ActionCache/' },
     ],
