@@ -7,9 +7,19 @@ export interface ExperienceEntry {
 
 export const experience: ExperienceEntry[] = [
   {
+    company: 'Corient',
+    role: 'Senior Platform Engineer',
+    period: '2026 – Present',
+    bullets: [
+      'Build and optimize automated SFTP data pipelines with Prefect, Databricks, and dbt to streamline custodian data ingestion, transformation, and delivery into Azure storage.',
+      'Develop an integrated trading platform connecting Addepar, Vestmark, and Salesforce, building data models and workflows with Databricks and dbt to unify investment, trading, and client data.',
+      "Modernize the organization's engineering platform by implementing CI/CD practices and establishing Terraform-based Infrastructure as Code for Azure resource management.",
+    ],
+  },
+  {
     company: 'New American Funding',
     role: 'Senior DevOps Engineer',
-    period: '2025 – Present',
+    period: '2025 – 2026',
     bullets: [
       'Led Kubernetes adoption across engineering teams — designed cluster architecture, authored Helm charts, and established GitOps workflows with ArgoCD.',
       'Built Terraform-based infrastructure automation for Azure environments, reducing provisioning time and enforcing compliance through policy as code.',

@@ -17,6 +17,10 @@ export const skillGroups: SkillGroup[] = [
     skills: ['.NET', 'ASP.NET Core', 'React', 'SignalR'],
   },
   {
+    label: 'Data',
+    skills: ['Databricks', 'dbt', 'Prefect'],
+  },
+  {
     label: 'Tooling',
     skills: ['GitHub Actions', 'Azure DevOps', 'SonarCloud', 'Docker Scout'],
   },
