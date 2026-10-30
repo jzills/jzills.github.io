@@ -96,10 +96,10 @@ export function Hero() {
             Joshua Zillwood
           </h1>
           <p className="text-xl text-muted mb-4">
-            DevOps &amp; Software Engineer
+            Platform &amp; Software Engineer
           </p>
           <p className="text-base text-muted/70 font-mono max-w-lg mb-10 leading-relaxed">
-            Building developer platforms, cloud infrastructure, and automation systems.
+            Building developer platforms and cloud infrastructure, with a focus on AI-assisted engineering.
           </p>
 
           <div className="flex flex-wrap gap-3">
