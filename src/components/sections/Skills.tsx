@@ -3,6 +3,7 @@ import { motion, useInView } from 'framer-motion'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Chip } from '@/components/ui/Chip'
 import { skillGroups } from '@/data/skills'
+import { slug } from '@/lib/searchIndex'
 
 export function Skills() {
   const ref = useRef<HTMLElement>(null)
@@ -24,7 +25,7 @@ export function Skills() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {skillGroups.map((group) => (
-              <div key={group.label}>
+              <div key={group.label} id={`skills-${slug(group.label)}`}>
                 <p className="text-xs font-mono text-[#71717a] uppercase tracking-widest mb-4">
                   {group.label}
                 </p>

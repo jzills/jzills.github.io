@@ -7,6 +7,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Card } from '@/components/ui/Card'
 import { Chip } from '@/components/ui/Chip'
 import { projects } from '@/data/projects'
+import { slug } from '@/lib/searchIndex'
 import type { PackageRegistry } from '@/data/projects'
 
 const registryMeta: Record<PackageRegistry, { label: string; Icon: React.ComponentType<{ size?: number }> }> = {
@@ -53,7 +54,7 @@ export function Projects() {
               const docsIsStretched = Boolean(project.docsUrl)
 
               return (
-                <Card key={project.name} hover className="relative">
+                <Card key={project.name} id={`project-${slug(project.name)}`} hover className="relative">
                   <div className="flex flex-col h-full gap-4">
                     <div className="flex-1">
                       <h3 className="text-base font-semibold text-fg mb-2">{project.name}</h3>

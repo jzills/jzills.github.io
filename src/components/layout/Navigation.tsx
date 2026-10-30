@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
+import { SearchBox } from '@/components/layout/SearchBox'
 
 const navLinks = [
   { label: 'About', href: '#about' },
@@ -31,6 +32,7 @@ export function Navigation() {
               <span className="absolute -bottom-px left-0 w-0 h-px bg-accent transition-all duration-200 group-hover:w-full" />
             </a>
           ))}
+          <SearchBox primary className="w-44 lg:w-52" />
           <a
             href="https://docs.google.com/document/d/1Cn8XP9f3FjcqYxIxBOgPaePRyFFD69YliEm-djYhK0k/export?format=pdf"
             target="_blank"
@@ -53,6 +55,7 @@ export function Navigation() {
       {open && (
         <div className="md:hidden border-t border-border bg-bg/95 backdrop-blur-sm">
           <div className="max-w-[1100px] mx-auto px-6 py-4 flex flex-col gap-4">
+            <SearchBox onNavigate={() => setOpen(false)} />
             {navLinks.map((link) => (
               <a
                 key={link.href}

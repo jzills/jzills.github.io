@@ -1,12 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { CreativeCard } from '@/components/ui/CreativeCard'
 import { creativeItems } from '@/data/creative'
+import { CREATIVE_SHOW_EVENT } from '@/lib/searchIndex'
 
 export function CreativeGallery() {
   const [index, setIndex] = useState(0)
   const [dir, setDir] = useState(1)
+
+  useEffect(() => {
+    const onShow = (e: Event) => {
+      setDir(1)
+      setIndex((e as CustomEvent<number>).detail)
+    }
+    window.addEventListener(CREATIVE_SHOW_EVENT, onShow)
+    return () => window.removeEventListener(CREATIVE_SHOW_EVENT, onShow)
+  }, [])
 
   if (creativeItems.length === 0) return null
 
@@ -22,14 +32,14 @@ export function CreativeGallery() {
 
   if (creativeItems.length === 1) {
     return (
-      <div>
+      <div id="creative-gallery">
         <CreativeCard item={creativeItems[0]} />
       </div>
     )
   }
 
   return (
-    <div>
+    <div id="creative-gallery">
       {/* Card with arrows overlaid on the canvas area (h-48 = 12rem, center = top-32) */}
       <div className="relative group">
         <AnimatePresence mode="wait" initial={false}>

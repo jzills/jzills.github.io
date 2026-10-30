@@ -31,8 +31,33 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+/* Layered so utilities like outline-none can opt an element out. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 }
 
+
+/* Search results scroll to these anchors; keep them clear of the fixed nav. */
+[id] {
+  scroll-margin-top: 4.5rem;
+}
+
+/* Briefly rings the item a search result jumped to. */
+@keyframes search-flash {
+  0%, 35% {
+    outline-color: var(--color-accent);
+  }
+  100% {
+    outline-color: transparent;
+  }
+}
+
+.search-flash {
+  outline: 2px solid transparent;
+  outline-offset: 6px;
+  border-radius: 0.25rem;
+  animation: search-flash 1.6s ease-out;
+}
