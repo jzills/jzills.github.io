@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { Mail, FileText, ChevronDown } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/Button'
+import { experience } from '@/data/experience'
+
+const current = experience[0]
+
+const iconLinkClass = 'inline-flex items-center justify-center w-9 h-9 rounded bg-surface border border-border text-muted hover:text-fg hover:border-accent/40 transition-all duration-200'
 
 function WaveformCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -92,50 +98,60 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
         >
+          <p className="inline-flex items-center gap-2.5 mb-6 px-3 py-1 rounded-full border border-border bg-surface/60 text-xs font-mono text-muted">
+            <span className="relative flex w-2 h-2" aria-hidden="true">
+              <span className="absolute inline-flex w-full h-full rounded-full bg-accent opacity-60 animate-ping" />
+              <span className="relative inline-flex w-2 h-2 rounded-full bg-accent" />
+            </span>
+            {current.role} <span className="text-accent">@ {current.company}</span>
+          </p>
           <h1 className="text-5xl sm:text-6xl font-bold text-fg tracking-tight leading-none mb-4">
             Joshua Zillwood
           </h1>
           <p className="text-xl text-muted mb-4">
             Platform &amp; Software Engineer
           </p>
-          <p className="text-base text-muted/70 font-mono max-w-lg mb-10 leading-relaxed">
+          <p className="text-base text-muted font-mono max-w-lg mb-10 leading-relaxed">
             Building developer platforms and cloud infrastructure, with a focus on AI-assisted engineering.
           </p>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="primary"
+              href="https://docs.google.com/document/d/1Cn8XP9f3FjcqYxIxBOgPaePRyFFD69YliEm-djYhK0k/export?format=pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FileText size={15} />
+              Resume
+            </Button>
             <a
               href="https://github.com/jzills"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded bg-surface border border-border text-sm text-fg hover:border-accent/40 transition-all duration-200"
+              aria-label="GitHub"
+              title="GitHub"
+              className={iconLinkClass}
             >
-              <GitHubIcon size={15} />
-              GitHub
+              <GitHubIcon size={16} />
             </a>
             <a
               href="https://linkedin.com/in/jzillss"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded bg-surface border border-border text-sm text-fg hover:border-accent/40 transition-all duration-200"
+              aria-label="LinkedIn"
+              title="LinkedIn"
+              className={iconLinkClass}
             >
-              <LinkedInIcon size={15} />
-              LinkedIn
+              <LinkedInIcon size={16} />
             </a>
             <a
               href="mailto:joshua.zillwood@gmail.com"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded bg-surface border border-border text-sm text-fg hover:border-accent/40 transition-all duration-200"
+              aria-label="Email"
+              title="Email"
+              className={iconLinkClass}
             >
-              <Mail size={15} />
-              Email
-            </a>
-            <a
-              href="https://docs.google.com/document/d/1Cn8XP9f3FjcqYxIxBOgPaePRyFFD69YliEm-djYhK0k/export?format=pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded border border-accent/50 text-sm text-accent hover:bg-accent/5 transition-all duration-200"
-            >
-              <FileText size={15} />
-              Resume
+              <Mail size={16} />
             </a>
           </div>
         </motion.div>

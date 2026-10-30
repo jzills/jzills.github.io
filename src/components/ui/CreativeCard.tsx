@@ -44,19 +44,24 @@ function AudioCard({ item }: { item: Extract<CreativeItem, { kind: 'audio' }> })
 
   return (
     <div
-      className="relative bg-surface border border-border rounded overflow-hidden cursor-pointer transition-all duration-200 hover:border-accent/40 hover:ring-1 hover:ring-accent/15 select-none"
-      onClick={toggle}
+      className="relative bg-surface border border-border rounded overflow-hidden transition-all duration-200 hover:border-accent/40 hover:ring-1 hover:ring-accent/15 select-none"
     >
       <audio
         ref={audioRef}
         src={item.audioSrc}
         onEnded={() => setPlaying(false)}
       />
-      <div className="h-48 bg-gradient-to-br from-accent/15 via-surface to-surface flex items-center justify-center">
-        <div className="p-4 rounded-full border border-accent/40 bg-bg/60 text-accent transition-transform duration-150 active:scale-95">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={`${playing ? 'Pause' : 'Play'} ${item.title}`}
+        aria-pressed={playing}
+        className="group/play w-full h-48 bg-gradient-to-br from-accent/15 via-surface to-surface flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+      >
+        <span className="p-4 rounded-full border border-accent/40 bg-bg/60 text-accent transition-transform duration-150 group-active/play:scale-95">
           {playing ? <Pause size={24} /> : <Play size={24} />}
-        </div>
-      </div>
+        </span>
+      </button>
       <div className="p-4">
         <p className="text-sm font-medium text-fg mb-1">{item.title}</p>
         <p className="text-xs text-muted mb-3 leading-relaxed">{item.description}</p>

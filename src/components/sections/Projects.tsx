@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card'
 import { Chip } from '@/components/ui/Chip'
 import { projects } from '@/data/projects'
 import { slug } from '@/lib/searchIndex'
+import { revealOnScroll, rise } from '@/lib/motion'
 import type { PackageRegistry } from '@/data/projects'
 
 const registryMeta: Record<PackageRegistry, { label: string; Icon: React.ComponentType<{ size?: number }> }> = {
@@ -48,82 +49,84 @@ export function Projects() {
             subheading="Libraries, tools, and utilities — born from problems I actually had."
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <motion.div {...revealOnScroll} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {projects.map((project) => {
               // Docs are the card's destination when they exist, GitHub otherwise.
               const docsIsStretched = Boolean(project.docsUrl)
 
               return (
-                <Card key={project.name} id={`project-${slug(project.name)}`} hover className="relative">
-                  <div className="flex flex-col h-full gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-base font-semibold text-fg mb-2">{project.name}</h3>
-                      <p className="text-sm text-muted leading-relaxed">{project.description}</p>
-                    </div>
+                <motion.div key={project.name} variants={rise}>
+                  <Card id={`project-${slug(project.name)}`} hover className="relative h-full">
+                    <div className="flex flex-col h-full gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-base font-semibold text-fg mb-2">{project.name}</h3>
+                        <p className="text-sm text-muted leading-relaxed">{project.description}</p>
+                      </div>
 
-                    <div className="flex flex-wrap gap-1.5">
-                      {project.tags.map((tag) => (
-                        <Chip key={tag} label={tag} />
-                      ))}
-                    </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {project.tags.map((tag) => (
+                          <Chip key={tag} label={tag} />
+                        ))}
+                      </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-[1em] border-t border-border">
-                      <a
-                        href={project.githubUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`${project.name} on GitHub`}
-                        className={`${linkClass} ${docsIsStretched ? raisedClass : stretchClass}`}
-                      >
-                        <GitHubIcon size={13} />
-                        GitHub
-                      </a>
-                      {project.docsUrl && (
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-[1em] border-t border-border">
                         <a
-                          href={project.docsUrl}
+                          href={project.githubUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          aria-label={`${project.name} documentation`}
-                          className={`${linkClass} ${stretchClass}`}
+                          aria-label={`${project.name} on GitHub`}
+                          className={`${linkClass} ${docsIsStretched ? raisedClass : stretchClass}`}
                         >
-                          <BookOpen size={13} />
-                          Docs
+                          <GitHubIcon size={13} />
+                          GitHub
                         </a>
-                      )}
-                      {project.packages?.map(({ registry, url, title }) => {
-                        const { label, Icon } = registryMeta[registry]
-                        return (
+                        {project.docsUrl && (
                           <a
-                            key={registry}
-                            href={url}
+                            href={project.docsUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            aria-label={`${project.name} on ${label}`}
-                            title={title}
-                            className={`${linkClass} ${raisedClass}`}
+                            aria-label={`${project.name} documentation`}
+                            className={`${linkClass} ${stretchClass}`}
                           >
-                            <Icon size={13} />
-                            {label}
+                            <BookOpen size={13} />
+                            Docs
                           </a>
-                        )
-                      })}
-                      {project.demoUrl && (
-                        <a
-                          href={project.demoUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${demoLinkClass} ${raisedClass}`}
-                        >
-                          <ExternalLink size={13} />
-                          Demo
-                        </a>
-                      )}
+                        )}
+                        {project.packages?.map(({ registry, url, title }) => {
+                          const { label, Icon } = registryMeta[registry]
+                          return (
+                            <a
+                              key={registry}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={`${project.name} on ${label}`}
+                              title={title}
+                              className={`${linkClass} ${raisedClass}`}
+                            >
+                              <Icon size={13} />
+                              {label}
+                            </a>
+                          )
+                        })}
+                        {project.demoUrl && (
+                          <a
+                            href={project.demoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`${demoLinkClass} ${raisedClass}`}
+                          >
+                            <ExternalLink size={13} />
+                            Demo
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Card>
+                  </Card>
+                </motion.div>
               )
             })}
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </section>

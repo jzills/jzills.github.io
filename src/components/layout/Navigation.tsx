@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Menu, X } from 'lucide-react'
 import { SearchBox } from '@/components/layout/SearchBox'
 
@@ -11,8 +11,35 @@ const navLinks = [
   { label: 'Contact', href: '#contact' },
 ]
 
+// The hero is observed too so no link stays highlighted after scrolling back to the top.
+const sectionIds = ['hero', ...navLinks.map((link) => link.href.slice(1))]
+
+function useActiveSection() {
+  const [active, setActive] = useState<string | null>(null)
+
+  useEffect(() => {
+    // A section counts as active while it crosses a line just above mid-viewport.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(entry.target.id)
+        }
+      },
+      { rootMargin: '-45% 0px -55% 0px' },
+    )
+    for (const id of sectionIds) {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    }
+    return () => observer.disconnect()
+  }, [])
+
+  return active
+}
+
 export function Navigation() {
   const [open, setOpen] = useState(false)
+  const active = useActiveSection()
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/80 backdrop-blur-sm">
@@ -22,16 +49,20 @@ export function Navigation() {
         </a>
 
         <div className="hidden md:flex items-center gap-6">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="text-sm text-muted hover:text-fg transition-colors duration-200 relative group"
-            >
-              {link.label}
-              <span className="absolute -bottom-px left-0 w-0 h-px bg-accent transition-all duration-200 group-hover:w-full" />
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = active === link.href.slice(1)
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                aria-current={isActive ? 'location' : undefined}
+                className={`text-sm hover:text-fg transition-colors duration-200 relative group ${isActive ? 'text-fg' : 'text-muted'}`}
+              >
+                {link.label}
+                <span className={`absolute -bottom-px left-0 h-px bg-accent transition-all duration-200 group-hover:w-full ${isActive ? 'w-full' : 'w-0'}`} />
+              </a>
+            )
+          })}
           <SearchBox primary className="w-44 lg:w-52" />
           <a
             href="https://docs.google.com/document/d/1Cn8XP9f3FjcqYxIxBOgPaePRyFFD69YliEm-djYhK0k/export?format=pdf"
@@ -60,7 +91,8 @@ export function Navigation() {
               <a
                 key={link.href}
                 href={link.href}
-                className="text-sm text-muted hover:text-fg transition-colors"
+                aria-current={active === link.href.slice(1) ? 'location' : undefined}
+                className={`text-sm hover:text-fg transition-colors ${active === link.href.slice(1) ? 'text-fg' : 'text-muted'}`}
                 onClick={() => setOpen(false)}
               >
                 {link.label}
