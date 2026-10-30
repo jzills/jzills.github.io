@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import type React from 'react'
 import { motion, useInView } from 'framer-motion'
-import { BookOpen, ExternalLink } from 'lucide-react'
+import { BookOpen, ExternalLink, Puzzle } from 'lucide-react'
 import { GitHubIcon, NuGetIcon, NpmIcon, PyPIIcon, DockerIcon, ArtifactHubIcon } from '@/components/ui/BrandIcons'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Card } from '@/components/ui/Card'
@@ -15,6 +15,7 @@ const registryMeta: Record<PackageRegistry, { label: string; Icon: React.Compone
   npm:         { label: 'npm',         Icon: NpmIcon         },
   dockerhub:   { label: 'Docker Hub',  Icon: DockerIcon      },
   artifacthub: { label: 'Artifact Hub', Icon: ArtifactHubIcon },
+  krew:        { label: 'Krew',        Icon: Puzzle          },
 }
 
 const linkBase = 'inline-flex items-center gap-1.5 text-xs text-muted transition-colors'
@@ -88,7 +89,7 @@ export function Projects() {
                           Docs
                         </a>
                       )}
-                      {project.packages?.map(({ registry, url }) => {
+                      {project.packages?.map(({ registry, url, title }) => {
                         const { label, Icon } = registryMeta[registry]
                         return (
                           <a
@@ -97,6 +98,7 @@ export function Projects() {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={`${project.name} on ${label}`}
+                            title={title}
                             className={`${linkClass} ${raisedClass}`}
                           >
                             <Icon size={13} />
