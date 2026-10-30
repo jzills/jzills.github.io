@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Mail, FileText, ChevronDown } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 import { motion } from 'framer-motion'
+import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/Button'
 import { experience } from '@/data/experience'
 
@@ -9,8 +10,20 @@ const current = experience[0]
 
 const iconLinkClass = 'inline-flex items-center justify-center w-9 h-9 rounded bg-surface border border-border text-muted hover:text-fg hover:border-accent/40 transition-all duration-200'
 
+// The light-theme stroke is darker and stronger so the lines still read on white.
+const waveStroke = {
+  dark: 'rgba(34, 211, 238, 0.12)',
+  light: 'rgba(14, 116, 144, 0.18)',
+}
+
 function WaveformCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const theme = useTheme()
+  // Read by the draw loop each frame so a theme switch doesn't restart the animation.
+  const strokeRef = useRef(waveStroke[theme])
+  useEffect(() => {
+    strokeRef.current = waveStroke[theme]
+  }, [theme])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -38,7 +51,7 @@ function WaveformCanvas() {
         { freq: 0.005, amp: 0.06, speed: 0.002, phase: Math.PI * 1.3 },
       ]
 
-      ctx.strokeStyle = 'rgba(34, 211, 238, 0.12)'
+      ctx.strokeStyle = strokeRef.current
       ctx.lineWidth = 1.5
 
       waves.forEach((wave) => {

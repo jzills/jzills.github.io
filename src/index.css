@@ -13,6 +13,25 @@
   --color-accent-dim: #0891b2;
 }
 
+/* Matches descendants of <html data-theme="light">, e.g. light:shadow-black/10. */
+@custom-variant light (&:where([data-theme=light] *));
+
+:root {
+  color-scheme: dark;
+}
+
+/* The accent darkens to teal so text and borders keep AA contrast on white. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-border: #e4e4e7;
+  --color-fg: #18181b;
+  --color-muted: #5b5b66;
+  --color-accent: #0e7490;
+  --color-accent-dim: #155e75;
+}
+
 * {
   box-sizing: border-box;
 }

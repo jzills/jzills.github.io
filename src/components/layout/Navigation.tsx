@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Menu, X } from 'lucide-react'
 import { SearchBox } from '@/components/layout/SearchBox'
+import { ThemeToggle } from '@/components/layout/ThemeToggle'
 
 const navLinks = [
   { label: 'About', href: '#about' },
@@ -64,6 +65,8 @@ export function Navigation() {
             )
           })}
           <SearchBox primary className="w-44 lg:w-52" />
+          {/* Negative margin offsets the button padding so the visible gap matches its neighbors. */}
+          <ThemeToggle className="-mx-2" />
           <a
             href="https://docs.google.com/document/d/1Cn8XP9f3FjcqYxIxBOgPaePRyFFD69YliEm-djYhK0k/export?format=pdf"
             target="_blank"
@@ -74,13 +77,16 @@ export function Navigation() {
           </a>
         </div>
 
-        <button
-          className="md:hidden p-2 text-muted hover:text-fg transition-colors"
-          onClick={() => setOpen((v) => !v)}
-          aria-label={open ? 'Close menu' : 'Open menu'}
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        <div className="md:hidden flex items-center gap-1">
+          <ThemeToggle />
+          <button
+            className="p-2 text-muted hover:text-fg transition-colors"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </nav>
 
       {open && (

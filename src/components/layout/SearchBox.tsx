@@ -151,7 +151,7 @@ export function SearchBox({ primary = false, onNavigate, className = '' }: Props
         <div
           id="search-results"
           role="listbox"
-          className="absolute right-0 mt-2 w-full md:w-[380px] max-h-[70vh] overflow-y-auto rounded border border-border bg-bg/95 backdrop-blur-sm shadow-xl shadow-black/40 z-50"
+          className="absolute right-0 mt-2 w-full md:w-[380px] max-h-[70vh] overflow-y-auto rounded border border-border bg-bg/95 backdrop-blur-sm shadow-xl shadow-black/40 light:shadow-black/10 z-50"
         >
           {ordered.length === 0 ? (
             <p className="px-4 py-6 text-sm text-muted text-center">No results for “{query.trim()}”</p>
