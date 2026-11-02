@@ -7,9 +7,16 @@ void main() {
 }
 `.trim()
 
+const coarse = window.matchMedia('(pointer: coarse)').matches
+
 // Touch devices render at half resolution (a quarter of the pixels) and let CSS
 // upscale; full-resolution ray marching is too heavy for phone GPUs.
-const renderScale = window.matchMedia('(pointer: coarse)').matches ? 0.5 : 1
+const renderScale = coarse ? 0.5 : 1
+
+// Where a shader animates. On touch devices only the middle band of the screen
+// counts, so a page of shaders animates about one at a time while the rest hold a
+// still frame; on desktop anything on screen animates.
+const animateMargin = coarse ? '-35% 0px -35% 0px' : '0px'
 
 type ShaderState = {
   gl: WebGLRenderingContext
@@ -38,16 +45,18 @@ export function useShaderRunner(
     let running = false
     let initRaf = 0
 
+    const render = ({ gl, uTime, uRes, start }: ShaderState) => {
+      gl.uniform1f(uTime, (performance.now() - start) / 1000)
+      gl.uniform2f(uRes, canvas.width, canvas.height)
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    }
+
     const play = () => {
       const state = stateRef.current
       if (running || !visible || !state) return
       running = true
-      const { gl, uTime, uRes, start } = state
       const draw = () => {
-        const t = (performance.now() - start) / 1000
-        gl.uniform1f(uTime, t)
-        gl.uniform2f(uRes, canvas.width, canvas.height)
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+        render(state)
         rafRef.current = requestAnimationFrame(draw)
       }
       rafRef.current = requestAnimationFrame(draw)
@@ -58,13 +67,13 @@ export function useShaderRunner(
       cancelAnimationFrame(rafRef.current)
     }
 
-    // Render only while the canvas is on screen: ray-marching every frame while
-    // off-screen starves scrolling on phones.
+    // Animate only inside the animate band: ray-marching every frame while
+    // off-screen starves scrolling on phones. Paused canvases keep their last frame.
     const visibility = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting
       if (visible) play()
       else pause()
-    })
+    }, { rootMargin: animateMargin })
     visibility.observe(canvas)
 
     const cleanup = () => {
@@ -111,6 +120,8 @@ export function useShaderRunner(
         canvas.width = Math.max(1, Math.round(canvas.offsetWidth * renderScale))
         canvas.height = Math.max(1, Math.round(canvas.offsetHeight * renderScale))
         gl.viewport(0, 0, canvas.width, canvas.height)
+        // Resizing clears the canvas; redraw so a paused shader doesn't go blank.
+        if (!running && stateRef.current) render(stateRef.current)
       }
       const observer = new ResizeObserver(resize)
       observer.observe(canvas)
@@ -124,6 +135,8 @@ export function useShaderRunner(
         start: performance.now(),
       }
 
+      // Draw one frame up front so shaders outside the animate band still show a still.
+      render(stateRef.current)
       play()
     })
 

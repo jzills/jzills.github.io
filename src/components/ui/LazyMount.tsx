@@ -12,7 +12,7 @@ interface Props {
 
 // Mounts children only near the viewport. Shader cards use it so a page of shaders
 // holds only a handful of WebGL contexts at once; browsers drop the oldest past ~16.
-export function LazyMount({ children, className = '', rootMargin = '300px 0px', enabled = true }: Props) {
+export function LazyMount({ children, className = '', rootMargin = '100px 0px', enabled = true }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [near, setNear] = useState(false)
 
