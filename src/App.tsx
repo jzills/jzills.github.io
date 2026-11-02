@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Navigation } from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
 import { Hero } from '@/components/sections/Hero'
@@ -7,8 +8,12 @@ import { Projects } from '@/components/sections/Projects'
 import { Skills } from '@/components/sections/Skills'
 import { Creative } from '@/components/sections/Creative'
 import { Contact } from '@/components/sections/Contact'
+import { scrollToHash } from '@/lib/pages'
 
 export default function App() {
+  // Arriving from another page (e.g. /lab) with a #section hash.
+  useEffect(scrollToHash, [])
+
   return (
     <div className="min-h-screen bg-bg">
       <Navigation />

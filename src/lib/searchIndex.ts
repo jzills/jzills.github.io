@@ -2,9 +2,7 @@ import { projects } from '@/data/projects'
 import { experience } from '@/data/experience'
 import { skillGroups } from '@/data/skills'
 import { creativeItems } from '@/data/creative'
-
-// Fired with an item index to make the creative carousel show that item.
-export const CREATIVE_SHOW_EVENT = 'creative:show'
+import { LAB_PATH } from '@/lib/pages'
 
 export type SearchKind = 'Project' | 'Experience' | 'Skill' | 'Creative' | 'Section'
 
@@ -16,8 +14,8 @@ export interface SearchRecord {
   body: string
   // Element id to scroll to.
   target: string
-  // Creative items share one carousel, so the gallery has to be told which to show.
-  creativeIndex?: number
+  // Page the target lives on; defaults to the home page.
+  path?: string
 }
 
 export interface SearchResult {
@@ -29,6 +27,9 @@ export interface SearchResult {
 
 export const slug = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
+// Anchor id of a creative item's card on the lab page.
+export const labId = (title: string) => `lab-${slug(title)}`
 
 const records: SearchRecord[] = [
   ...projects.map((p): SearchRecord => ({
@@ -56,13 +57,13 @@ const records: SearchRecord[] = [
       target: `skills-${slug(g.label)}`,
     })),
   ),
-  ...creativeItems.map((c, i): SearchRecord => ({
+  ...creativeItems.map((c): SearchRecord => ({
     kind: 'Creative',
     title: c.title,
     tags: [c.kind, ...c.tags],
     body: c.description,
-    target: 'creative-gallery',
-    creativeIndex: i,
+    target: labId(c.title),
+    path: LAB_PATH,
   })),
   {
     kind: 'Section',

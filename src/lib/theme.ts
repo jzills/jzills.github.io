@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react'
 
 export type Theme = 'light' | 'dark'
 
-// Must match the key read by the inline script in index.html, which applies the
+// Must match the key read by public/theme-init.js, which applies the
 // theme before first paint so light-mode visitors never see a dark flash.
 const STORAGE_KEY = 'theme'
 

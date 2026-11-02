@@ -1,22 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { CreativeCard } from '@/components/ui/CreativeCard'
-import { creativeItems } from '@/data/creative'
-import { CREATIVE_SHOW_EVENT } from '@/lib/searchIndex'
+import { featuredItems as creativeItems } from '@/data/creative'
 
 export function CreativeGallery() {
   const [index, setIndex] = useState(0)
   const [dir, setDir] = useState(1)
-
-  useEffect(() => {
-    const onShow = (e: Event) => {
-      setDir(1)
-      setIndex((e as CustomEvent<number>).detail)
-    }
-    window.addEventListener(CREATIVE_SHOW_EVENT, onShow)
-    return () => window.removeEventListener(CREATIVE_SHOW_EVENT, onShow)
-  }, [])
 
   if (creativeItems.length === 0) return null
 

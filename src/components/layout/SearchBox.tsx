@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
 import { Search } from 'lucide-react'
-import { CREATIVE_SHOW_EVENT, search, tokenize } from '@/lib/searchIndex'
+import { search, tokenize } from '@/lib/searchIndex'
+import { HOME_PATH, currentPath, flashTo } from '@/lib/pages'
 import type { SearchRecord, SearchResult } from '@/lib/searchIndex'
 
 interface Props {
@@ -30,17 +31,10 @@ function highlight(text: string, terms: string[]): ReactNode {
 }
 
 function reveal(record: SearchRecord) {
-  if (record.creativeIndex !== undefined) {
-    window.dispatchEvent(new CustomEvent(CREATIVE_SHOW_EVENT, { detail: record.creativeIndex }))
-  }
-  const el = document.getElementById(record.target)
-  if (!el) return
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  // Restart the animation if the same element is chosen twice in a row.
-  el.classList.remove('search-flash')
-  void el.offsetWidth
-  el.classList.add('search-flash')
-  window.setTimeout(() => el.classList.remove('search-flash'), 1600)
+  const path = record.path ?? HOME_PATH
+  // The target page scrolls to and flashes the hash itself once it loads.
+  if (path !== currentPath()) window.location.href = `${path}#${record.target}`
+  else flashTo(record.target)
 }
 
 // Results grouped by kind, groups ordered by their best match.

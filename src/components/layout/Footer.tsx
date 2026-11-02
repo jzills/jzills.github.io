@@ -3,6 +3,7 @@ import { Check, Copy, Mail } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 import { experience } from '@/data/experience'
 import { projects } from '@/data/projects'
+import { LAB_PATH, homeHref } from '@/lib/pages'
 
 const email = 'joshua.zillwood@gmail.com'
 
@@ -17,6 +18,7 @@ const siteLinks: FooterLink[] = [
   { label: 'Projects', href: '#projects' },
   { label: 'Skills', href: '#skills' },
   { label: 'Creative', href: '#creative' },
+  { label: 'Lab', href: LAB_PATH },
   { label: 'Contact', href: '#contact' },
 ]
 
@@ -80,7 +82,7 @@ export function Footer() {
       <div className="max-w-[1100px] mx-auto px-6">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-16">
           <div className="max-w-sm">
-            <a href="#hero" className="font-mono text-2xl font-medium text-accent hover:text-accent-dim transition-colors">
+            <a href={homeHref('#hero')} className="font-mono text-2xl font-medium text-accent hover:text-accent-dim transition-colors">
               jz.
             </a>
             <p className="mt-4 text-muted leading-relaxed">
@@ -104,7 +106,7 @@ export function Footer() {
                     return (
                       <li key={label}>
                         <a
-                          href={href}
+                          href={href.startsWith('#') ? homeHref(href) : href}
                           className={linkClass}
                           {...(external && { target: '_blank', rel: 'noopener noreferrer' })}
                         >
