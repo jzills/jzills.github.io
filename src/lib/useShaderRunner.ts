@@ -7,6 +7,10 @@ void main() {
 }
 `.trim()
 
+// Touch devices render at half resolution (a quarter of the pixels) and let CSS
+// upscale; full-resolution ray marching is too heavy for phone GPUs.
+const renderScale = window.matchMedia('(pointer: coarse)').matches ? 0.5 : 1
+
 type ShaderState = {
   gl: WebGLRenderingContext
   uTime: WebGLUniformLocation | null
@@ -30,7 +34,14 @@ export function useShaderRunner(
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const startLoop = (state: ShaderState) => {
+    let visible = false
+    let running = false
+    let initRaf = 0
+
+    const play = () => {
+      const state = stateRef.current
+      if (running || !visible || !state) return
+      running = true
       const { gl, uTime, uRes, start } = state
       const draw = () => {
         const t = (performance.now() - start) / 1000
@@ -42,13 +53,30 @@ export function useShaderRunner(
       rafRef.current = requestAnimationFrame(draw)
     }
 
-    if (stateRef.current) {
-      startLoop(stateRef.current)
-      return () => cancelAnimationFrame(rafRef.current)
+    const pause = () => {
+      running = false
+      cancelAnimationFrame(rafRef.current)
     }
 
+    // Render only while the canvas is on screen: ray-marching every frame while
+    // off-screen starves scrolling on phones.
+    const visibility = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting
+      if (visible) play()
+      else pause()
+    })
+    visibility.observe(canvas)
+
+    const cleanup = () => {
+      cancelAnimationFrame(initRaf)
+      pause()
+      visibility.disconnect()
+    }
+
+    if (stateRef.current) return cleanup
+
     // Defer first init to rAF so canvas has been laid out and has real dimensions
-    rafRef.current = requestAnimationFrame(() => {
+    initRaf = requestAnimationFrame(() => {
       if (!canvas) return
 
       const gl = canvas.getContext('webgl')
@@ -79,15 +107,14 @@ export function useShaderRunner(
       gl.enableVertexAttribArray(pos)
       gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
 
-      const observer = new ResizeObserver(() => {
-        canvas.width = Math.max(1, canvas.offsetWidth)
-        canvas.height = Math.max(1, canvas.offsetHeight)
+      const resize = () => {
+        canvas.width = Math.max(1, Math.round(canvas.offsetWidth * renderScale))
+        canvas.height = Math.max(1, Math.round(canvas.offsetHeight * renderScale))
         gl.viewport(0, 0, canvas.width, canvas.height)
-      })
+      }
+      const observer = new ResizeObserver(resize)
       observer.observe(canvas)
-      canvas.width = Math.max(1, canvas.offsetWidth)
-      canvas.height = Math.max(1, canvas.offsetHeight)
-      gl.viewport(0, 0, canvas.width, canvas.height)
+      resize()
 
       stateRef.current = {
         gl,
@@ -97,10 +124,10 @@ export function useShaderRunner(
         start: performance.now(),
       }
 
-      startLoop(stateRef.current)
+      play()
     })
 
-    return () => cancelAnimationFrame(rafRef.current)
+    return cleanup
   }, [active, fragmentShader])
 
   // Full teardown on unmount only

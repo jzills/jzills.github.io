@@ -76,11 +76,18 @@ function WaveformCanvas() {
     const observer = new ResizeObserver(resize)
     observer.observe(canvas)
     resize()
-    draw()
+
+    // Animate only while the hero is on screen so the loop doesn't compete with scrolling.
+    const visibility = new IntersectionObserver(([entry]) => {
+      cancelAnimationFrame(raf)
+      if (entry.isIntersecting) draw()
+    })
+    visibility.observe(canvas)
 
     return () => {
       cancelAnimationFrame(raf)
       observer.disconnect()
+      visibility.disconnect()
     }
   }, [])
 
