@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react'
-import { Menu, X } from 'lucide-react'
+import { FlaskConical, Menu, X } from 'lucide-react'
 import { SearchBox } from '@/components/layout/SearchBox'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { LAB_PATH, homeHref, isLabPage } from '@/lib/pages'
 
+// About sits right under the hero and Creative is a teaser for the Lab, so neither
+// gets a link; the footer still lists every section.
 const navLinks = [
-  { label: 'About', href: '#about' },
   { label: 'Experience', href: '#experience' },
   { label: 'Projects', href: '#projects' },
   { label: 'Skills', href: '#skills' },
-  { label: 'Creative', href: '#creative' },
   { label: 'Contact', href: '#contact' },
 ]
 
 const labLink = { label: 'Lab', href: LAB_PATH }
 
-// The hero is observed too so no link stays highlighted after scrolling back to the top.
-const sectionIds = ['hero', ...navLinks.map((link) => link.href.slice(1))]
+// Every section is observed, linked or not, so scrolling into one without a link
+// (or back to the hero) clears the highlight instead of leaving the previous one lit.
+const sectionIds = ['hero', 'about', 'experience', 'projects', 'skills', 'creative', 'contact']
 
 function useActiveSection() {
   const [active, setActive] = useState<string | null>(null)
@@ -53,7 +54,7 @@ export function Navigation() {
           jz.
         </a>
 
-        <div className="hidden lg:flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-5 lg:gap-6">
           {navLinks.map((link) => {
             const isActive = active === link.href.slice(1)
             return (
@@ -68,15 +69,18 @@ export function Navigation() {
               </a>
             )
           })}
+          {/* The divider and icon mark Lab as its own page rather than another section. */}
+          <span aria-hidden="true" className="h-4 w-px bg-border" />
           <a
             href={labLink.href}
             aria-current={onLab ? 'page' : undefined}
-            className={`text-sm hover:text-fg transition-colors duration-200 relative group ${onLab ? 'text-fg' : 'text-muted'}`}
+            className={`inline-flex items-center gap-1.5 text-sm hover:text-fg transition-colors duration-200 relative group ${onLab ? 'text-fg' : 'text-muted'}`}
           >
+            <FlaskConical size={14} aria-hidden="true" />
             {labLink.label}
             <span className={`absolute -bottom-px left-0 h-px bg-accent transition-all duration-200 group-hover:w-full ${onLab ? 'w-full' : 'w-0'}`} />
           </a>
-          <SearchBox primary className="w-52" />
+          <SearchBox primary className="w-36 lg:w-52" />
           {/* Negative margin offsets the button padding so the visible gap matches its neighbors. */}
           <ThemeToggle className="-mx-2" />
           <a
@@ -89,7 +93,7 @@ export function Navigation() {
           </a>
         </div>
 
-        <div className="lg:hidden flex items-center gap-1">
+        <div className="md:hidden flex items-center gap-1">
           <ThemeToggle />
           <button
             className="p-2 text-muted hover:text-fg transition-colors"
@@ -102,7 +106,7 @@ export function Navigation() {
       </nav>
 
       {open && (
-        <div className="lg:hidden border-t border-border bg-bg/95 backdrop-blur-sm">
+        <div className="md:hidden border-t border-border bg-bg/95 backdrop-blur-sm">
           <div className="max-w-[1100px] mx-auto px-6 py-4 flex flex-col gap-4">
             <SearchBox onNavigate={() => setOpen(false)} />
             {navLinks.map((link) => (
@@ -119,9 +123,10 @@ export function Navigation() {
             <a
               href={labLink.href}
               aria-current={onLab ? 'page' : undefined}
-              className={`text-sm hover:text-fg transition-colors ${onLab ? 'text-fg' : 'text-muted'}`}
+              className={`inline-flex items-center gap-1.5 border-t border-border pt-4 text-sm hover:text-fg transition-colors ${onLab ? 'text-fg' : 'text-muted'}`}
               onClick={() => setOpen(false)}
             >
+              <FlaskConical size={14} aria-hidden="true" />
               {labLink.label}
             </a>
             <a
