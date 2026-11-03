@@ -18,8 +18,8 @@ export function Creative() {
           transition={{ duration: 0.5, ease: 'easeOut' }}
         >
           <SectionHeading
-            label="Beyond Platform Work"
-            heading="Creative & Experimental"
+            label="Creative & Experimental"
+            heading="From the Lab"
             subheading="Where engineering instincts meet generative media."
           />
 

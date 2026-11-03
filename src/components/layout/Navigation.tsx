@@ -46,6 +46,8 @@ export function Navigation() {
   const [open, setOpen] = useState(false)
   const active = useActiveSection()
   const onLab = isLabPage()
+  // The Creative section previews the Lab, so the Lab link lights up there too.
+  const labLit = onLab || active === 'creative'
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/80 backdrop-blur-sm">
@@ -74,11 +76,11 @@ export function Navigation() {
           <a
             href={labLink.href}
             aria-current={onLab ? 'page' : undefined}
-            className={`inline-flex items-center gap-1.5 text-sm hover:text-fg transition-colors duration-200 relative group ${onLab ? 'text-fg' : 'text-muted'}`}
+            className={`inline-flex items-center gap-1.5 text-sm hover:text-fg transition-colors duration-200 relative group ${labLit ? 'text-fg' : 'text-muted'}`}
           >
             <FlaskConical size={14} aria-hidden="true" />
             {labLink.label}
-            <span className={`absolute -bottom-px left-0 h-px bg-accent transition-all duration-200 group-hover:w-full ${onLab ? 'w-full' : 'w-0'}`} />
+            <span className={`absolute -bottom-px left-0 h-px bg-accent transition-all duration-200 group-hover:w-full ${labLit ? 'w-full' : 'w-0'}`} />
           </a>
           <SearchBox primary className="w-36 lg:w-52" />
           {/* Negative margin offsets the button padding so the visible gap matches its neighbors. */}
@@ -123,7 +125,7 @@ export function Navigation() {
             <a
               href={labLink.href}
               aria-current={onLab ? 'page' : undefined}
-              className={`inline-flex items-center gap-1.5 border-t border-border pt-4 text-sm hover:text-fg transition-colors ${onLab ? 'text-fg' : 'text-muted'}`}
+              className={`inline-flex items-center gap-1.5 border-t border-border pt-4 text-sm hover:text-fg transition-colors ${labLit ? 'text-fg' : 'text-muted'}`}
               onClick={() => setOpen(false)}
             >
               <FlaskConical size={14} aria-hidden="true" />
