@@ -9,10 +9,6 @@ void main() {
 
 const coarse = window.matchMedia('(pointer: coarse)').matches
 
-// Touch devices render at half resolution (a quarter of the pixels) and let CSS
-// upscale; full-resolution ray marching is too heavy for phone GPUs.
-const renderScale = coarse ? 0.5 : 1
-
 // Where a shader animates. On touch devices only the middle band of the screen
 // counts, so a page of shaders animates about one at a time while the rest hold a
 // still frame; on desktop anything on screen animates.
@@ -117,8 +113,8 @@ export function useShaderRunner(
       gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
 
       const resize = () => {
-        canvas.width = Math.max(1, Math.round(canvas.offsetWidth * renderScale))
-        canvas.height = Math.max(1, Math.round(canvas.offsetHeight * renderScale))
+        canvas.width = Math.max(1, Math.round(canvas.offsetWidth))
+        canvas.height = Math.max(1, Math.round(canvas.offsetHeight))
         gl.viewport(0, 0, canvas.width, canvas.height)
         // Resizing clears the canvas; redraw so a paused shader doesn't go blank.
         if (!running && stateRef.current) render(stateRef.current)
