@@ -3,7 +3,7 @@ import { motion, useInView } from 'framer-motion'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Chip } from '@/components/ui/Chip'
 import { skillGroups } from '@/data/skills'
-import { slug } from '@/lib/searchIndex'
+import { slug } from '@/lib/anchors'
 import { revealOnScroll, rise } from '@/lib/motion'
 
 export function Skills() {

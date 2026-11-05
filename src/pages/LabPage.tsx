@@ -6,7 +6,7 @@ import { CreativeCard } from '@/components/ui/CreativeCard'
 import { Lightbox } from '@/components/ui/Lightbox'
 import { creativeItems } from '@/data/creative'
 import type { CreativeItem } from '@/data/creative'
-import { labId } from '@/lib/searchIndex'
+import { labId } from '@/lib/anchors'
 import { revealOnScroll, rise } from '@/lib/motion'
 import { scrollToHash } from '@/lib/pages'
 

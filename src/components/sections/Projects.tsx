@@ -7,7 +7,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Card } from '@/components/ui/Card'
 import { Chip } from '@/components/ui/Chip'
 import { projects } from '@/data/projects'
-import { slug } from '@/lib/searchIndex'
+import { slug } from '@/lib/anchors'
 import { revealOnScroll, rise } from '@/lib/motion'
 import type { PackageRegistry } from '@/data/projects'
 

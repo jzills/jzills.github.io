@@ -4,6 +4,7 @@ import { skillGroups } from '@/data/skills'
 import { creativeItems } from '@/data/creative'
 import readmes from '@/data/generated/readmes.json'
 import { LAB_PATH } from '@/lib/pages'
+import { labId, slug } from '@/lib/anchors'
 
 export type SearchKind = 'Project' | 'Experience' | 'Skill' | 'Creative' | 'Section' | 'Docs'
 
@@ -27,12 +28,6 @@ export interface SearchResult {
   // A body excerpt centred on the first body match, or the body's opening.
   snippet?: string
 }
-
-export const slug = (s: string) =>
-  s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-
-// Anchor id of a creative item's card on the lab page.
-export const labId = (title: string) => `lab-${slug(title)}`
 
 const records: SearchRecord[] = [
   ...projects.map((p): SearchRecord => ({

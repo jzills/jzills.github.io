@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
 import { ArrowUpRight, Search } from 'lucide-react'
-import { search, tokenize } from '@/lib/searchIndex'
 import { HOME_PATH, currentPath, flashTo } from '@/lib/pages'
 import type { SearchRecord, SearchResult } from '@/lib/searchIndex'
 
@@ -12,6 +11,12 @@ interface Props {
   onNavigate?: () => void
   className?: string
 }
+
+// The index carries every README section, so it loads on first use rather than
+// with the page. One shared promise serves every search box.
+type SearchIndex = typeof import('@/lib/searchIndex')
+let indexPromise: Promise<SearchIndex> | undefined
+const loadIndex = () => (indexPromise ??= import('@/lib/searchIndex'))
 
 // The platform never changes, so there is nothing to subscribe to; the server
 // snapshot keeps the first client render in step with the prerendered HTML.
@@ -60,15 +65,19 @@ export function SearchBox({ primary = false, onNavigate, className = '' }: Props
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const isMac = useIsMac()
+  const [index, setIndex] = useState<SearchIndex | null>(null)
+  const ensureIndex = () => {
+    if (!index) loadIndex().then(setIndex)
+  }
   const [active, setActive] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
 
-  const results = useMemo(() => search(query), [query])
+  const results = useMemo(() => index?.search(query) ?? [], [index, query])
   const grouped = useMemo(() => group(results), [results])
   // Flattened in display order so arrow keys follow what is on screen.
   const ordered = useMemo(() => grouped.flatMap(([, list]) => list), [grouped])
-  const terms = useMemo(() => tokenize(query), [query])
+  const terms = useMemo(() => index?.tokenize(query) ?? [], [index, query])
 
   // A ?q= link opens with that search. Applied after hydration, since the
   // prerendered HTML has an empty box and the first client render must match it.
@@ -79,6 +88,7 @@ export function SearchBox({ primary = false, onNavigate, className = '' }: Props
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from the URL
       setQuery(q)
       setOpen(true)
+      loadIndex().then(setIndex)
     }
   }, [primary])
 
@@ -144,7 +154,10 @@ export function SearchBox({ primary = false, onNavigate, className = '' }: Props
             setActive(0)
             setOpen(true)
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            ensureIndex()
+            setOpen(true)
+          }}
           onKeyDown={onKeyDown}
           placeholder="Search…"
           aria-label="Search the site"
@@ -166,7 +179,9 @@ export function SearchBox({ primary = false, onNavigate, className = '' }: Props
           role="listbox"
           className="absolute right-0 mt-2 w-full md:w-[380px] max-h-[70vh] overflow-y-auto rounded border border-border bg-bg/95 backdrop-blur-sm shadow-xl shadow-black/40 light:shadow-black/10 z-50"
         >
-          {ordered.length === 0 ? (
+          {!index ? (
+            <p className="px-4 py-6 text-sm text-muted text-center">Loading…</p>
+          ) : ordered.length === 0 ? (
             <p className="px-4 py-6 text-sm text-muted text-center">No results for “{query.trim()}”</p>
           ) : (
             grouped.map(([kind, list]) => (

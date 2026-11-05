@@ -1,6 +1,6 @@
 import type { ExperienceEntry } from '@/data/experience'
 import { motion } from 'framer-motion'
-import { slug } from '@/lib/searchIndex'
+import { slug } from '@/lib/anchors'
 import { revealOnScroll, rise } from '@/lib/motion'
 
 interface Props {
