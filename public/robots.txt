@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jzills.github.io/sitemap.xml
