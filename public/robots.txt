@@ -2,3 +2,8 @@ User-agent: *
 Allow: /
 
 Sitemap: https://jzills.github.io/sitemap.xml
+# Project docs sites share this host, so their sitemaps are listed here too.
+Sitemap: https://jzills.github.io/kx/sitemap.xml
+Sitemap: https://jzills.github.io/snoop/sitemap.xml
+Sitemap: https://jzills.github.io/hmac-manager/sitemap.xml
+Sitemap: https://jzills.github.io/action-cache/sitemap.xml
