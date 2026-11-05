@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Mail, FileText, ChevronDown } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/Button'
 import { experience } from '@/data/experience'
@@ -175,20 +175,20 @@ export function Hero() {
         </div>
       </div>
 
-      <motion.a
+      <m.a
         href="#about"
         className="absolute bottom-8 left-1/2 -translate-x-1/2 text-border hover:text-muted transition-colors"
         aria-label="Scroll to about"
         animate={{ opacity: scrolled ? 0 : 1, y: scrolled ? 8 : 0 }}
         transition={{ duration: 0.3 }}
       >
-        <motion.div
+        <m.div
           animate={{ y: [0, 6, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
         >
           <ChevronDown size={20} />
-        </motion.div>
-      </motion.a>
+        </m.div>
+      </m.a>
     </section>
   )
 }

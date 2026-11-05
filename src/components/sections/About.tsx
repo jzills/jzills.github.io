@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { SectionHeading } from '@/components/ui/SectionHeading'
@@ -10,7 +10,7 @@ export function About() {
   return (
     <section id="about" ref={ref} className="py-24 px-6">
       <div className="max-w-[1100px] mx-auto">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -39,7 +39,7 @@ export function About() {
               good abstraction, and attention to what the system is actually doing.
             </p>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </section>
   )

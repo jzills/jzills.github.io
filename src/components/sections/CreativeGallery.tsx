@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { CreativeCard } from '@/components/ui/CreativeCard'
 import { featuredItems as creativeItems } from '@/data/creative'
@@ -33,7 +33,7 @@ export function CreativeGallery() {
       {/* Card with arrows overlaid on the canvas area (h-48 = 12rem, center = top-32) */}
       <div className="relative group">
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div
+          <m.div
             key={index}
             initial={{ opacity: 0, x: dir * 24 }}
             animate={{ opacity: 1, x: 0 }}
@@ -41,7 +41,7 @@ export function CreativeGallery() {
             transition={{ duration: 0.2, ease: 'easeInOut' }}
           >
             <CreativeCard item={creativeItems[index]} />
-          </motion.div>
+          </m.div>
         </AnimatePresence>
 
         <button

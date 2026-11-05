@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Navigation } from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
+import { MotionProvider } from '@/components/layout/MotionProvider'
 import { Hero } from '@/components/sections/Hero'
 import { About } from '@/components/sections/About'
 import { Experience } from '@/components/sections/Experience'
@@ -15,18 +16,20 @@ export default function App() {
   useEffect(scrollToHash, [])
 
   return (
-    <div className="min-h-screen bg-bg">
-      <Navigation />
-      <main>
-        <Hero />
-        <About />
-        <Experience />
-        <Projects />
-        <Skills />
-        <Creative />
-        <Contact />
-      </main>
-      <Footer />
-    </div>
+    <MotionProvider>
+      <div className="min-h-screen bg-bg">
+        <Navigation />
+        <main>
+          <Hero />
+          <About />
+          <Experience />
+          <Projects />
+          <Skills />
+          <Creative />
+          <Contact />
+        </main>
+        <Footer />
+      </div>
+    </MotionProvider>
   )
 }

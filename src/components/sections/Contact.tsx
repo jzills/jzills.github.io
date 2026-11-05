@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { m, useInView } from 'framer-motion'
 import { Mail } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 
@@ -10,7 +10,7 @@ export function Contact() {
   return (
     <section id="contact" ref={ref} className="py-24 px-6 border-t border-border">
       <div className="max-w-[1100px] mx-auto">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -51,7 +51,7 @@ export function Contact() {
               joshua.zillwood@gmail.com
             </a>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </section>
   )

@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { m, useInView } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { CreativeGallery } from '@/components/sections/CreativeGallery'
@@ -12,7 +12,7 @@ export function Creative() {
   return (
     <section id="creative" ref={ref} className="py-24 px-6 border-t border-border">
       <div className="max-w-[1100px] mx-auto">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -65,7 +65,7 @@ export function Creative() {
               </a>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </section>
   )

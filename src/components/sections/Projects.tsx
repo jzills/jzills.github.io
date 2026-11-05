@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import type React from 'react'
-import { motion, useInView } from 'framer-motion'
+import { m, useInView } from 'framer-motion'
 import { BookOpen, ExternalLink, Puzzle } from 'lucide-react'
 import { GitHubIcon, NuGetIcon, NpmIcon, PyPIIcon, DockerIcon, ArtifactHubIcon } from '@/components/ui/BrandIcons'
 import { SectionHeading } from '@/components/ui/SectionHeading'
@@ -38,7 +38,7 @@ export function Projects() {
   return (
     <section id="projects" ref={ref} className="py-24 px-6 border-t border-border">
       <div className="max-w-[1100px] mx-auto">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -49,13 +49,13 @@ export function Projects() {
             subheading="Libraries, tools, and utilities — born from problems I actually had."
           />
 
-          <motion.div {...revealOnScroll} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <m.div {...revealOnScroll} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {projects.map((project) => {
               // Docs are the card's destination when they exist, GitHub otherwise.
               const docsIsStretched = Boolean(project.docsUrl)
 
               return (
-                <motion.div key={project.name} variants={rise}>
+                <m.div key={project.name} variants={rise}>
                   <Card id={`project-${slug(project.name)}`} hover className="relative h-full">
                     <div className="flex flex-col h-full gap-4">
                       <div className="flex-1">
@@ -123,11 +123,11 @@ export function Projects() {
                       </div>
                     </div>
                   </Card>
-                </motion.div>
+                </m.div>
               )
             })}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </div>
     </section>
   )

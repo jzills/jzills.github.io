@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { m, useInView } from 'framer-motion'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Chip } from '@/components/ui/Chip'
 import { skillGroups } from '@/data/skills'
@@ -13,7 +13,7 @@ export function Skills() {
   return (
     <section id="skills" ref={ref} className="py-24 px-6 border-t border-border">
       <div className="max-w-[1100px] mx-auto">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -24,9 +24,9 @@ export function Skills() {
             subheading="Technologies I use day-to-day across platform, backend, and tooling work."
           />
 
-          <motion.div {...revealOnScroll} className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <m.div {...revealOnScroll} className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {skillGroups.map((group) => (
-              <motion.div key={group.label} variants={rise} id={`skills-${slug(group.label)}`}>
+              <m.div key={group.label} variants={rise} id={`skills-${slug(group.label)}`}>
                 <p className="text-xs font-mono text-muted uppercase tracking-widest mb-4">
                   {group.label}
                 </p>
@@ -35,10 +35,10 @@ export function Skills() {
                     <Chip key={skill} label={skill} />
                   ))}
                 </div>
-              </motion.div>
+              </m.div>
             ))}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </div>
     </section>
   )
