@@ -80,3 +80,21 @@ body {
   border-radius: 0.25rem;
   animation: search-flash 1.6s ease-out;
 }
+
+/* Above-the-fold entrance; CSS so it plays from the prerendered HTML without waiting on JS. */
+@keyframes page-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.page-rise {
+  animation: page-rise 0.6s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-rise {
+    animation: none;
+  }
+}

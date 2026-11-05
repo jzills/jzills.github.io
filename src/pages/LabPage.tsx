@@ -41,19 +41,14 @@ export function LabPage() {
     <div className="min-h-screen bg-bg">
       <Navigation />
       <main className="max-w-[1100px] mx-auto px-6 pt-32 pb-24">
-        <motion.header
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="mb-12"
-        >
+        <header className="page-rise mb-12">
           <p className="text-xs font-mono text-accent uppercase tracking-widest mb-3">Creative &amp; Experimental</p>
           <h1 className="text-4xl sm:text-5xl font-bold text-fg tracking-tight mb-4">Lab</h1>
           <p className="text-muted text-base max-w-2xl leading-relaxed">
             Shaders, computer vision experiments, and other generative work. The shaders run live in
             your browser. Select any piece to view it full-size.
           </p>
-        </motion.header>
+        </header>
 
         {filters.length > 0 && (
           <div role="group" aria-label="Filter work" className="flex flex-wrap gap-2 mb-8">

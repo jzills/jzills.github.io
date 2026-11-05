@@ -113,11 +113,9 @@ export function Hero() {
     <section id="hero" className="relative min-h-[100dvh] flex items-center overflow-hidden">
       <WaveformCanvas />
       <div className="relative max-w-[1100px] mx-auto px-6 w-full pt-20 pb-16">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-        >
+        {/* A CSS animation rather than framer-motion: it starts from the prerendered
+            HTML, so the hero paints before any JavaScript has loaded. */}
+        <div className="page-rise">
           <p className="inline-flex items-center gap-2.5 mb-6 px-3 py-1 rounded-full border border-border bg-surface/60 text-xs font-mono text-muted">
             <span className="relative flex w-2 h-2" aria-hidden="true">
               <span className="absolute inline-flex w-full h-full rounded-full bg-accent opacity-60 animate-ping" />
@@ -174,7 +172,7 @@ export function Hero() {
               <Mail size={16} />
             </a>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       <motion.a
