@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
-import { Search } from 'lucide-react'
+import { ArrowUpRight, Search } from 'lucide-react'
 import { search, tokenize } from '@/lib/searchIndex'
 import { HOME_PATH, currentPath, flashTo } from '@/lib/pages'
 import type { SearchRecord, SearchResult } from '@/lib/searchIndex'
@@ -31,6 +31,10 @@ function highlight(text: string, terms: string[]): ReactNode {
 }
 
 function reveal(record: SearchRecord) {
+  if (record.href) {
+    window.open(record.href, '_blank', 'noopener,noreferrer')
+    return
+  }
   const path = record.path ?? HOME_PATH
   // The target page scrolls to and flashes the hash itself once it loads.
   if (path !== currentPath()) window.location.href = `${path}#${record.target}`
@@ -167,6 +171,9 @@ export function SearchBox({ primary = false, onNavigate, className = '' }: Props
                     >
                       <p className="text-sm text-fg">
                         {highlight(record.title, terms)}
+                        {record.href && (
+                          <ArrowUpRight size={12} aria-label="opens in a new tab" className="inline ml-1 -mt-0.5 text-muted" />
+                        )}
                         {record.subtitle && (
                           <span className="ml-2 text-xs text-muted">{highlight(record.subtitle, terms)}</span>
                         )}

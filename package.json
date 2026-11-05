@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "fetch-readmes": "node scripts/fetch-readmes.ts",
+    "prebuild": "npm run fetch-readmes",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
