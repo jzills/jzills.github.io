@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
 import { ArrowUpRight, Search } from 'lucide-react'
 import { search, tokenize } from '@/lib/searchIndex'
@@ -13,7 +13,11 @@ interface Props {
   className?: string
 }
 
-const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+// The platform never changes, so there is nothing to subscribe to; the server
+// snapshot keeps the first client render in step with the prerendered HTML.
+const subscribeNever = () => () => {}
+const useIsMac = () =>
+  useSyncExternalStore(subscribeNever, () => /Mac|iPhone|iPad/.test(navigator.platform), () => false)
 
 function highlight(text: string, terms: string[]): ReactNode {
   if (terms.length === 0) return text
@@ -53,10 +57,9 @@ function group(results: SearchResult[]) {
 }
 
 export function SearchBox({ primary = false, onNavigate, className = '' }: Props) {
-  const [query, setQuery] = useState(() =>
-    primary ? (new URLSearchParams(window.location.search).get('q') ?? '') : '',
-  )
-  const [open, setOpen] = useState(() => query !== '')
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const isMac = useIsMac()
   const [active, setActive] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -66,6 +69,18 @@ export function SearchBox({ primary = false, onNavigate, className = '' }: Props
   // Flattened in display order so arrow keys follow what is on screen.
   const ordered = useMemo(() => grouped.flatMap(([, list]) => list), [grouped])
   const terms = useMemo(() => tokenize(query), [query])
+
+  // A ?q= link opens with that search. Applied after hydration, since the
+  // prerendered HTML has an empty box and the first client render must match it.
+  useEffect(() => {
+    if (!primary) return
+    const q = new URLSearchParams(window.location.search).get('q')
+    if (q) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from the URL
+      setQuery(q)
+      setOpen(true)
+    }
+  }, [primary])
 
   useEffect(() => {
     if (!primary) return

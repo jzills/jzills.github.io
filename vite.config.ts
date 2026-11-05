@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import path from 'node:path'
 
 export default defineConfig({
   plugins: [tailwindcss(), react()],
@@ -10,14 +10,14 @@ export default defineConfig({
     rollupOptions: {
       // Each page is its own HTML entry; GitHub Pages serves dist/lab/index.html at /lab/.
       input: {
-        main: path.resolve(__dirname, 'index.html'),
-        lab: path.resolve(__dirname, 'lab/index.html'),
+        main: path.resolve(import.meta.dirname, 'index.html'),
+        lab: path.resolve(import.meta.dirname, 'lab/index.html'),
       },
     },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
 })

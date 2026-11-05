@@ -6,7 +6,8 @@ export type Theme = 'light' | 'dark'
 // theme before first paint so light-mode visitors never see a dark flash.
 const STORAGE_KEY = 'theme'
 
-const systemQuery = window.matchMedia('(prefers-color-scheme: light)')
+// Absent while prerendering, which has no window.
+const systemQuery = typeof window === 'undefined' ? null : window.matchMedia('(prefers-color-scheme: light)')
 const listeners = new Set<() => void>()
 
 function readStored(): Theme | null {
@@ -24,7 +25,7 @@ function apply(theme: Theme) {
 }
 
 // Follow the OS setting until the visitor picks a theme explicitly.
-systemQuery.addEventListener('change', () => {
+systemQuery?.addEventListener('change', () => {
   if (!readStored()) apply(systemQuery.matches ? 'light' : 'dark')
 })
 
@@ -46,6 +47,9 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener)
 }
 
+// Prerendered HTML is built as dark; light-mode visitors switch over once hydrated.
+const getServerTheme = (): Theme => 'dark'
+
 export function useTheme(): Theme {
-  return useSyncExternalStore(subscribe, getTheme)
+  return useSyncExternalStore(subscribe, getTheme, getServerTheme)
 }

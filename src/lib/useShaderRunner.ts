@@ -7,7 +7,8 @@ void main() {
 }
 `.trim()
 
-const coarse = window.matchMedia('(pointer: coarse)').matches
+// Guarded for prerendering, which has no window; the hook itself only runs in the browser.
+const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
 // Where a shader animates. On touch devices only the middle band of the screen
 // counts, so a page of shaders animates about one at a time while the rest hold a

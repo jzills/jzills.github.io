@@ -7,7 +7,7 @@
     "dev": "vite",
     "fetch-readmes": "node scripts/fetch-readmes.ts",
     "prebuild": "npm run fetch-readmes",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },

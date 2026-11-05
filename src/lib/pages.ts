@@ -1,7 +1,15 @@
 export const HOME_PATH = '/'
 export const LAB_PATH = '/lab/'
 
-export const isLabPage = () => window.location.pathname.startsWith('/lab')
+// Prerendering has no window, so the prerender script names the page it is rendering.
+let prerenderPath = HOME_PATH
+export const setPrerenderPath = (path: string) => {
+  prerenderPath = path
+}
+
+const pathname = () => (typeof window === 'undefined' ? prerenderPath : window.location.pathname)
+
+export const isLabPage = () => pathname().startsWith('/lab')
 
 export const currentPath = () => (isLabPage() ? LAB_PATH : HOME_PATH)
 
