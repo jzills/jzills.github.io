@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Mail, FileText, ChevronDown } from 'lucide-react'
+import { Mail, FileText, ChevronDown, FlaskConical } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 import { m } from 'framer-motion'
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/Button'
 import { experience } from '@/data/experience'
+import { LAB_PATH } from '@/lib/pages'
 
 const current = experience[0]
 
@@ -142,6 +143,10 @@ export function Hero() {
             >
               <FileText size={15} />
               Resume
+            </Button>
+            <Button href={LAB_PATH}>
+              <FlaskConical size={15} />
+              Lab
             </Button>
             <a
               href="https://github.com/jzills"
