@@ -134,48 +134,53 @@ export function Hero() {
             Building developer platforms and cloud infrastructure, with a focus on AI-assisted engineering.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="primary"
-              href="https://docs.google.com/document/d/1Cn8XP9f3FjcqYxIxBOgPaePRyFFD69YliEm-djYhK0k/export?format=pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FileText size={15} />
-              Resume
-            </Button>
-            <Button href={LAB_PATH}>
-              <FlaskConical size={15} />
-              Lab
-            </Button>
-            <a
-              href="https://github.com/jzills"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              title="GitHub"
-              className={iconLinkClass}
-            >
-              <GitHubIcon size={16} />
-            </a>
-            <a
-              href="https://linkedin.com/in/jzillss"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-              title="LinkedIn"
-              className={iconLinkClass}
-            >
-              <LinkedInIcon size={16} />
-            </a>
-            <a
-              href="mailto:joshua.zillwood@gmail.com"
-              aria-label="Email"
-              title="Email"
-              className={iconLinkClass}
-            >
-              <Mail size={16} />
-            </a>
+          {/* On phones the icons drop to their own row rather than wrapping one at a time. */}
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="primary"
+                href="https://docs.google.com/document/d/1Cn8XP9f3FjcqYxIxBOgPaePRyFFD69YliEm-djYhK0k/export?format=pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FileText size={15} />
+                Resume
+              </Button>
+              <Button href={LAB_PATH}>
+                <FlaskConical size={15} />
+                Lab
+              </Button>
+            </div>
+            <div className="flex items-center gap-3">
+              <a
+                href="https://github.com/jzills"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
+                title="GitHub"
+                className={iconLinkClass}
+              >
+                <GitHubIcon size={16} />
+              </a>
+              <a
+                href="https://linkedin.com/in/jzillss"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                title="LinkedIn"
+                className={iconLinkClass}
+              >
+                <LinkedInIcon size={16} />
+              </a>
+              <a
+                href="mailto:joshua.zillwood@gmail.com"
+                aria-label="Email"
+                title="Email"
+                className={iconLinkClass}
+              >
+                <Mail size={16} />
+              </a>
+            </div>
           </div>
         </div>
       </div>
