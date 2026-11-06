@@ -1,4 +1,3 @@
-export const electricRailway = `
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -269,4 +268,3 @@ void main()
 
     gl_FragColor = vec4(tot, 1.0);
 }
-`

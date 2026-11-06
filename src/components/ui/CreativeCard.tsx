@@ -4,13 +4,24 @@ import { Play, Pause, Maximize2, Layers, Volume2, VolumeX, ChevronLeft, ChevronR
 import { Chip } from '@/components/ui/Chip'
 import { LazyMount } from '@/components/ui/LazyMount'
 import { useShaderRunner } from '@/lib/useShaderRunner'
-import type { AudioItem, CreativeItem, ImageItem, ShaderItem, VideoItem } from '@/data/creative'
+import type { AudioItem, CreativeItem, ImageItem, ShaderItem, ShaderVariant, VideoItem } from '@/data/creative'
 
 const shellClass = 'h-full bg-surface border border-border rounded overflow-hidden transition-all duration-200 hover:border-accent/40 hover:ring-1 hover:ring-accent/15'
 
-export function ShaderCanvas({ fragmentShader, playing = true, className = '' }: { fragmentShader: string; playing?: boolean; className?: string }) {
+// Key it by variant: a canvas builds its WebGL program once, from the first source it gets.
+export function ShaderCanvas({ variant, playing = true, className = '' }: { variant: ShaderVariant; playing?: boolean; className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  useShaderRunner(canvasRef, fragmentShader, playing)
+  const [source, setSource] = useState('')
+  useEffect(() => {
+    let cancelled = false
+    variant.load().then((src) => {
+      if (!cancelled) setSource(src)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [variant])
+  useShaderRunner(canvasRef, source, playing, variant.still)
   return <canvas ref={canvasRef} className={className} />
 }
 
@@ -95,35 +106,73 @@ function Media({ item, onOpen, children }: { item: CreativeItem; onOpen?: () => 
   )
 }
 
-function ShaderCard({ item, onOpen, paused }: { item: ShaderItem; onOpen?: () => void; paused?: boolean }) {
+const badgeClass = 'absolute flex items-center gap-1 px-1.5 py-0.5 rounded bg-bg/75 text-[11px] font-mono text-fg'
+
+// Shown on hover with a mouse, always on touch screens.
+const arrowClass = 'absolute top-1/2 -translate-y-1/2 z-10 p-1.5 rounded bg-bg/70 text-muted hover:text-fg pointer-fine:opacity-0 pointer-fine:group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent'
+
+// A series card's position, e.g. "2 / 5". Goes inside the media.
+function SeriesBadge({ variant, count }: { variant: number; count: number }) {
+  if (count < 2) return null
+  return (
+    <span className={`${badgeClass} bottom-2 left-2`}>
+      <Layers size={12} aria-hidden="true" />
+      {variant + 1} / {count}
+    </span>
+  )
+}
+
+// Steps a series card through its variants. Goes beside the media button, since buttons can't nest.
+function SeriesArrows({ title, count, onStep }: { title: string; count: number; onStep: (delta: number) => void }) {
+  if (count < 2) return null
+  return (
+    <>
+      <button type="button" onClick={() => onStep(-1)} aria-label={`Previous ${title} variant`} className={`${arrowClass} left-2`}>
+        <ChevronLeft size={16} />
+      </button>
+      <button type="button" onClick={() => onStep(1)} aria-label={`Next ${title} variant`} className={`${arrowClass} right-2`}>
+        <ChevronRight size={16} />
+      </button>
+    </>
+  )
+}
+
+function useSeries(count: number) {
+  const [variant, setVariant] = useState(0)
+  const step = (delta: number) => setVariant((v) => (v + delta + count) % count)
+  return [variant, step] as const
+}
+
+function ShaderCard({ item, onOpen, paused }: { item: ShaderItem; onOpen?: (variant: number) => void; paused?: boolean }) {
   const [playing, setPlaying] = useState(true)
+  const count = item.variants.length
+  const [variant, step] = useSeries(count)
+  const current = item.variants[variant]
   return (
     <div className={shellClass}>
-      {/* The toggle sits beside the media button rather than inside it: buttons can't nest. */}
+      {/* The controls sit beside the media button rather than inside it: buttons can't nest. */}
       <div className="group/card relative">
-        <Media item={item} onOpen={onOpen}>
+        <Media item={item} onOpen={onOpen && (() => onOpen(variant))}>
           {/* The black backdrop stands in while the canvas is unmounted off-screen. */}
           <LazyMount className="absolute inset-0 bg-black" enabled={!paused}>
-            <ShaderCanvas fragmentShader={item.fragmentShader} playing={playing} className="absolute inset-0 w-full h-full" />
+            <ShaderCanvas key={variant} variant={current} playing={playing} className="absolute inset-0 w-full h-full" />
           </LazyMount>
+          <SeriesBadge variant={variant} count={count} />
         </Media>
-        <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-2 left-2" />
+        <SeriesArrows title={item.title} count={count} onStep={step} />
+        {!current.still && (
+          <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-2 right-2" />
+        )}
       </div>
       <CardText item={item} />
     </div>
   )
 }
 
-const badgeClass = 'absolute flex items-center gap-1 px-1.5 py-0.5 rounded bg-bg/75 text-[11px] font-mono text-fg'
-
-// Shown on hover with a mouse, always on touch screens.
-const arrowClass = 'absolute top-1/2 -translate-y-1/2 z-10 p-1.5 rounded bg-bg/70 text-muted hover:text-fg pointer-fine:opacity-0 pointer-fine:group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent'
-
 function ImageCard({ item, onOpen }: { item: ImageItem; onOpen?: (variant: number) => void }) {
-  const [variant, setVariant] = useState(0)
   const count = item.images.length
+  const [variant, step] = useSeries(count)
   const image = item.images[variant]
-  const step = (delta: number) => setVariant((v) => (v + delta + count) % count)
 
   return (
     <div className={shellClass}>
@@ -139,23 +188,9 @@ function ImageCard({ item, onOpen }: { item: ImageItem; onOpen?: (variant: numbe
             decoding="async"
             className="absolute inset-0 w-full h-full object-cover"
           />
-          {count > 1 && (
-            <span className={`${badgeClass} bottom-2 left-2`}>
-              <Layers size={12} aria-hidden="true" />
-              {variant + 1} / {count}
-            </span>
-          )}
+          <SeriesBadge variant={variant} count={count} />
         </Media>
-        {count > 1 && (
-          <>
-            <button type="button" onClick={() => step(-1)} aria-label={`Previous ${item.title} variant`} className={`${arrowClass} left-2`}>
-              <ChevronLeft size={16} />
-            </button>
-            <button type="button" onClick={() => step(1)} aria-label={`Next ${item.title} variant`} className={`${arrowClass} right-2`}>
-              <ChevronRight size={16} />
-            </button>
-          </>
-        )}
+        <SeriesArrows title={item.title} count={count} onStep={step} />
       </div>
       <CardText item={item} />
     </div>

@@ -28,16 +28,19 @@ type ShaderState = {
 
 export function useShaderRunner(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  // Empty until the source has loaded; nothing is drawn before then.
   fragmentShader: string,
   // False holds the current frame, e.g. when the visitor pauses the shader.
-  active: boolean
+  active: boolean,
+  // For shaders that don't use u_time: draw one frame and never start the loop.
+  still = false
 ) {
   const rafRef = useRef<number>(0)
   const stateRef = useRef<ShaderState | null>(null)
 
   useEffect(() => {
     cancelAnimationFrame(rafRef.current)
-    if (!active) return
+    if (!active || !fragmentShader) return
 
     const canvas = canvasRef.current
     if (!canvas) return
@@ -54,7 +57,7 @@ export function useShaderRunner(
 
     const play = () => {
       const state = stateRef.current
-      if (running || !visible || !state) return
+      if (still || running || !visible || !state) return
       running = true
       if (state.pausedAt !== null) {
         state.start += performance.now() - state.pausedAt
@@ -148,7 +151,7 @@ export function useShaderRunner(
     })
 
     return cleanup
-  }, [active, fragmentShader])
+  }, [active, fragmentShader, still])
 
   // Full teardown on unmount only
   useEffect(() => {

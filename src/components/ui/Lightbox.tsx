@@ -14,8 +14,9 @@ interface Props {
 
 const navButtonClass = 'p-2 rounded bg-bg/70 text-muted hover:text-fg transition-colors cursor-pointer'
 
-// How many images an item steps through: a series has several, anything else one.
-const variantCount = (item: CreativeItem) => (item.kind === 'image' ? item.images.length : 1)
+// How many variants an item steps through: a series has several, anything else one.
+const variantCount = (item: CreativeItem) =>
+  item.kind === 'image' ? item.images.length : item.kind === 'shader' ? item.variants.length : 1
 
 // Starts downloading an image so it's cached by the time it's shown.
 const preload = (src: string) => {
@@ -72,12 +73,15 @@ function LightboxImage({ image, alt }: { image: LabImage; alt: string }) {
   )
 }
 
-function LightboxShader({ item }: { item: ShaderItem }) {
+function LightboxShader({ item, variant }: { item: ShaderItem; variant: number }) {
   const [playing, setPlaying] = useState(true)
+  const current = item.variants[variant]
   return (
     <div className="group/card relative">
-      <ShaderCanvas fragmentShader={item.fragmentShader} playing={playing} className="w-full h-[70vh] rounded bg-black" />
-      <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-3 left-3" />
+      <ShaderCanvas variant={current} playing={playing} className="w-full h-[70vh] rounded bg-black" />
+      {!current.still && (
+        <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-3 right-3" />
+      )}
     </div>
   )
 }
@@ -87,7 +91,7 @@ function LightboxMedia({ item, variant }: { item: CreativeItem; variant: number 
     case 'shader':
       // Keyed so switching shaders builds a fresh WebGL program instead of reusing the
       // last one, and starts each one playing.
-      return <LightboxShader key={item.title} item={item} />
+      return <LightboxShader key={`${item.title}-${variant}`} item={item} variant={variant} />
     case 'image': {
       const alt = item.images.length > 1 ? `${item.alt} (${variant + 1} of ${item.images.length})` : item.alt
       return <LightboxImage image={item.images[variant]} alt={alt} />
@@ -182,6 +186,25 @@ export function Lightbox({ items, index, initialVariant = 0, onIndexChange }: Pr
       {item && (
         <div className="relative">
           <LightboxMedia item={item} variant={variant} />
+
+          {item.kind === 'shader' && item.variants.length > 1 && (
+            <div role="group" aria-label="Variants" className="mt-3 flex flex-wrap justify-center gap-2">
+              {item.variants.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setShown({ index: index!, variant: i })}
+                  aria-label={`Variant ${i + 1} of ${item.variants.length}`}
+                  aria-current={i === variant ? 'true' : undefined}
+                  className={`w-9 h-9 rounded border font-mono text-xs cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                    i === variant ? 'border-accent text-accent' : 'border-zinc-600 text-zinc-300 hover:text-white'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
 
           {item.kind === 'image' && item.images.length > 1 && (
             <div role="group" aria-label="Variants" className="mt-3 flex flex-wrap justify-center gap-2">

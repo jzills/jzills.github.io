@@ -1,7 +1,3 @@
-import { spiralTunnel } from '@/data/shaders/spiralTunnel'
-import { pseudoFractal } from '@/data/shaders/pseudoFractal'
-import { electricRailway } from '@/data/shaders/electricRailway'
-
 type BaseItem = {
   title: string
   description: string
@@ -10,9 +6,17 @@ type BaseItem = {
   featured?: boolean
 }
 
+export type ShaderVariant = {
+  // Fetches the fragment shader source; each one is its own chunk, loaded when its card mounts.
+  load: () => Promise<string>
+  // Doesn't use u_time: drawn once, with no animation loop or pause button.
+  still?: boolean
+}
+
+// One shader, or a series of variants of one idea shown as a single card.
 export type ShaderItem = BaseItem & {
   kind: 'shader'
-  fragmentShader: string
+  variants: ShaderVariant[]
 }
 
 export type AudioItem = BaseItem & {
@@ -49,6 +53,16 @@ export type VideoItem = BaseItem & {
 
 export type CreativeItem = ShaderItem | AudioItem | ImageItem | VideoItem
 
+const glsl = import.meta.glob<string>('./shaders/glsl/*.glsl', { query: '?raw', import: 'default' })
+
+// A shader in src/data/shaders/glsl/<name>.glsl.
+const shader = (name: string, opts: { still?: boolean } = {}): ShaderVariant => {
+  const load = glsl[`./shaders/glsl/${name}.glsl`]
+  if (!load) throw new Error(`No shader named ${name}`)
+  return { load, ...opts }
+}
+const still = { still: true }
+
 // Images processed into public/lab/art/<slug>/ as 01.webp, 01-card.webp, 02.webp, …
 const art = (slug: string, sizes: [width: number, height: number][]): LabImage[] =>
   sizes.map(([width, height], i) => {
@@ -64,7 +78,7 @@ export const creativeItems: CreativeItem[] = [
     title: 'Spiral Tunnel',
     description: 'Ray-marched spiral geometry with Perlin noise shading — infinite procedural depth.',
     tags: ['GLSL', 'Ray Marching', 'Generative'],
-    fragmentShader: spiralTunnel,
+    variants: [shader('spiral-tunnel')],
     featured: true,
   },
   {
@@ -72,7 +86,7 @@ export const creativeItems: CreativeItem[] = [
     title: 'Pseudo Fractal #5',
     description: 'Procedural SDF generated through iterative coordinate folding, rotation, and domain repetition.',
     tags: ['GLSL', 'Ray Marching', 'Generative'],
-    fragmentShader: pseudoFractal,
+    variants: [shader('pseudo-fractal')],
     featured: true,
   },
   {
@@ -80,8 +94,323 @@ export const creativeItems: CreativeItem[] = [
     title: 'Electric Railway to Nowhere-Ville',
     description: 'Ray-marched infinite railway assembled from tiled signed distance fields, animated electrical arcs, and procedural atmospheric glow.',
     tags: ['GLSL', 'Ray Marching', 'Generative'],
-    fragmentShader: electricRailway,
+    variants: [shader('electric-railway')],
     featured: true,
+  },
+  {
+    kind: 'shader',
+    title: 'Lime Cells',
+    description: 'Glossy yellow-green cells that bulge and shift, each edge ringed with a bright seam.',
+    tags: ['GLSL', '2D', 'Voronoi'],
+    variants: [shader('2dstuff-03')],
+  },
+  {
+    kind: 'shader',
+    title: 'Ring of Squares',
+    description: 'Eight glowing outlined squares turning in a ring over a dark, softly lit field.',
+    tags: ['GLSL', '2D'],
+    variants: [shader('2dstuff-01')],
+  },
+  {
+    kind: 'shader',
+    title: 'Spheres',
+    description: 'Glossy spheres merging into a checkered red and blue world that bends around them.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('spheres04')],
+  },
+  {
+    kind: 'shader',
+    title: 'Strange Terrain',
+    description: 'A smooth pale-blue landscape of curving ridges and soft, glowing hollows.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('strange-terrain04')],
+  },
+  {
+    kind: 'shader',
+    title: 'Symmetry',
+    description: 'Radially symmetric forms built from repeated, rotated distance fields: spiked rings, studded crowns, and a ribbed blossom.',
+    tags: ['GLSL', 'Ray Marching', 'Series'],
+    variants: [shader('symmetry07'), shader('symmetry08'), shader('symmetry09'), shader('symmetry11')],
+  },
+  {
+    kind: 'shader',
+    title: 'Liquid Chrome',
+    description: 'Cellular patterns with a polished, metallic sheen: a silver honeycomb, a tiled green and violet grid, and a sphere of shards.',
+    tags: ['GLSL', '2D', 'Voronoi', 'Series'],
+    variants: [shader('combo-14'), shader('combo-13'), shader('combo-11')],
+  },
+  {
+    kind: 'shader',
+    title: 'Magenta Lattice',
+    description: 'A soft magenta grid of rounded cells dimpling toward a dark center.',
+    tags: ['GLSL', '2D'],
+    variants: [shader('combo-07', still)],
+  },
+  {
+    kind: 'shader',
+    title: 'Fourier Forms',
+    description: 'Green organic sculptures shaped by sums of waves: one rippling and turning, one a frozen, streaked swirl.',
+    tags: ['GLSL', 'Ray Marching', 'Series'],
+    variants: [shader('ft3d-06'), shader('ft3d-07', still)],
+  },
+  {
+    kind: 'shader',
+    title: 'Coral Rings',
+    description: 'Concentric pink and silver ridges stacked into an ornate, shell-like mandala.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('nu10')],
+  },
+  {
+    kind: 'shader',
+    title: 'Banded Capsule',
+    description: 'A pale-blue capsule wrapped in fine bands, tumbling slowly in empty space.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('run03')],
+  },
+  {
+    kind: 'shader',
+    title: 'Glossy Blobs',
+    description: 'Shiny coral-pink blobs and capsules receding into a dark, mirrored distance.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('geom01', still)],
+  },
+  {
+    kind: 'shader',
+    title: 'Iridescent Hall',
+    description: 'A dense, layered chamber of warped, oil-slick surfaces in rust, teal, and violet.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('geom04-r', still)],
+  },
+  {
+    kind: 'shader',
+    title: 'Tendril Garden',
+    description: 'Iridescent tendrils, spheres, and twisted forms floating in the dark.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('geom12', still)],
+  },
+  {
+    kind: 'shader',
+    title: 'Popcorn 09',
+    description: 'A popcorn-map field in hot pink, orange, and electric blue, swirling into a bright eye.',
+    tags: ['GLSL', '2D'],
+    variants: [shader('popcorn09', still)],
+  },
+  {
+    kind: 'shader',
+    title: 'Popcorn 11',
+    description: 'Repeating violet glints, like light catching ice, drifting across a deep blue tile.',
+    tags: ['GLSL', '2D'],
+    variants: [shader('popcorn11')],
+  },
+  {
+    kind: 'shader',
+    title: 'Popcorn 12',
+    description: 'Liquid blue folds that roll and churn like a slow, glossy sea.',
+    tags: ['GLSL', '2D'],
+    variants: [shader('popcorn12')],
+  },
+  {
+    kind: 'shader',
+    title: 'Popcorn 13',
+    description: 'Marbled cream, rust, and navy bands, a popcorn map with sharp contour edges.',
+    tags: ['GLSL', '2D'],
+    variants: [shader('popcorn13', still)],
+  },
+  {
+    kind: 'shader',
+    title: 'Pseudo Fractal 4-05',
+    description: 'Rows of lavender arches folded from one shape, repeated toward a cyan horizon.',
+    tags: ['GLSL', 'Ray Marching', 'Fractal'],
+    variants: [shader('pf4-05')],
+  },
+  {
+    kind: 'shader',
+    title: 'Pseudo Fractal 5-06',
+    description: 'A neon skyline of folded spikes in blue, violet, and acid green above a glowing floor.',
+    tags: ['GLSL', 'Ray Marching', 'Fractal'],
+    variants: [shader('pf5-06')],
+  },
+  {
+    kind: 'shader',
+    title: 'Pseudo Fractal 6-03',
+    description: 'Pearly, knotted limbs reaching in from above and below, mirrored across a dark plane.',
+    tags: ['GLSL', 'Ray Marching', 'Fractal'],
+    variants: [shader('pf6-03')],
+  },
+  {
+    kind: 'shader',
+    title: 'Pseudo Fractal 7-06',
+    description: 'An endless pale tunnel of folded rings narrowing to a dark center.',
+    tags: ['GLSL', 'Ray Marching', 'Fractal'],
+    variants: [shader('pf7-06')],
+  },
+  {
+    kind: 'shader',
+    title: 'Reflection',
+    description: 'A mossy sphere resting on an endless yellow and green checkerboard.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('reflection01', still)],
+  },
+  {
+    kind: 'shader',
+    title: 'Sine Warp I',
+    description: 'Oxblood and teal liquid wound into a glossy whirlpool by layered sine waves.',
+    tags: ['GLSL', '2D', 'Voronoi'],
+    variants: [shader('sw01')],
+  },
+  {
+    kind: 'shader',
+    title: 'Sine Warp II',
+    description: 'Stained-glass cells in red, blue, and magenta, sheared into diagonal streams.',
+    tags: ['GLSL', '2D', 'Voronoi'],
+    variants: [shader('sw02')],
+  },
+  {
+    kind: 'shader',
+    title: 'Bump Mapping',
+    description: 'A small sphere whose surface is roughened into green and violet cells by a bump map.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('bump-mapping-02')],
+  },
+  {
+    kind: 'shader',
+    title: 'Normal Mapping',
+    description: 'Monochrome triangles split into four quadrants, lit as if carved from the surface.',
+    tags: ['GLSL', '2D'],
+    variants: [shader('normal-mapping-01')],
+  },
+  {
+    kind: 'shader',
+    title: 'Lantern Corridor',
+    description: 'An endless hall of blue and silver lantern forms converging on a white-hot vanishing point.',
+    tags: ['GLSL', 'Ray Marching', 'Series'],
+    variants: [shader('t01', still), shader('t02', still)],
+  },
+  {
+    kind: 'shader',
+    title: 'Floating Dunes',
+    description: 'Warm, sunlit mushroom forms hovering over a pale desert floor.',
+    tags: ['GLSL', 'Ray Marching', 'Series'],
+    variants: [shader('t07', still), shader('t08', still)],
+  },
+  {
+    kind: 'shader',
+    title: 'Voronoi 01',
+    description: 'Shattered mosaic cells in magenta, maroon, and cyan.',
+    tags: ['GLSL', '2D', 'Voronoi'],
+    variants: [shader('voronoi01')],
+  },
+  {
+    kind: 'shader',
+    title: 'Voronoi 04',
+    description: 'Deep blue cells blurred into flowing, watery light.',
+    tags: ['GLSL', '2D', 'Voronoi'],
+    variants: [shader('voronoi04')],
+  },
+  {
+    kind: 'shader',
+    title: 'Voronoi 05',
+    description: 'Bright blue cells with glowing violet edges, like a crackled glaze.',
+    tags: ['GLSL', '2D', 'Voronoi'],
+    variants: [shader('voronoi05')],
+  },
+  {
+    kind: 'shader',
+    title: 'Voronoi 06',
+    description: 'Dark cells outlined in neon blue, each lit by a faint violet glow.',
+    tags: ['GLSL', '2D', 'Voronoi'],
+    variants: [shader('voronoi06')],
+  },
+  {
+    kind: 'shader',
+    title: 'Voronoi 10',
+    description: 'Molten pink, orange, and green swirls pulled through a cell pattern.',
+    tags: ['GLSL', '2D', 'Voronoi'],
+    variants: [shader('voronoi10')],
+  },
+  {
+    kind: 'shader',
+    title: 'Voronoi 12',
+    description: 'Interference rings in green, blue, and red layered over a cell grid.',
+    tags: ['GLSL', '2D', 'Voronoi'],
+    variants: [shader('voronoi12')],
+  },
+  {
+    kind: 'shader',
+    title: 'Voronoi 14',
+    description: 'Lilac cells with soft contour bands, like a topographic map of clouds.',
+    tags: ['GLSL', '2D', 'Voronoi', 'Noise'],
+    variants: [shader('voronoi14')],
+  },
+  {
+    kind: 'shader',
+    title: 'Capsule Cells',
+    description: 'Pale-blue capsules and spheres clustering and blending smoothly on a deep blue field.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('capsule-cells')],
+  },
+  {
+    kind: 'shader',
+    title: 'Woven Orb',
+    description: 'An intricate orb of interlocking pink and teal patterns, turning in the dark.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('n-01')],
+  },
+  {
+    kind: 'shader',
+    title: 'Menger Sponge',
+    description: 'Flying through the endlessly recursive tunnels of a Menger sponge fractal.',
+    tags: ['GLSL', 'Ray Marching', 'Fractal'],
+    variants: [shader('menger-sponge')],
+  },
+  {
+    kind: 'shader',
+    title: 'Perlin Noise',
+    description: 'A silver sphere banded by Perlin noise, lit by a long beam of warm light.',
+    tags: ['GLSL', 'Ray Marching', 'Noise'],
+    variants: [shader('perlin-noise')],
+  },
+  {
+    kind: 'shader',
+    title: 'Hashless Noise',
+    description: 'Rippled lavender noise, streaked with flares of pink light.',
+    tags: ['GLSL', '2D', 'Noise'],
+    variants: [shader('hashless-noise-02')],
+  },
+  {
+    kind: 'shader',
+    title: 'Popcorn Texture',
+    description: 'A molten amber and violet popcorn texture wrapped around a turning sphere.',
+    tags: ['GLSL', 'Ray Marching', 'Noise'],
+    variants: [shader('popcorn-texture-01')],
+  },
+  {
+    kind: 'shader',
+    title: 'Murky Terrain',
+    description: 'Flying low over a hazy, rose-tinted canyon toward a pale sun.',
+    tags: ['GLSL', 'Ray Marching', 'Terrain'],
+    variants: [shader('murky-terrain')],
+  },
+  {
+    kind: 'shader',
+    title: 'Ornate Terrain',
+    description: 'A dark, intricately textured mountain rising through mist under a violet sky.',
+    tags: ['GLSL', 'Ray Marching', 'Terrain'],
+    variants: [shader('ornate-terrain')],
+  },
+  {
+    kind: 'shader',
+    title: 'what',
+    description: 'Bright white filaments tracing a warped grid across black.',
+    tags: ['GLSL', '2D'],
+    variants: [shader('what')],
+  },
+  {
+    kind: 'shader',
+    title: 'Gyroid',
+    description: 'A teal gyroid surface caged inside a glowing lattice sphere.',
+    tags: ['GLSL', 'Ray Marching'],
+    variants: [shader('gyroid')],
   },
   {
     kind: 'video',

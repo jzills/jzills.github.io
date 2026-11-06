@@ -1,15 +1,17 @@
-export const pseudoFractal = `
 #ifdef GL_ES
 precision mediump float;
 #endif
 
 #define PI 3.1415926535897932
-#define R 0.7
+#define R 1.0
 #define AA 1
+#define C 35.0
 
 uniform float u_time;
 uniform vec2 u_resolution;
 float glo = 0.0;
+
+//#define u_time 0.0
 
 float rand(vec2 n) 
 {
@@ -62,11 +64,11 @@ float sdCapsule(vec3 p, float h, float r)
 
 vec2 leaf(vec3 p)
 {
-    float t = sin(u_time);
+    float t = sin(u_time) * 0.5 + 0.5;
     vec3 q = p;
-    vec2 b1 = vec2(sdBox(q, vec3(1.0, 1.0, 5.0)), 1.0);
-    vec2 b2 = vec2(sdBox(q, vec3(1.0, 15.0, 1.0)), 2.0);
-    vec2 b3 = vec2(sdBox(q, vec3(5.0, 0.25, 10.0 + t * 5.0)), 3.0);
+    vec2 b1 = vec2(sdBox(q, vec3(1.0, 5.0 + t, 5.0)), 1.0);
+    vec2 b2 = vec2(sdBox(q, vec3(5.0 + t, 1.0, 1.0)), 2.0);
+    vec2 b3 = vec2(sdBox(q, vec3(5.0, 0.25, 5.0 + t)), 3.0);
     float d = smin(b1.x, b2.x, 0.1);
     float i = b1.x < b2.x ? b1.y : b2.y;
     i = b3.x < d ? b3.y : i;
@@ -90,13 +92,17 @@ float tor(vec3 p, float a, float b)
 
 float space(vec3 p)
 {
-    return tor(p, 20.0, 15.0);
+    return tor(p, 20.0 * sin(u_time * 0.75) + 5.0, 15.0);
 }
 
 vec2 map(vec3 p)
 {
-    p.xy *= rotate(u_time * 0.25);
-    //p.xz *= rotate(u_time * 0.5);
+    vec3 u = p;
+    p.x += u_time * 15.0;
+    p.z += sin(p.x * 0.1215 ) * 5.0;
+    p.yz *= rotate(u_time * 0.25);
+    p.x = mod(p.x + C * 0.5, C) - C * 0.5;
+    
     vec3 q = abs(p);
     float t = sin(u_time * 0.5) * 0.5;
     float si = sin(p.z * 0.5 + u_time - cos(q.y * 0.05)) * 0.5 + 0.5;
@@ -104,16 +110,20 @@ vec2 map(vec3 p)
 
     for (int i = 0; i < 3; ++i)
     {
-        q = abs(p) - vec3(3.0 + si, 5.0, 1.0 + float(i * i));
+        q = abs(p) - vec3(10.0 * t + si * t + 5.0, 5.0, 1.0 + float(i * i));
         q.xz *= rotate(t / PI * float(i));
         q.xy *= rotate(float(i * i) + sh * 0.005 + t);
-        q.yz *= rotate(float(i * i));
+        q.yz *= rotate(float(i * i));    
         p = q;
     }
 
     vec2 lf = leaf(q);
-    float sp = space(q);
-    float d = smin(lf.x, lf.x, 0.1);
+    float sp = min(space(u), space(q));
+    float pl = u.y + 25.0;
+    float d = smin(lf.x, pl, 0.1);
+
+    //float pip = length(abs(u.xy) + vec2(-35.0)) - 1.0;
+    //d = smin(d, pip, 0.1);
     glo += 0.1 / (0.1 + sp * sp * si);
     
     return vec2(d * R, sh < lf.x ? 0.0 : lf.y);
@@ -123,7 +133,7 @@ vec2 rayMarch(vec3 ro, vec3 rd)
 {
     vec2 t = vec2(0.0);
 
-    for (int i = 0; i < 128; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         vec3 pos = ro + t.x * rd;
         vec2 d = map(pos);
@@ -192,10 +202,25 @@ vec3 setCamera(vec2 uv, vec3 ro, float zoom)
     return rd;
 }
 
-vec3 bg(vec2 uv)
+vec3 bg(vec3 rd)
 {
-    vec3 mat = vec3(0.01, 0.02, 0.05);
-    return mat;
+    float k = rd.y * 0.5;
+    return mix(vec3(0., 0.0, 0.0), vec3(0.4, 0.02, 0.5), k);
+}
+
+float bump(vec3 p)
+{
+    
+    vec3 q = p;
+    for (int i = 0; i < 1; ++i)
+    {
+        q = abs(p) - float(i*i)*sin(p.y)*3.9;
+        q.xy *= rotate(float(i)*sin(p.x*0.95));
+        q.yz *= rotate(float(i)*cos(p.y*3.5));
+        p = q;
+    }
+    return length(map(q));
+    //return length(sin(p.z*0.9)+cos(p.xzy*0.1))*0.025;
 }
 
 void main()
@@ -208,17 +233,35 @@ void main()
         vec2 off = vec2(float(m), float(n)) / float(AA);
         vec2 uv = ((gl_FragCoord.xy + off) - 0.5 * u_resolution.xy) / u_resolution.y;
         vec3 col = vec3(0.0);
-        vec3 ro = vec3(0.0, 0.0, -70.0);
+        vec3 ro = vec3(-30.0, 0.0, -80.0);
         vec3 rd = setCamera(uv, ro, 1.0);
         vec2 t = rayMarch(ro, rd);
+        //col = bg(rd);
         glo = 0.0;
 
         if (t.x < 100.0)
         {
             vec3 pos = ro + t.x * rd;
             vec3 nor = calcNormal(pos);
+
+            vec2 eps = vec2(0.01, 0.0);
+    
+            float f = bump(pos); // Sample value multiplied by the amplitude.
+            float fx = bump(pos-eps.xyy); // Samefor the nearby sample in the X-direction.
+            float fy = bump(pos-eps.yxy); // Same for the nearby sample in the Y-direction.
+            float fz = bump(pos-eps.yyx);
+
+            // Controls how much the bump is accentuated.
+            const float bumpFactor = 0.5;
+            
+            // Using the above to determine the dx and dy function gradients.
+            fx = (fx-f)/eps.x; // Change in X
+            fy = (fy-f)/eps.x; // Change in Y.
+            fz = (fz-f)/eps.x;
+            nor = normalize(nor+vec3(fx, fy, fz) * bumpFactor);  
+
             vec3 ref = reflect(rd, nor);
-            vec3 lid = normalize(vec3(50.0, 50.0, 0.0) - pos);
+            vec3 lid = normalize(vec3(30.0, 60.0, -50.0) - pos);
             vec3 hal = normalize(-rd + lid);
             vec3 mat = vec3(0.27, 0.15, 0.215);
             float amb = 0.5 * nor.y;
@@ -227,10 +270,7 @@ void main()
             float ao = calcAO(pos, nor);
             vec3 fog = vec3(0.004) * (1.0 - (length(uv) - 0.2));
                 
-            if (t.y <= 0.9)
-            {
-                //col = vec3(0.5, 0.9, 0.1);
-            }
+            if (t.y <= 0.9) {}
             else if (t.y <= 1.9)
             {
                 col += vec3(0.3, 0.1, 0.2);
@@ -240,7 +280,8 @@ void main()
                 col += vec3(0.1, 0.7, 0.9);
             }
 
-            col += mat * (amb + dif + spe) + 0.125 * ao;
+            col += mat * (amb + dif + spe);
+            col += 0.5 * mix(col, bg(ref), nor);
             col = mix(col, fog, 1.0 - exp(-0.000005 * t.x * t.x * t.x));
             col = mix(col, 0.05 * glo * glo * vec3(0.2, 0.4, 0.9), lid);
         }
@@ -253,4 +294,3 @@ void main()
 
     gl_FragColor = vec4(tot, 1.0);
 }
-`
