@@ -4,7 +4,8 @@ import { Play, Pause, Maximize2, Layers, Volume2, VolumeX, ChevronLeft, ChevronR
 import { Chip } from '@/components/ui/Chip'
 import { LazyMount } from '@/components/ui/LazyMount'
 import { useShaderRunner } from '@/lib/useShaderRunner'
-import type { AudioItem, CreativeItem, ImageItem, ShaderItem, ShaderVariant, VideoItem } from '@/data/creative'
+import { useTheme } from '@/lib/theme'
+import type { AudioItem, CreativeItem, ImageItem, MusicItem, ShaderItem, ShaderVariant, VideoClip, VideoItem } from '@/data/creative'
 
 const shellClass = 'h-full bg-surface border border-border rounded overflow-hidden transition-all duration-200 hover:border-accent/40 hover:ring-1 hover:ring-accent/15'
 
@@ -45,7 +46,7 @@ export function ShaderPlayToggle({ playing, onToggle, title, className = '' }: {
 }
 
 // Plays only while on screen, like the shaders, so off-screen videos don't decode in the background.
-export function AutoplayVideo({ item, className = '' }: { item: VideoItem; className?: string }) {
+export function AutoplayVideo({ clip, alt, className = '' }: { clip: VideoClip; alt: string; className?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -63,9 +64,9 @@ export function AutoplayVideo({ item, className = '' }: { item: VideoItem; class
   return (
     <video
       ref={videoRef}
-      src={item.src}
-      poster={item.poster}
-      aria-label={item.alt}
+      src={clip.src}
+      poster={clip.poster}
+      aria-label={alt}
       muted
       loop
       playsInline
@@ -202,9 +203,31 @@ const controlClass = 'p-1.5 rounded text-white hover:text-accent transition-colo
 
 // A video with sound never autoplays: the visitor starts it, and the controls
 // stay on screen so it's clear there's audio before pressing play.
-function SoundVideo({ item, onOpen, paused }: { item: VideoItem; onOpen?: () => void; paused?: boolean }) {
+interface SoundVideoProps {
+  item: VideoItem
+  clip: VideoClip
+  onOpen?: () => void
+  paused?: boolean
+  // Series arrows, drawn over the video.
+  nav?: ReactNode
+  // Position in a series, e.g. "2 / 7", shown in the control bar.
+  position?: string
+  // Start playing on mount: set when stepping to the next clip while one plays.
+  autoStart?: boolean
+  onPlayingChange?: (playing: boolean) => void
+}
+
+function SoundVideo({ item, clip, onOpen, paused, nav, position, autoStart, onPlayingChange }: SoundVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [playing, setPlaying] = useState(false)
+  const [playing, setPlayingState] = useState(false)
+  const setPlaying = (p: boolean) => {
+    setPlayingState(p)
+    onPlayingChange?.(p)
+  }
+
+  useEffect(() => {
+    if (autoStart) videoRef.current?.play().catch(() => {})
+  }, [autoStart])
   const [muted, setMuted] = useState(false)
   // Mirrors the element, which starts at full volume.
   const [volume, setVolume] = useState(1)
@@ -240,12 +263,12 @@ function SoundVideo({ item, onOpen, paused }: { item: VideoItem; onOpen?: () => 
 
   return (
     <div className={shellClass}>
-      <div className="relative h-64 bg-black">
+      <div className="group/card relative h-64 bg-black">
         <video
           ref={videoRef}
-          src={item.src}
-          poster={item.poster}
-          aria-label={item.alt}
+          src={clip.src}
+          poster={clip.poster}
+          aria-label={position ? `${item.alt} (${position.replace(' / ', ' of ')})` : item.alt}
           loop
           playsInline
           preload="none"
@@ -303,20 +326,60 @@ function SoundVideo({ item, onOpen, paused }: { item: VideoItem; onOpen?: () => 
             aria-label="Volume"
             className="w-24 accent-accent cursor-pointer"
           />
+          {position && (
+            <span className="ml-auto flex items-center gap-1 pr-1 text-[11px] font-mono text-white/80">
+              <Layers size={12} aria-hidden="true" />
+              {position}
+            </span>
+          )}
         </div>
+        {nav}
       </div>
       <CardText item={item} />
     </div>
   )
 }
 
-function VideoCard({ item, onOpen, paused }: { item: VideoItem; onOpen?: () => void; paused?: boolean }) {
-  if (item.sound) return <SoundVideo item={item} onOpen={onOpen} paused={paused} />
+function VideoCard({ item, onOpen, paused }: { item: VideoItem; onOpen?: (variant: number) => void; paused?: boolean }) {
+  const count = item.clips.length
+  const [variant, step] = useSeries(count)
+  const clip = item.clips[variant]
+  // Whether the clip on show is playing, so stepping on keeps the music going.
+  const playingRef = useRef(false)
+  const [autoStart, setAutoStart] = useState(false)
+  const open = onOpen && (() => onOpen(variant))
+  const stepClip = (delta: number) => {
+    setAutoStart(playingRef.current)
+    step(delta)
+  }
+
+  if (item.sound) {
+    return (
+      <SoundVideo
+        // Remounts per clip, so its playing state and controls start fresh.
+        key={variant}
+        item={item}
+        clip={clip}
+        onOpen={open}
+        paused={paused}
+        nav={<SeriesArrows title={item.title} count={count} onStep={stepClip} />}
+        position={count > 1 ? `${variant + 1} / ${count}` : undefined}
+        autoStart={autoStart}
+        onPlayingChange={(p) => {
+          playingRef.current = p
+        }}
+      />
+    )
+  }
   return (
     <div className={shellClass}>
-      <Media item={item} onOpen={onOpen}>
-        <AutoplayVideo item={item} className="absolute inset-0 w-full h-full object-cover" />
-      </Media>
+      <div className="group/card relative">
+        <Media item={item} onOpen={open}>
+          <AutoplayVideo key={variant} clip={clip} alt={item.alt} className="absolute inset-0 w-full h-full object-cover" />
+          <SeriesBadge variant={variant} count={count} />
+        </Media>
+        <SeriesArrows title={item.title} count={count} onStep={step} />
+      </div>
       <CardText item={item} />
     </div>
   )
@@ -361,6 +424,40 @@ function AudioCard({ item }: { item: AudioItem }) {
   )
 }
 
+// Bandcamp's player takes its colours in the URL, so they follow the site's theme
+// tokens by hand (--color-surface and --color-accent in index.css).
+const bandcampColors = {
+  dark: { bg: '111113', link: '22d3ee' },
+  light: { bg: 'ffffff', link: '0e7490' },
+}
+
+function MusicCard({ item }: { item: MusicItem }) {
+  const theme = useTheme()
+  const { bg, link } = bandcampColors[theme]
+  const { album, track } = item.bandcamp
+  const src =
+    'https://bandcamp.com/EmbeddedPlayer/' +
+    (album ? `album=${album}/` : '') +
+    `size=large/bgcol=${bg}/linkcol=${link}/tracklist=false/artwork=small/track=${track}/transparent=true/`
+
+  // The player already names the album and track, so the card adds only its chips.
+  return (
+    <div className={`${shellClass} flex flex-col`}>
+      {/* Bandcamp's standard player with small artwork is 120px tall. Loads only near the viewport.
+          No fallback link inside: iframe children are parsed as text, which breaks hydration. */}
+      <iframe
+        title={`${item.title} on Bandcamp`}
+        src={src}
+        loading="lazy"
+        className="block w-full h-[120px] border-0 shrink-0"
+      />
+      <div className="mt-auto flex flex-wrap gap-1.5 p-4">
+        {item.tags.map((tag) => <Chip key={tag} label={tag} />)}
+      </div>
+    </div>
+  )
+}
+
 interface CreativeCardProps {
   item: CreativeItem
   // Makes the media clickable (the lab page opens a lightbox); audio plays inline instead.
@@ -380,5 +477,7 @@ export function CreativeCard({ item, onOpen, paused }: CreativeCardProps) {
       return <VideoCard item={item} onOpen={onOpen} paused={paused} />
     case 'audio':
       return <AudioCard item={item} />
+    case 'music':
+      return <MusicCard item={item} />
   }
 }

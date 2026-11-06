@@ -18,6 +18,7 @@ const kindLabels: Record<Kind, string> = {
   image: 'Images',
   video: 'Video',
   audio: 'Audio',
+  music: 'Music',
 }
 
 // One chip is active at a time, across both rows: All, a kind, or a technique tag.
@@ -26,11 +27,18 @@ type Filter = { id: string; label: string; matches: (item: CreativeItem) => bool
 const all: Filter = { id: 'all', label: 'All', matches: () => true }
 
 // Only kinds that have work get a chip, so the row grows as the lab does.
-const kindFilters: Filter[] = [...new Set(creativeItems.map((item) => item.kind))].map((kind) => ({
-  id: kind,
-  label: kindLabels[kind],
-  matches: (item) => item.kind === kind,
-}))
+// Anything you can listen to: audio and Bandcamp cards, and videos with a soundtrack.
+const hasSound = (item: CreativeItem) =>
+  item.kind === 'audio' || item.kind === 'music' || (item.kind === 'video' && item.sound === true)
+
+// Audio and music kinds fold into the one Audio chip below.
+const soundKinds: Kind[] = ['audio', 'music']
+const kindFilters: Filter[] = [
+  ...[...new Set(creativeItems.map((item) => item.kind))]
+    .filter((kind) => !soundKinds.includes(kind))
+    .map((kind): Filter => ({ id: kind, label: kindLabels[kind], matches: (item) => item.kind === kind })),
+  ...(creativeItems.some(hasSound) ? [{ id: 'sound', label: 'Audio', matches: hasSound }] : []),
+]
 
 // Tags that name a technique, in display order. Only those some item carries get a chip.
 const techniqueFilters: Filter[] = ['Ray Marching', '2D', 'Noise', 'Voronoi', 'Fractal', 'Terrain']
@@ -44,6 +52,18 @@ const rows: { label: string; filters: Filter[] }[] = [
 
 const countOf = (filter: Filter) => creativeItems.filter(filter.matches).length
 
+// Grid cells in display order. Music cards are short (a player and chips), so
+// consecutive ones pair up and two stack into one cell.
+function toCells(items: CreativeItem[]): CreativeItem[][] {
+  const cells: CreativeItem[][] = []
+  for (const item of items) {
+    const last = cells[cells.length - 1]
+    if (item.kind === 'music' && last?.length === 1 && last[0].kind === 'music') last.push(item)
+    else cells.push([item])
+  }
+  return cells
+}
+
 export function LabPage() {
   const [filter, setFilter] = useState<Filter>(all)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
@@ -52,8 +72,8 @@ export function LabPage() {
   useEffect(scrollToHash, [])
 
   const visible = useMemo(() => creativeItems.filter(filter.matches), [filter])
-  // Audio plays inline, so the lightbox steps through everything else.
-  const openable = useMemo<CreativeItem[]>(() => visible.filter((item) => item.kind !== 'audio'), [visible])
+  // Audio and music play inline, so the lightbox steps through everything else.
+  const openable = useMemo<CreativeItem[]>(() => visible.filter((item) => item.kind !== 'audio' && item.kind !== 'music'), [visible])
 
   return (
     <MotionProvider>
@@ -94,25 +114,30 @@ export function LabPage() {
 
           {/* Keyed by filter so the stagger replays when the selection changes. */}
           <m.div key={filter.id} {...revealOnScroll} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {visible.map((item) => {
-              const lightboxIndex = openable.indexOf(item)
-              return (
-                <m.div key={item.title} variants={rise} id={labId(item.title)}>
-                  <CreativeCard
-                    item={item}
-                    onOpen={
-                      lightboxIndex >= 0
-                        ? (variant = 0) => {
-                            setOpenVariant(variant)
-                            setOpenIndex(lightboxIndex)
-                          }
-                        : undefined
-                    }
-                    paused={openIndex !== null}
-                  />
-                </m.div>
-              )
-            })}
+            {toCells(visible).map((cell) => (
+              // A music pair splits the cell's height, which the row's tallest card sets.
+              <m.div key={cell[0].title} variants={rise} className="flex flex-col gap-4">
+                {cell.map((item) => {
+                  const lightboxIndex = openable.indexOf(item)
+                  return (
+                    <div key={item.title} id={labId(item.title)} className="flex-1">
+                      <CreativeCard
+                        item={item}
+                        onOpen={
+                          lightboxIndex >= 0
+                            ? (variant = 0) => {
+                                setOpenVariant(variant)
+                                setOpenIndex(lightboxIndex)
+                              }
+                            : undefined
+                        }
+                        paused={openIndex !== null}
+                      />
+                    </div>
+                  )
+                })}
+              </m.div>
+            ))}
           </m.div>
         </main>
         <Footer />

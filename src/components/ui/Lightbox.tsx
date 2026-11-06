@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { ArrowUpRight, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { ShaderCanvas, ShaderPlayToggle } from '@/components/ui/CreativeCard'
-import type { CreativeItem, LabImage, ShaderItem } from '@/data/creative'
+import type { ClipCredits, Credit, CreativeItem, LabImage, ShaderItem, VideoItem } from '@/data/creative'
 
 interface Props {
   items: CreativeItem[]
@@ -16,7 +16,84 @@ const navButtonClass = 'p-2 rounded bg-bg/70 text-muted hover:text-fg transition
 
 // How many variants an item steps through: a series has several, anything else one.
 const variantCount = (item: CreativeItem) =>
-  item.kind === 'image' ? item.images.length : item.kind === 'shader' ? item.variants.length : 1
+  item.kind === 'image' ? item.images.length
+    : item.kind === 'shader' ? item.variants.length
+      : item.kind === 'video' ? item.clips.length
+        : 1
+
+// Thumbnails for picking a variant directly; shaders get numbered buttons instead.
+const thumbnails = (item: CreativeItem) =>
+  item.kind === 'image' ? item.images.map((image) => image.card)
+    : item.kind === 'video' ? item.clips.map((clip) => clip.poster)
+      : null
+
+// Wakes a sleeping free-tier host once per page view, when its lightbox first opens.
+const woken = new Set<string>()
+function wake(url: string) {
+  if (woken.has(url)) return
+  woken.add(url)
+  // Opaque no-cors request: only the side effect (the host starting up) matters.
+  fetch(url, { mode: 'no-cors', cache: 'no-store' }).catch(() => {})
+}
+
+function CreditLine({ credit }: { credit: Credit }) {
+  const detail = [credit.author, credit.license].filter(Boolean).join(' · ')
+  return (
+    <li className="leading-snug">
+      {credit.url ? (
+        <a href={credit.url} target="_blank" rel="noopener noreferrer" className="text-zinc-200 hover:text-white underline-offset-2 hover:underline">
+          {credit.title}
+        </a>
+      ) : (
+        <span className="text-zinc-200">{credit.title}</span>
+      )}
+      {detail && <span className="text-zinc-400"> · {detail}</span>}
+    </li>
+  )
+}
+
+// A clip's sources, fetched the first time the section is expanded.
+function Credits({ url }: { url: string }) {
+  const [credits, setCredits] = useState<ClipCredits | null>(null)
+  const [failed, setFailed] = useState(false)
+  const load = () => {
+    if (credits || failed) return
+    fetch(url).then((r) => r.json()).then(setCredits).catch(() => setFailed(true))
+  }
+  return (
+    <details onToggle={(e) => e.currentTarget.open && load()} className="mt-3 text-xs text-zinc-300">
+      <summary className="cursor-pointer select-none text-zinc-200 hover:text-white">Credits</summary>
+      {failed && <p className="mt-2 text-zinc-400">Couldn't load the credits.</p>}
+      {credits && (
+        <div className="mt-2 grid gap-4 sm:grid-cols-2 max-h-56 overflow-y-auto pr-2">
+          <div>
+            <p className="mb-1 font-mono uppercase tracking-widest text-[10px] text-zinc-400">Sounds</p>
+            <ul className="space-y-1">{credits.sounds.map((c) => <CreditLine key={c.title + c.url} credit={c} />)}</ul>
+          </div>
+          <div>
+            <p className="mb-1 font-mono uppercase tracking-widest text-[10px] text-zinc-400">Footage</p>
+            <p className="mb-1 text-zinc-400">From the Internet Archive; the clip shows fragments of some of these.</p>
+            <ul className="space-y-1">{credits.footage.map((c) => <CreditLine key={c.url ?? c.title} credit={c} />)}</ul>
+          </div>
+          <p className="sm:col-span-2 text-zinc-400">
+            Own something here and want it removed? <a href="/#contact" className="underline underline-offset-2 hover:text-white">Get in touch</a>.
+          </p>
+        </div>
+      )}
+    </details>
+  )
+}
+
+function LiveLink({ live }: { live: NonNullable<VideoItem['live']> }) {
+  return (
+    <p className="mt-2 text-sm">
+      <a href={live.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent hover:underline underline-offset-2">
+        Open live <ArrowUpRight size={14} aria-hidden="true" />
+      </a>
+      <span className="ml-2 text-xs text-zinc-400">{live.note}</span>
+    </p>
+  )
+}
 
 // Starts downloading an image so it's cached by the time it's shown.
 const preload = (src: string) => {
@@ -96,12 +173,13 @@ function LightboxMedia({ item, variant }: { item: CreativeItem; variant: number 
       const alt = item.images.length > 1 ? `${item.alt} (${variant + 1} of ${item.images.length})` : item.alt
       return <LightboxImage image={item.images[variant]} alt={alt} />
     }
-    case 'video':
+    case 'video': {
+      const clip = item.clips[variant]
       return (
         <video
-          key={item.src}
-          src={item.src}
-          poster={item.poster}
+          key={clip.src}
+          src={clip.src}
+          poster={clip.poster}
           aria-label={item.alt}
           controls
           autoPlay
@@ -109,10 +187,12 @@ function LightboxMedia({ item, variant }: { item: CreativeItem; variant: number 
           muted={!item.sound}
           loop
           playsInline
-          className="max-w-full max-h-[75vh] mx-auto rounded"
+          className="max-w-full max-h-[70vh] mx-auto rounded"
         />
       )
+    }
     case 'audio':
+    case 'music':
       return null
   }
 }
@@ -155,6 +235,11 @@ export function Lightbox({ items, index, initialVariant = 0, onIndexChange }: Pr
 
   const canStep = items.length > 1 || (item !== null && variantCount(item) > 1)
 
+  const wakeUrl = item?.kind === 'video' ? item.live?.wake : undefined
+  useEffect(() => {
+    if (wakeUrl) wake(wakeUrl)
+  }, [wakeUrl])
+
   useEffect(() => {
     if (index !== null) neighborImages(items, index, variant).forEach((image) => preload(image.src))
   }, [items, index, variant])
@@ -181,7 +266,9 @@ export function Lightbox({ items, index, initialVariant = 0, onIndexChange }: Pr
       // A click on the backdrop lands on the dialog element itself.
       onClick={(e) => e.target === e.currentTarget && close()}
       aria-label={item?.title}
-      className="m-auto w-[min(1100px,calc(100vw-2rem))] max-h-none bg-transparent p-0 text-fg backdrop:bg-black/90 backdrop:backdrop-blur-sm"
+      // Capped at the viewport and scrollable: open credits can make it taller than the screen,
+      // and a centred dialog that overflows would push its top out of reach.
+      className="m-auto w-[min(1100px,calc(100vw-2rem))] max-h-[calc(100dvh-2rem)] overflow-y-auto bg-transparent p-0 text-fg backdrop:bg-black/90 backdrop:backdrop-blur-sm"
     >
       {item && (
         <div className="relative">
@@ -206,31 +293,37 @@ export function Lightbox({ items, index, initialVariant = 0, onIndexChange }: Pr
             </div>
           )}
 
-          {item.kind === 'image' && item.images.length > 1 && (
+          {(thumbnails(item)?.length ?? 0) > 1 && (
             <div role="group" aria-label="Variants" className="mt-3 flex flex-wrap justify-center gap-2">
-              {item.images.map((image, i) => (
+              {thumbnails(item)!.map((thumb, i, all) => (
                 <button
-                  key={image.src}
+                  key={thumb}
                   type="button"
                   onClick={() => setShown({ index: index!, variant: i })}
-                  aria-label={`Variant ${i + 1} of ${item.images.length}`}
+                  aria-label={`Variant ${i + 1} of ${all.length}`}
                   aria-current={i === variant ? 'true' : undefined}
                   className={`w-14 h-14 rounded overflow-hidden cursor-pointer outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-accent ${
                     i === variant ? 'ring-2 ring-accent' : 'opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={image.card} alt="" loading="lazy" className="w-full h-full object-cover" />
+                  <img src={thumb} alt="" loading="lazy" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
           )}
 
-          <div className="mt-4 flex items-start justify-between gap-4">
+          {/* Stacked on phones, so the caption gets the full width rather than a column beside the buttons. */}
+          <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="min-w-0">
               <p className="text-base font-medium text-white">{item.title}</p>
               <p className="mt-1 text-sm text-zinc-300 leading-relaxed">{item.description}</p>
+              {item.kind === 'video' && item.live && <LiveLink live={item.live} />}
+              {item.kind === 'video' && item.clips[variant].credits && (
+                // Keyed by clip so each one's credits load and collapse separately.
+                <Credits key={item.clips[variant].credits} url={item.clips[variant].credits!} />
+              )}
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center justify-end gap-2">
               {canStep && (
                 <>
                   <button type="button" onClick={() => step(-1)} aria-label="Previous" className={navButtonClass}>

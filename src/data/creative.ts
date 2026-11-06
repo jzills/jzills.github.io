@@ -41,17 +41,41 @@ export type ImageItem = BaseItem & {
   alt: string
 }
 
-export type VideoItem = BaseItem & {
-  kind: 'video'
+export type Credit = { title: string; author?: string; license?: string; url?: string }
+
+// What went into a clip: fetched from `VideoClip.credits` when the lightbox shows it.
+export type ClipCredits = { sounds: Credit[]; footage: Credit[] }
+
+export type VideoClip = {
   src: string
   poster: string
+  // URL of a ClipCredits JSON file, loaded only when someone opens the credits.
+  credits?: string
+}
+
+// One video, or a series of clips shown as a single card.
+export type VideoItem = BaseItem & {
+  kind: 'video'
+  clips: VideoClip[]
   alt: string
   // Has an audio track worth hearing: the card shows a play button and volume
   // controls instead of autoplaying muted.
   sound?: boolean
+  // A live version to link from the lightbox. `wake` is pinged when the lightbox
+  // opens, so a free-tier host that sleeps is starting up before anyone clicks.
+  live?: { url: string; note: string; wake?: string }
 }
 
-export type CreativeItem = ShaderItem | AudioItem | ImageItem | VideoItem
+// A track on Bandcamp, played through Bandcamp's embedded player.
+export type MusicItem = BaseItem & {
+  kind: 'music'
+  // From the track's Share / Embed code: EmbeddedPlayer/album=…/track=…
+  bandcamp: { album?: number; track: number }
+  // The track or album page, linked from the player.
+  url: string
+}
+
+export type CreativeItem = ShaderItem | AudioItem | ImageItem | VideoItem | MusicItem
 
 const glsl = import.meta.glob<string>('./shaders/glsl/*.glsl', { query: '?raw', import: 'default' })
 
@@ -413,12 +437,46 @@ export const creativeItems: CreativeItem[] = [
     variants: [shader('gyroid')],
   },
   {
+    kind: 'music',
+    // Not shown on the card (the player names the track); used for search and the card's anchor.
+    title: 'KO',
+    description: 'From Mental Floss by desmata.',
+    tags: ['Music', 'Bandcamp'],
+    bandcamp: { album: 1163472419, track: 802633773 },
+    url: 'https://desmata.bandcamp.com/album/mental-floss',
+  },
+  {
+    kind: 'music',
+    title: 'Blades of Steel',
+    description: 'From Meltman by desmata.',
+    tags: ['Music', 'Bandcamp'],
+    bandcamp: { album: 128538034, track: 1532648264 },
+    url: 'https://desmata.bandcamp.com/album/meltman',
+  },
+  {
+    kind: 'video',
+    title: 'Driftcast',
+    description: 'A shared generative radio station. A server composes an evolving, layered mix from Freesound samples and picks archival footage, and every listener renders it live in the browser with Tone.js and WebGL shaders. Seven 30-second recordings.',
+    tags: ['Video', 'Audio', 'Generative', 'WebGL', 'Series'],
+    alt: 'Glitched, color-graded archival footage and shader textures reacting to a layered generative mix',
+    sound: true,
+    // Recorded from three 20-minute sessions; credits come from the station's own logs.
+    clips: Array.from({ length: 7 }, (_, i) => {
+      const n = String(i + 1).padStart(2, '0')
+      return { src: `/lab/driftcast/${n}.mp4`, poster: `/lab/driftcast/${n}-poster.webp`, credits: `/lab/driftcast/${n}-credits.json` }
+    }),
+    live: {
+      url: 'https://driftcast-d9n9.onrender.com/',
+      note: 'Live station on free hosting, so it may take up to a minute to wake up.',
+      wake: 'https://driftcast-d9n9.onrender.com/api/station/time',
+    },
+  },
+  {
     kind: 'video',
     title: 'Bloom',
     description: 'Glowing petal forms in violet and blue that fold, open, and turn around a green core, set to sound.',
     tags: ['Video', 'Audio', 'Generative'],
-    src: '/lab/art/bloom.mp4',
-    poster: '/lab/art/bloom-poster.webp',
+    clips: [{ src: '/lab/art/bloom.mp4', poster: '/lab/art/bloom-poster.webp' }],
     alt: 'Luminous violet and blue petal shapes unfolding around a green center on black',
     sound: true,
   },
