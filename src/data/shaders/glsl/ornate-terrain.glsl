@@ -100,9 +100,9 @@ vec3 getNormal(vec3 p)
     ));
 }
 
-void main()
+vec3 renderPixel(vec2 fragCoord)
 {
-    vec2 uv = (gl_FragCoord.xy-.5*u_resolution.xy);
+    vec2 uv = (fragCoord-.5*u_resolution.xy);
     uv /= min(u_resolution.x, u_resolution.y);
 
     vec3 col = vec3(0.);
@@ -134,5 +134,20 @@ void main()
 
     col = mix(col, vec3(.2, .2, .3+.3*uv.y), smoothstep(.74, 1., t.x/FAR));
 
-    gl_FragColor = vec4(sqrt(col), 1.);
+    return sqrt(col);
+}
+
+#define AA 2
+
+// Supersampling: AA x AA samples spread evenly across the pixel, averaged.
+void main()
+{
+    vec3 tot = vec3(0.0);
+    for (int m = 0; m < AA; ++m)
+    for (int n = 0; n < AA; ++n)
+    {
+        vec2 off = (vec2(float(m), float(n)) + 0.5) / float(AA) - 0.5;
+        tot += renderPixel(gl_FragCoord.xy + off);
+    }
+    gl_FragColor = vec4(tot / float(AA * AA), 1.0);
 }

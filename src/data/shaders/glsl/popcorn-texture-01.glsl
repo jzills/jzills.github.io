@@ -152,9 +152,9 @@ vec3 setCamera(vec2 uv, vec3 ro, float zoom)
     return rd;
 }
 
-void main()
+vec3 renderPixel(vec2 fragCoord)
 {
-    vec2 uv = (2.0 * gl_FragCoord.xy - u_resolution.xy) / min(u_resolution.y, u_resolution.x);
+    vec2 uv = (2.0 * fragCoord - u_resolution.xy) / min(u_resolution.y, u_resolution.x);
 	vec3 col = vec3(0.0);
 	vec3 ro = vec3(0.0, 0.0, -2.0);
 	ro.xz *= rotate(u_time*0.5);
@@ -190,5 +190,20 @@ void main()
 		//col = mix(col, fog, 1.0-exp(-0.0005*t.x*t.x*t.x));
 	}
 
-    gl_FragColor = vec4(col, 1);
+    return col;
+}
+
+#define AA 2
+
+// Supersampling: AA x AA samples spread evenly across the pixel, averaged.
+void main()
+{
+    vec3 tot = vec3(0.0);
+    for (int m = 0; m < AA; ++m)
+    for (int n = 0; n < AA; ++n)
+    {
+        vec2 off = (vec2(float(m), float(n)) + 0.5) / float(AA) - 0.5;
+        tot += renderPixel(gl_FragCoord.xy + off);
+    }
+    gl_FragColor = vec4(tot / float(AA * AA), 1.0);
 }

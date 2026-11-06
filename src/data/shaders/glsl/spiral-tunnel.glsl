@@ -144,9 +144,9 @@ float calcShadow(vec3 ro, vec3 rd)
     return 0.25*(1.0+res)*(1.0+res)*(2.0-res);
 }
 
-void main()
+vec3 renderPixel(vec2 fragCoord)
 {
-    vec2 uv = (gl_FragCoord.xy-0.5*u_resolution.xy);
+    vec2 uv = (fragCoord-0.5*u_resolution.xy);
     uv /= min(u_resolution.x, u_resolution.y);
 
     vec3 col = vec3(0.0);
@@ -172,5 +172,20 @@ void main()
         col = mix(col, fg, 1.0-exp(-0.00025*t.x*t.x*t.x));
     }
 
-    gl_FragColor = vec4(col, 1.0);
+    return col;
+}
+
+#define AA 2
+
+// Supersampling: AA x AA samples spread evenly across the pixel, averaged.
+void main()
+{
+    vec3 tot = vec3(0.0);
+    for (int m = 0; m < AA; ++m)
+    for (int n = 0; n < AA; ++n)
+    {
+        vec2 off = (vec2(float(m), float(n)) + 0.5) / float(AA) - 0.5;
+        tot += renderPixel(gl_FragCoord.xy + off);
+    }
+    gl_FragColor = vec4(tot / float(AA * AA), 1.0);
 }
