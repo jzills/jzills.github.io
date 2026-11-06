@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Play, Pause, Maximize2, Layers, Volume2, VolumeX } from 'lucide-react'
+import { Play, Pause, Maximize2, Layers, Volume2, VolumeX, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Chip } from '@/components/ui/Chip'
 import { LazyMount } from '@/components/ui/LazyMount'
 import { useShaderRunner } from '@/lib/useShaderRunner'
@@ -8,10 +8,29 @@ import type { AudioItem, CreativeItem, ImageItem, ShaderItem, VideoItem } from '
 
 const shellClass = 'h-full bg-surface border border-border rounded overflow-hidden transition-all duration-200 hover:border-accent/40 hover:ring-1 hover:ring-accent/15'
 
-export function ShaderCanvas({ fragmentShader, className = '' }: { fragmentShader: string; className?: string }) {
+export function ShaderCanvas({ fragmentShader, playing = true, className = '' }: { fragmentShader: string; playing?: boolean; className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  useShaderRunner(canvasRef, fragmentShader, true)
+  useShaderRunner(canvasRef, fragmentShader, playing)
   return <canvas ref={canvasRef} className={className} />
+}
+
+// Pauses and resumes a shader. Like the series arrows it shows on hover with a
+// mouse and always on touch screens, and stays up while paused so a still frame
+// doesn't read as broken.
+export function ShaderPlayToggle({ playing, onToggle, title, className = '' }: { playing: boolean; onToggle: () => void; title: string; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={`${playing ? 'Pause' : 'Play'} ${title}`}
+      aria-pressed={!playing}
+      className={`absolute z-10 p-1.5 rounded bg-bg/70 text-muted hover:text-fg transition-opacity cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:opacity-100 ${
+        playing ? 'pointer-fine:opacity-0 pointer-fine:group-hover/card:opacity-100' : ''
+      } ${className}`}
+    >
+      {playing ? <Pause size={14} /> : <Play size={14} />}
+    </button>
+  )
 }
 
 // Plays only while on screen, like the shaders, so off-screen videos don't decode in the background.
@@ -64,7 +83,7 @@ function Media({ item, onOpen, children }: { item: CreativeItem; onOpen?: () => 
   return (
     <button
       type="button"
-      onClick={onOpen}
+      onClick={() => onOpen()}
       aria-label={`Open ${item.title}`}
       className="group/media relative block w-full h-64 cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
     >
@@ -77,14 +96,19 @@ function Media({ item, onOpen, children }: { item: CreativeItem; onOpen?: () => 
 }
 
 function ShaderCard({ item, onOpen, paused }: { item: ShaderItem; onOpen?: () => void; paused?: boolean }) {
+  const [playing, setPlaying] = useState(true)
   return (
     <div className={shellClass}>
-      <Media item={item} onOpen={onOpen}>
-        {/* The black backdrop stands in while the canvas is unmounted off-screen. */}
-        <LazyMount className="absolute inset-0 bg-black" enabled={!paused}>
-          <ShaderCanvas fragmentShader={item.fragmentShader} className="absolute inset-0 w-full h-full" />
-        </LazyMount>
-      </Media>
+      {/* The toggle sits beside the media button rather than inside it: buttons can't nest. */}
+      <div className="group/card relative">
+        <Media item={item} onOpen={onOpen}>
+          {/* The black backdrop stands in while the canvas is unmounted off-screen. */}
+          <LazyMount className="absolute inset-0 bg-black" enabled={!paused}>
+            <ShaderCanvas fragmentShader={item.fragmentShader} playing={playing} className="absolute inset-0 w-full h-full" />
+          </LazyMount>
+        </Media>
+        <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-2 left-2" />
+      </div>
       <CardText item={item} />
     </div>
   )
@@ -92,28 +116,47 @@ function ShaderCard({ item, onOpen, paused }: { item: ShaderItem; onOpen?: () =>
 
 const badgeClass = 'absolute flex items-center gap-1 px-1.5 py-0.5 rounded bg-bg/75 text-[11px] font-mono text-fg'
 
-function ImageCard({ item, onOpen }: { item: ImageItem; onOpen?: () => void }) {
-  const [cover] = item.images
+// Shown on hover with a mouse, always on touch screens.
+const arrowClass = 'absolute top-1/2 -translate-y-1/2 z-10 p-1.5 rounded bg-bg/70 text-muted hover:text-fg pointer-fine:opacity-0 pointer-fine:group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent'
+
+function ImageCard({ item, onOpen }: { item: ImageItem; onOpen?: (variant: number) => void }) {
+  const [variant, setVariant] = useState(0)
   const count = item.images.length
+  const image = item.images[variant]
+  const step = (delta: number) => setVariant((v) => (v + delta + count) % count)
+
   return (
     <div className={shellClass}>
-      <Media item={item} onOpen={onOpen}>
-        <img
-          src={cover.card}
-          alt={item.alt}
-          width={cover.width}
-          height={cover.height}
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+      {/* The arrows sit beside the media button rather than inside it: buttons can't nest. */}
+      <div className="group/card relative">
+        <Media item={item} onOpen={onOpen && (() => onOpen(variant))}>
+          <img
+            src={image.card}
+            alt={count > 1 ? `${item.alt} (${variant + 1} of ${count})` : item.alt}
+            width={image.width}
+            height={image.height}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          {count > 1 && (
+            <span className={`${badgeClass} bottom-2 left-2`}>
+              <Layers size={12} aria-hidden="true" />
+              {variant + 1} / {count}
+            </span>
+          )}
+        </Media>
         {count > 1 && (
-          <span className={`${badgeClass} bottom-2 left-2`} aria-label={`Series of ${count}`}>
-            <Layers size={12} aria-hidden="true" />
-            {count}
-          </span>
+          <>
+            <button type="button" onClick={() => step(-1)} aria-label={`Previous ${item.title} variant`} className={`${arrowClass} left-2`}>
+              <ChevronLeft size={16} />
+            </button>
+            <button type="button" onClick={() => step(1)} aria-label={`Next ${item.title} variant`} className={`${arrowClass} right-2`}>
+              <ChevronRight size={16} />
+            </button>
+          </>
         )}
-      </Media>
+      </div>
       <CardText item={item} />
     </div>
   )
@@ -189,7 +232,7 @@ function SoundVideo({ item, onOpen, paused }: { item: VideoItem; onOpen?: () => 
         {onOpen && (
           <button
             type="button"
-            onClick={onOpen}
+            onClick={() => onOpen()}
             aria-label={`Open ${item.title}`}
             className="absolute top-2 right-2 p-1.5 rounded bg-bg/70 text-muted hover:text-fg transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
@@ -286,7 +329,8 @@ function AudioCard({ item }: { item: AudioItem }) {
 interface CreativeCardProps {
   item: CreativeItem
   // Makes the media clickable (the lab page opens a lightbox); audio plays inline instead.
-  onOpen?: () => void
+  // A series passes the variant on show, so the lightbox opens on the same image.
+  onOpen?: (variant?: number) => void
   // Unmounts a shader's canvas and pauses a playing video, e.g. while a lightbox covers the grid.
   paused?: boolean
 }

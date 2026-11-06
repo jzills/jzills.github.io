@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { ShaderCanvas } from '@/components/ui/CreativeCard'
-import type { CreativeItem } from '@/data/creative'
+import { ShaderCanvas, ShaderPlayToggle } from '@/components/ui/CreativeCard'
+import type { CreativeItem, LabImage, ShaderItem } from '@/data/creative'
 
 interface Props {
   items: CreativeItem[]
   // Index into items of the open item, or null when closed.
   index: number | null
+  // Variant of a series to open on, e.g. the one its card was showing.
+  initialVariant?: number
   onIndexChange: (index: number | null) => void
 }
 
@@ -15,24 +17,80 @@ const navButtonClass = 'p-2 rounded bg-bg/70 text-muted hover:text-fg transition
 // How many images an item steps through: a series has several, anything else one.
 const variantCount = (item: CreativeItem) => (item.kind === 'image' ? item.images.length : 1)
 
+// Starts downloading an image so it's cached by the time it's shown.
+const preload = (src: string) => {
+  new Image().src = src
+}
+
+// The full-size image that an arrow press would show next in each direction.
+function neighborImages(items: CreativeItem[], index: number, variant: number): LabImage[] {
+  const out: LabImage[] = []
+  const item = items[index]
+  for (const delta of [1, -1]) {
+    const next = variant + delta
+    if (item.kind === 'image' && next >= 0 && next < item.images.length) {
+      out.push(item.images[next])
+      continue
+    }
+    const neighbor = items[(index + delta + items.length) % items.length]
+    if (neighbor.kind === 'image') out.push(neighbor.images[delta > 0 ? 0 : neighbor.images.length - 1])
+  }
+  return out
+}
+
+// Keeps the current image on screen until the next one has decoded, so stepping
+// never flashes an empty frame or the browser's alt text in its place. The box has
+// a fixed height so the caption below doesn't jump between images of different shapes.
+function LightboxImage({ image, alt }: { image: LabImage; alt: string }) {
+  const [shown, setShown] = useState({ image, alt })
+
+  useEffect(() => {
+    if (shown.image.src === image.src) return
+    let cancelled = false
+    const next = new Image()
+    next.src = image.src
+    // decode() rejects for a broken image; show it anyway rather than stall.
+    next.decode().catch(() => {}).then(() => {
+      if (!cancelled) setShown({ image, alt })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [image, alt, shown.image.src])
+
+  return (
+    <div className="flex items-center justify-center h-[70vh]">
+      <img
+        src={shown.image.src}
+        alt={shown.alt}
+        width={shown.image.width}
+        height={shown.image.height}
+        // Transparent text hides the alt text while the first image loads.
+        className="w-auto h-auto max-w-full max-h-full rounded object-contain text-transparent"
+      />
+    </div>
+  )
+}
+
+function LightboxShader({ item }: { item: ShaderItem }) {
+  const [playing, setPlaying] = useState(true)
+  return (
+    <div className="group/card relative">
+      <ShaderCanvas fragmentShader={item.fragmentShader} playing={playing} className="w-full h-[70vh] rounded bg-black" />
+      <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-3 left-3" />
+    </div>
+  )
+}
+
 function LightboxMedia({ item, variant }: { item: CreativeItem; variant: number }) {
   switch (item.kind) {
     case 'shader':
-      // Keyed so switching shaders builds a fresh WebGL program instead of reusing the last one.
-      return <ShaderCanvas key={item.title} fragmentShader={item.fragmentShader} className="w-full h-[70vh] rounded bg-black" />
+      // Keyed so switching shaders builds a fresh WebGL program instead of reusing the
+      // last one, and starts each one playing.
+      return <LightboxShader key={item.title} item={item} />
     case 'image': {
-      const image = item.images[variant]
       const alt = item.images.length > 1 ? `${item.alt} (${variant + 1} of ${item.images.length})` : item.alt
-      return (
-        <img
-          key={image.src}
-          src={image.src}
-          alt={alt}
-          width={image.width}
-          height={image.height}
-          className="w-auto h-auto max-w-full max-h-[70vh] mx-auto rounded object-contain"
-        />
-      )
+      return <LightboxImage image={item.images[variant]} alt={alt} />
     }
     case 'video':
       return (
@@ -56,13 +114,19 @@ function LightboxMedia({ item, variant }: { item: CreativeItem; variant: number 
 }
 
 // Native <dialog> gives the focus trap, Esc to close, and focus restored to the opener.
-export function Lightbox({ items, index, onIndexChange }: Props) {
+export function Lightbox({ items, index, initialVariant = 0, onIndexChange }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const item = index === null ? null : items[index]
-  // The variant shown within a series. Stored with the index it belongs to, so
-  // opening any card (a new index) starts at its first variant.
+  // The variant shown within a series, stored with the index it belongs to. Until
+  // the visitor steps, it's the variant the lightbox was opened on.
   const [shown, setShown] = useState({ index: -1, variant: 0 })
-  const variant = shown.index === index ? shown.variant : 0
+  const variant = shown.index === index ? shown.variant : initialVariant
+
+  // Forgets the last position, so reopening a card starts where that card is.
+  const close = () => {
+    setShown({ index: -1, variant: 0 })
+    onIndexChange(null)
+  }
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -87,6 +151,10 @@ export function Lightbox({ items, index, onIndexChange }: Props) {
 
   const canStep = items.length > 1 || (item !== null && variantCount(item) > 1)
 
+  useEffect(() => {
+    if (index !== null) neighborImages(items, index, variant).forEach((image) => preload(image.src))
+  }, [items, index, variant])
+
   // Listened for on the document, not the dialog: stepping into another series
   // replaces the thumbnail that had focus, and keys would then miss the dialog.
   // Subscribes each render so the handler always sees the current position.
@@ -105,9 +173,9 @@ export function Lightbox({ items, index, onIndexChange }: Props) {
   return (
     <dialog
       ref={dialogRef}
-      onClose={() => onIndexChange(null)}
+      onClose={close}
       // A click on the backdrop lands on the dialog element itself.
-      onClick={(e) => e.target === e.currentTarget && onIndexChange(null)}
+      onClick={(e) => e.target === e.currentTarget && close()}
       aria-label={item?.title}
       className="m-auto w-[min(1100px,calc(100vw-2rem))] max-h-none bg-transparent p-0 text-fg backdrop:bg-black/90 backdrop:backdrop-blur-sm"
     >
@@ -153,7 +221,7 @@ export function Lightbox({ items, index, onIndexChange }: Props) {
                   </button>
                 </>
               )}
-              <button type="button" onClick={() => onIndexChange(null)} aria-label="Close" className={navButtonClass}>
+              <button type="button" onClick={close} aria-label="Close" className={navButtonClass}>
                 <X size={18} />
               </button>
             </div>

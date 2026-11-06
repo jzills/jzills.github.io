@@ -28,6 +28,7 @@ const filters: Filter[] = kinds.length > 1 ? ['all', ...kinds] : []
 export function LabPage() {
   const [filter, setFilter] = useState<Filter>('all')
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [openVariant, setOpenVariant] = useState(0)
 
   useEffect(scrollToHash, [])
 
@@ -82,7 +83,14 @@ export function LabPage() {
                 <m.div key={item.title} variants={rise} id={labId(item.title)}>
                   <CreativeCard
                     item={item}
-                    onOpen={lightboxIndex >= 0 ? () => setOpenIndex(lightboxIndex) : undefined}
+                    onOpen={
+                      lightboxIndex >= 0
+                        ? (variant = 0) => {
+                            setOpenVariant(variant)
+                            setOpenIndex(lightboxIndex)
+                          }
+                        : undefined
+                    }
                     paused={openIndex !== null}
                   />
                 </m.div>
@@ -92,7 +100,7 @@ export function LabPage() {
         </main>
         <Footer />
 
-        <Lightbox items={openable} index={openIndex} onIndexChange={setOpenIndex} />
+        <Lightbox items={openable} index={openIndex} initialVariant={openVariant} onIndexChange={setOpenIndex} />
       </div>
     </MotionProvider>
   )

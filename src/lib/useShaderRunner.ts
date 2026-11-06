@@ -21,11 +21,15 @@ type ShaderState = {
   uRes: WebGLUniformLocation | null
   observer: ResizeObserver
   start: number
+  // When the animation stopped, or null while it runs. Resuming shifts start by
+  // the time spent stopped, so a shader picks up on the frame it paused on.
+  pausedAt: number | null
 }
 
 export function useShaderRunner(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
   fragmentShader: string,
+  // False holds the current frame, e.g. when the visitor pauses the shader.
   active: boolean
 ) {
   const rafRef = useRef<number>(0)
@@ -42,8 +46,8 @@ export function useShaderRunner(
     let running = false
     let initRaf = 0
 
-    const render = ({ gl, uTime, uRes, start }: ShaderState) => {
-      gl.uniform1f(uTime, (performance.now() - start) / 1000)
+    const render = ({ gl, uTime, uRes, start, pausedAt }: ShaderState) => {
+      gl.uniform1f(uTime, ((pausedAt ?? performance.now()) - start) / 1000)
       gl.uniform2f(uRes, canvas.width, canvas.height)
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     }
@@ -52,6 +56,10 @@ export function useShaderRunner(
       const state = stateRef.current
       if (running || !visible || !state) return
       running = true
+      if (state.pausedAt !== null) {
+        state.start += performance.now() - state.pausedAt
+        state.pausedAt = null
+      }
       const draw = () => {
         render(state)
         rafRef.current = requestAnimationFrame(draw)
@@ -60,6 +68,7 @@ export function useShaderRunner(
     }
 
     const pause = () => {
+      if (running && stateRef.current) stateRef.current.pausedAt = performance.now()
       running = false
       cancelAnimationFrame(rafRef.current)
     }
@@ -130,6 +139,7 @@ export function useShaderRunner(
         uRes: gl.getUniformLocation(prog, 'u_resolution'),
         observer,
         start: performance.now(),
+        pausedAt: null,
       }
 
       // Draw one frame up front so shaders outside the animate band still show a still.
