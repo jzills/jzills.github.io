@@ -2,7 +2,7 @@
 precision mediump float;
 #endif
 
-#define AA 1
+#define AA 2
 #define TWO_PI 6.28318530718
 
 uniform float u_time;

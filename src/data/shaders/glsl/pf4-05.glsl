@@ -4,7 +4,7 @@ precision mediump float;
 
 #define PI 3.1415926535897932
 #define R 1.0
-#define AA 1
+#define AA 2
 
 uniform float u_time;
 uniform vec2 u_resolution;

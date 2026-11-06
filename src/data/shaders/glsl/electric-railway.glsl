@@ -3,7 +3,7 @@ precision mediump float;
 #endif
 
 #define PI 3.1415926535897932
-#define AA 1
+#define AA 2
 #define R 1.0
 #define CAMERA 0
 #define S 4.0

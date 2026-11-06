@@ -3,7 +3,7 @@ precision mediump float;
 #endif
 
 #define FAR 80.
-#define AA 1
+#define AA 2
 
 #define WATER_ID 0
 #define TERRAIN_ID 1

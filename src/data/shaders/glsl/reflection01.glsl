@@ -2,7 +2,7 @@
 precision mediump float;
 #endif
 
-#define AA 1
+#define AA 2
 #define PI 3.14
 
 uniform vec2 u_resolution;

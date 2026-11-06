@@ -2,7 +2,7 @@
 precision mediump float;
 #endif
 
-#define AA 1
+#define AA 2
 
 uniform float u_time;
 uniform vec2 u_resolution;
