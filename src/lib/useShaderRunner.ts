@@ -136,13 +136,17 @@ export function useShaderRunner(
       observer.observe(canvas)
       resize()
 
+      // Starts paused at t = 0, so a shader that waits outside the animate band
+      // picks up from the still it has been showing instead of jumping ahead by
+      // however long it waited.
+      const now = performance.now()
       stateRef.current = {
         gl,
         uTime: gl.getUniformLocation(prog, 'u_time'),
         uRes: gl.getUniformLocation(prog, 'u_resolution'),
         observer,
-        start: performance.now(),
-        pausedAt: null,
+        start: now,
+        pausedAt: now,
       }
 
       // Draw one frame up front so shaders outside the animate band still show a still.
