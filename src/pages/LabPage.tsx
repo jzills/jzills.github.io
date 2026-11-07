@@ -69,6 +69,7 @@ export function LabPage() {
   const [filter, setFilter] = useState<Filter>(all)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const [openVariant, setOpenVariant] = useState(0)
+  const [openCode, setOpenCode] = useState(false)
 
   useEffect(scrollToHash, [])
 
@@ -126,8 +127,9 @@ export function LabPage() {
                         item={item}
                         onOpen={
                           lightboxIndex >= 0
-                            ? (variant = 0) => {
+                            ? (variant = 0, code = false) => {
                                 setOpenVariant(variant)
+                                setOpenCode(code)
                                 setOpenIndex(lightboxIndex)
                               }
                             : undefined
@@ -144,7 +146,7 @@ export function LabPage() {
         <Footer />
         <AssistantWidget />
 
-        <Lightbox items={openable} index={openIndex} initialVariant={openVariant} onIndexChange={setOpenIndex} />
+        <Lightbox items={openable} index={openIndex} initialVariant={openVariant} initialCode={openCode} onIndexChange={setOpenIndex} />
       </div>
     </MotionProvider>
   )

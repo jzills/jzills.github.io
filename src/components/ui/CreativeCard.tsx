@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Play, Pause, Maximize2, Layers, Volume2, VolumeX, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Play, Pause, Maximize2, Layers, Volume2, VolumeX, ChevronLeft, ChevronRight, CodeXml } from 'lucide-react'
 import { Chip } from '@/components/ui/Chip'
 import { LazyMount } from '@/components/ui/LazyMount'
 import { useShaderRunner } from '@/lib/useShaderRunner'
@@ -110,7 +110,8 @@ function Media({ item, onOpen, children }: { item: CreativeItem; onOpen?: () => 
 const badgeClass = 'absolute flex items-center gap-1 px-1.5 py-0.5 rounded bg-bg/75 text-[11px] font-mono text-fg'
 
 // Shown on hover with a mouse, always on touch screens.
-const arrowClass = 'absolute top-1/2 -translate-y-1/2 z-10 p-1.5 rounded bg-bg/70 text-muted hover:text-fg pointer-fine:opacity-0 pointer-fine:group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent'
+const overlayClass = 'absolute z-10 p-1.5 rounded bg-bg/70 text-muted hover:text-fg pointer-fine:opacity-0 pointer-fine:group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent'
+const arrowClass = `${overlayClass} top-1/2 -translate-y-1/2`
 
 // A series card's position, e.g. "2 / 5". Goes inside the media.
 function SeriesBadge({ variant, count }: { variant: number; count: number }) {
@@ -144,7 +145,7 @@ function useSeries(count: number) {
   return [variant, step] as const
 }
 
-function ShaderCard({ item, onOpen, paused }: { item: ShaderItem; onOpen?: (variant: number) => void; paused?: boolean }) {
+function ShaderCard({ item, onOpen, paused }: { item: ShaderItem; onOpen?: (variant: number, code?: boolean) => void; paused?: boolean }) {
   const [playing, setPlaying] = useState(true)
   const count = item.variants.length
   const [variant, step] = useSeries(count)
@@ -163,6 +164,18 @@ function ShaderCard({ item, onOpen, paused }: { item: ShaderItem; onOpen?: (vari
         <SeriesArrows title={item.title} count={count} onStep={step} />
         {!current.still && (
           <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-2 right-2" />
+        )}
+        {/* Opens the lightbox with the code showing. Beside the play toggle, or in its place on a still. */}
+        {onOpen && (
+          <button
+            type="button"
+            onClick={() => onOpen(variant, true)}
+            aria-label={`Show ${item.title} code`}
+            title="Show code"
+            className={`${overlayClass} bottom-2 ${current.still ? 'right-2' : 'right-10'}`}
+          >
+            <CodeXml size={14} />
+          </button>
         )}
       </div>
       <CardText item={item} />
@@ -462,7 +475,8 @@ interface CreativeCardProps {
   item: CreativeItem
   // Makes the media clickable (the lab page opens a lightbox); audio plays inline instead.
   // A series passes the variant on show, so the lightbox opens on the same image.
-  onOpen?: (variant?: number) => void
+  // Shaders can also ask for their code to show.
+  onOpen?: (variant?: number, code?: boolean) => void
   // Unmounts a shader's canvas and pauses a playing video, e.g. while a lightbox covers the grid.
   paused?: boolean
 }

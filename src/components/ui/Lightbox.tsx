@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
-import { ArrowUpRight, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, CodeXml, Copy, X } from 'lucide-react'
 import { ShaderCanvas, ShaderPlayToggle } from '@/components/ui/CreativeCard'
-import type { ClipCredits, Credit, CreativeItem, LabImage, ShaderItem, VideoItem } from '@/data/creative'
+import { highlightGlsl } from '@/lib/glsl'
+import type { TokenKind } from '@/lib/glsl'
+import type { ClipCredits, Credit, CreativeItem, LabImage, ShaderItem, ShaderVariant, VideoItem } from '@/data/creative'
 
 interface Props {
   items: CreativeItem[]
@@ -9,6 +11,8 @@ interface Props {
   index: number | null
   // Variant of a series to open on, e.g. the one its card was showing.
   initialVariant?: number
+  // Open a shader with its code showing, e.g. from the card's code button.
+  initialCode?: boolean
   onIndexChange: (index: number | null) => void
 }
 
@@ -150,25 +154,88 @@ function LightboxImage({ image, alt }: { image: LabImage; alt: string }) {
   )
 }
 
-function LightboxShader({ item, variant }: { item: ShaderItem; variant: number }) {
-  const [playing, setPlaying] = useState(true)
-  const current = item.variants[variant]
+// The lightbox is dark in both themes, so the code colours are fixed rather than tokens.
+const tokenClass: Record<TokenKind, string> = {
+  comment: 'text-zinc-500 italic',
+  preprocessor: 'text-pink-300',
+  keyword: 'text-sky-300',
+  type: 'text-violet-300',
+  number: 'text-amber-300',
+  builtin: 'text-emerald-300',
+  function: 'text-yellow-100',
+  plain: '',
+}
+
+// A shader's GLSL source. The source is the same module the canvas compiled, so loading it is free.
+function ShaderCode({ variant, title }: { variant: ShaderVariant; title: string }) {
+  const [source, setSource] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    variant.load().then((src) => {
+      if (!cancelled) setSource(src)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [variant])
+  const tokens = useMemo(() => (source ? highlightGlsl(source) : []), [source])
+
+  useEffect(() => {
+    if (!copied) return
+    const timer = setTimeout(() => setCopied(false), 1500)
+    return () => clearTimeout(timer)
+  }, [copied])
+
+  const copy = () => {
+    if (source) navigator.clipboard?.writeText(source).then(() => setCopied(true), () => {})
+  }
+
   return (
-    <div className="group/card relative">
-      <ShaderCanvas variant={current} playing={playing} className="w-full h-[70vh] rounded bg-black" />
-      {!current.still && (
-        <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-3 right-3" />
-      )}
+    <div className="relative h-[70vh] rounded border border-zinc-800 bg-zinc-950">
+      {/* Focusable so the code can be scrolled from the keyboard. */}
+      <pre tabIndex={0} aria-label={`${title} source`} className="h-full overflow-auto p-4 pr-12 font-mono text-xs leading-relaxed text-zinc-300 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent">
+        <code>
+          {tokens.map((token, i) => (token.kind === 'plain' ? token.text : <span key={i} className={tokenClass[token.kind]}>{token.text}</span>))}
+        </code>
+      </pre>
+      <button
+        type="button"
+        onClick={copy}
+        disabled={!source}
+        aria-label={copied ? 'Copied' : 'Copy code'}
+        title={copied ? 'Copied' : 'Copy code'}
+        className="absolute top-2 right-4 p-1.5 rounded bg-zinc-900/90 text-zinc-300 hover:text-white transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      >
+        {copied ? <Check size={14} /> : <Copy size={14} />}
+      </button>
     </div>
   )
 }
 
-function LightboxMedia({ item, variant }: { item: CreativeItem; variant: number }) {
+// With the code open, the two sit side by side on wide screens; narrower ones show the code alone.
+function LightboxShader({ item, variant, showCode }: { item: ShaderItem; variant: number; showCode: boolean }) {
+  const [playing, setPlaying] = useState(true)
+  const current = item.variants[variant]
+  return (
+    <div className={showCode ? 'grid gap-3 lg:grid-cols-2' : undefined}>
+      <div className={`group/card relative ${showCode ? 'max-lg:hidden' : ''}`}>
+        <ShaderCanvas variant={current} playing={playing} className="w-full h-[70vh] rounded bg-black" />
+        {!current.still && (
+          <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-3 right-3" />
+        )}
+      </div>
+      {showCode && <ShaderCode variant={current} title={item.title} />}
+    </div>
+  )
+}
+
+function LightboxMedia({ item, variant, showCode }: { item: CreativeItem; variant: number; showCode: boolean }) {
   switch (item.kind) {
     case 'shader':
       // Keyed so switching shaders builds a fresh WebGL program instead of reusing the
       // last one, and starts each one playing.
-      return <LightboxShader key={`${item.title}-${variant}`} item={item} variant={variant} />
+      return <LightboxShader key={`${item.title}-${variant}`} item={item} variant={variant} showCode={showCode} />
     case 'image': {
       const alt = item.images.length > 1 ? `${item.alt} (${variant + 1} of ${item.images.length})` : item.alt
       return <LightboxImage image={item.images[variant]} alt={alt} />
@@ -198,17 +265,22 @@ function LightboxMedia({ item, variant }: { item: CreativeItem; variant: number 
 }
 
 // Native <dialog> gives the focus trap, Esc to close, and focus restored to the opener.
-export function Lightbox({ items, index, initialVariant = 0, onIndexChange }: Props) {
+export function Lightbox({ items, index, initialVariant = 0, initialCode = false, onIndexChange }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const item = index === null ? null : items[index]
   // The variant shown within a series, stored with the index it belongs to. Until
   // the visitor steps, it's the variant the lightbox was opened on.
   const [shown, setShown] = useState({ index: -1, variant: 0 })
   const variant = shown.index === index ? shown.variant : initialVariant
+  // Stays open while stepping, so the next shader shows its code too. Null until
+  // the visitor toggles it, so the lightbox opens however the card asked.
+  const [codeToggled, setCodeToggled] = useState<boolean | null>(null)
+  const showCode = codeToggled ?? initialCode
 
   // Forgets the last position, so reopening a card starts where that card is.
   const close = () => {
     setShown({ index: -1, variant: 0 })
+    setCodeToggled(null)
     onIndexChange(null)
   }
 
@@ -250,8 +322,8 @@ export function Lightbox({ items, index, initialVariant = 0, onIndexChange }: Pr
   useEffect(() => {
     if (!item) return
     const onKey = (e: globalThis.KeyboardEvent) => {
-      // A focused video or slider uses the arrows itself.
-      if (e.target instanceof HTMLElement && e.target.closest('video, input')) return
+      // A focused video, slider or code view uses the arrows itself.
+      if (e.target instanceof HTMLElement && e.target.closest('video, input, pre')) return
       if (e.key === 'ArrowLeft') step(-1)
       else if (e.key === 'ArrowRight') step(1)
     }
@@ -272,7 +344,7 @@ export function Lightbox({ items, index, initialVariant = 0, onIndexChange }: Pr
     >
       {item && (
         <div className="relative">
-          <LightboxMedia item={item} variant={variant} />
+          <LightboxMedia item={item} variant={variant} showCode={showCode} />
 
           {item.kind === 'shader' && item.variants.length > 1 && (
             <div role="group" aria-label="Variants" className="mt-3 flex flex-wrap justify-center gap-2">
@@ -324,6 +396,18 @@ export function Lightbox({ items, index, initialVariant = 0, onIndexChange }: Pr
               )}
             </div>
             <div className="flex shrink-0 items-center justify-end gap-2">
+              {item.kind === 'shader' && (
+                <button
+                  type="button"
+                  onClick={() => setCodeToggled(!showCode)}
+                  aria-pressed={showCode}
+                  aria-label={showCode ? 'Hide code' : 'Show code'}
+                  title={showCode ? 'Hide code' : 'Show code'}
+                  className={`p-2 rounded bg-bg/70 transition-colors cursor-pointer ${showCode ? 'text-accent' : 'text-muted hover:text-fg'}`}
+                >
+                  <CodeXml size={18} />
+                </button>
+              )}
               {canStep && (
                 <>
                   <button type="button" onClick={() => step(-1)} aria-label="Previous" className={navButtonClass}>
