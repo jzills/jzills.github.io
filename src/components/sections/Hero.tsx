@@ -6,6 +6,7 @@ import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/Button'
 import { experience } from '@/data/experience'
 import { LAB_PATH } from '@/lib/pages'
+import { profile } from '@/data/profile'
 
 const current = experience[0]
 
@@ -125,13 +126,13 @@ export function Hero() {
             {current.role} <span className="text-accent">@ {current.company}</span>
           </p>
           <h1 className="text-5xl sm:text-6xl font-bold text-fg tracking-tight leading-none mb-4">
-            Joshua Zillwood
+            {profile.name}
           </h1>
           <p className="text-xl text-muted mb-4">
-            Platform &amp; Software Engineer
+            {profile.headline}
           </p>
           <p className="text-base text-muted font-mono max-w-lg mb-10 leading-relaxed">
-            Building developer platforms and cloud infrastructure, with a focus on AI-assisted engineering.
+            {profile.tagline}
           </p>
 
           {/* On phones the icons drop to their own row rather than wrapping one at a time. */}
@@ -139,7 +140,7 @@ export function Hero() {
             <div className="flex items-center gap-3">
               <Button
                 variant="primary"
-                href="https://docs.google.com/document/d/1Cn8XP9f3FjcqYxIxBOgPaePRyFFD69YliEm-djYhK0k/export?format=pdf"
+                href={profile.links.resume}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -153,7 +154,7 @@ export function Hero() {
             </div>
             <div className="flex items-center gap-3">
               <a
-                href="https://github.com/jzills"
+                href={profile.links.github}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
@@ -163,7 +164,7 @@ export function Hero() {
                 <GitHubIcon size={16} />
               </a>
               <a
-                href="https://linkedin.com/in/jzillss"
+                href={profile.links.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
@@ -173,7 +174,7 @@ export function Hero() {
                 <LinkedInIcon size={16} />
               </a>
               <a
-                href="mailto:joshua.zillwood@gmail.com"
+                href={`mailto:${profile.links.email}`}
                 aria-label="Email"
                 title="Email"
                 className={iconLinkClass}
