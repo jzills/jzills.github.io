@@ -1,4 +1,19 @@
 import { useEffect, useRef } from 'react'
+import { animateInRow } from '@/lib/animateRow'
+
+// Guarded for prerendering, which has no window; the hook itself only runs in the browser.
+const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+
+// On touch devices only the middle band of the screen animates, so a page of
+// shaders runs about one at a time; on desktop it's the grid row most on screen.
+const animateBand = '-35% 0px -35% 0px'
+
+function watchAnimate(el: HTMLElement, onChange: (on: boolean) => void) {
+  if (!coarse) return animateInRow(el, onChange)
+  const observer = new IntersectionObserver(([entry]) => onChange(entry.isIntersecting), { rootMargin: animateBand })
+  observer.observe(el)
+  return () => observer.disconnect()
+}
 
 const VERT = `
 attribute vec2 a_position;
@@ -6,14 +21,6 @@ void main() {
   gl_Position = vec4(a_position, 0.0, 1.0);
 }
 `.trim()
-
-// Guarded for prerendering, which has no window; the hook itself only runs in the browser.
-const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
-
-// Where a shader animates. On touch devices only the middle band of the screen
-// counts, so a page of shaders animates about one at a time while the rest hold a
-// still frame; on desktop anything on screen animates.
-const animateMargin = coarse ? '-35% 0px -35% 0px' : '0px'
 
 type ShaderState = {
   gl: WebGLRenderingContext
@@ -76,19 +83,18 @@ export function useShaderRunner(
       cancelAnimationFrame(rafRef.current)
     }
 
-    // Animate only inside the animate band: ray-marching every frame while
-    // off-screen starves scrolling on phones. Paused canvases keep their last frame.
-    const visibility = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting
-      if (visible) play()
+    // Animate only a few at a time (see watchAnimate): ray-marching several
+    // canvases every frame stutters. Paused canvases keep their last frame.
+    const stopWatching = watchAnimate(canvas, (on) => {
+      visible = on
+      if (on) play()
       else pause()
-    }, { rootMargin: animateMargin })
-    visibility.observe(canvas)
+    })
 
     const cleanup = () => {
       cancelAnimationFrame(initRaf)
       pause()
-      visibility.disconnect()
+      stopWatching()
     }
 
     if (stateRef.current) return cleanup
@@ -136,7 +142,7 @@ export function useShaderRunner(
       observer.observe(canvas)
       resize()
 
-      // Starts paused at t = 0, so a shader that waits outside the animate band
+      // Starts paused at t = 0, so a shader that waits outside the animating ones
       // picks up from the still it has been showing instead of jumping ahead by
       // however long it waited.
       const now = performance.now()
@@ -149,7 +155,7 @@ export function useShaderRunner(
         pausedAt: now,
       }
 
-      // Draw one frame up front so shaders outside the animate band still show a still.
+      // Draw one frame up front so shaders outside the animating ones still show a still.
       render(stateRef.current)
       play()
     })
