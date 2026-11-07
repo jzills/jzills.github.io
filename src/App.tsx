@@ -9,6 +9,7 @@ import { Projects } from '@/components/sections/Projects'
 import { Skills } from '@/components/sections/Skills'
 import { Creative } from '@/components/sections/Creative'
 import { Contact } from '@/components/sections/Contact'
+import { AssistantWidget } from '@/components/assistant/AssistantWidget'
 import { scrollToHash } from '@/lib/pages'
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
           <Contact />
         </main>
         <Footer />
+        <AssistantWidget />
       </div>
     </MotionProvider>
   )
