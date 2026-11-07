@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer'
 import { MotionProvider } from '@/components/layout/MotionProvider'
 import { CreativeCard } from '@/components/ui/CreativeCard'
 import { Lightbox } from '@/components/ui/Lightbox'
+import { AssistantWidget } from '@/components/assistant/AssistantWidget'
 import { creativeItems } from '@/data/creative'
 import type { CreativeItem } from '@/data/creative'
 import { labId } from '@/lib/anchors'
@@ -141,6 +142,7 @@ export function LabPage() {
           </m.div>
         </main>
         <Footer />
+        <AssistantWidget />
 
         <Lightbox items={openable} index={openIndex} initialVariant={openVariant} onIndexChange={setOpenIndex} />
       </div>

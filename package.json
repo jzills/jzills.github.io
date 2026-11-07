@@ -9,12 +9,15 @@
     "prebuild": "npm run fetch-readmes",
     "build": "tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.ts",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.1",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.21.0",
+    "minisearch": "^7.2.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "tailwindcss": "^4.3.1"
@@ -31,7 +34,8 @@
     "globals": "^17.6.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12"
+    "vite": "^8.0.12",
+    "vitest": "^5.1.0"
   },
   "overrides": {
     "minimatch": "^11.0.1"
