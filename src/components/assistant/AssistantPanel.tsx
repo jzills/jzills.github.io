@@ -22,6 +22,9 @@ const THINKING_MS = 380
 
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const isPhone = () => window.matchMedia('(max-width: 639px)').matches
+// Focusing a field on a touch screen opens the keyboard over the suggestions, so
+// the input waits for a tap there.
+const isTouch = () => window.matchMedia('(pointer: coarse)').matches
 
 const supportLabel: Partial<Record<Answer['support'], string>> = {
   related: 'Related, not a direct match',
@@ -121,7 +124,7 @@ export default function AssistantPanel({ conversation, onChange, onClose, onClea
   }, [conversation])
 
   useEffect(() => {
-    inputRef.current?.focus()
+    if (!isTouch()) inputRef.current?.focus()
   }, [])
 
   // While searching, show the question and the typing dots at the bottom. Once the
@@ -187,7 +190,7 @@ export default function AssistantPanel({ conversation, onChange, onClose, onClea
   const clear = () => {
     onClear()
     setThinking(false)
-    inputRef.current?.focus()
+    if (!isTouch()) inputRef.current?.focus()
   }
 
   // Following a section link on a phone closes the full-screen panel so the section shows.
@@ -261,6 +264,7 @@ export default function AssistantPanel({ conversation, onChange, onClose, onClea
           <label htmlFor="assistant-input" className="sr-only">
             Ask a question about Joshua's work
           </label>
+          {/* 16px on phones: iOS Safari zooms the page into any smaller field it focuses. */}
           <textarea
             id="assistant-input"
             ref={inputRef}
@@ -270,7 +274,7 @@ export default function AssistantPanel({ conversation, onChange, onClose, onClea
             onKeyDown={onInputKeyDown}
             placeholder="Ask about his experience, skills, projects…"
             maxLength={500}
-            className="flex-1 resize-none bg-transparent text-sm text-fg placeholder:text-muted outline-none max-h-32 leading-relaxed py-0.5"
+            className="flex-1 resize-none bg-transparent text-base sm:text-sm text-fg placeholder:text-muted outline-none max-h-32 leading-relaxed py-0.5"
           />
           <button
             type="submit"
