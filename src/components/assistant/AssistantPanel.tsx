@@ -26,6 +26,35 @@ const isPhone = () => window.matchMedia('(max-width: 639px)').matches
 // the input waits for a tap there.
 const isTouch = () => window.matchMedia('(pointer: coarse)').matches
 
+// Eases the log to a scroll position. Done by hand because iOS Safari often drops
+// scrollTo's smooth behavior and jumps. Stops if the reader touches or scrolls,
+// and jumps straight there when they've asked for reduced motion. Returns a canceller.
+function glide(el: HTMLElement, target: number, duration = 420) {
+  const to = Math.max(0, Math.min(target, el.scrollHeight - el.clientHeight))
+  const from = el.scrollTop
+  if (prefersReducedMotion() || Math.abs(to - from) < 2) {
+    el.scrollTop = to
+    return () => {}
+  }
+  let frame = 0
+  const start = performance.now()
+  const stop = () => {
+    cancelAnimationFrame(frame)
+    el.removeEventListener('touchstart', stop)
+    el.removeEventListener('wheel', stop)
+  }
+  const step = (now: number) => {
+    const t = Math.min(1, (now - start) / duration)
+    el.scrollTop = from + (to - from) * (1 - (1 - t) ** 3)
+    if (t < 1) frame = requestAnimationFrame(step)
+    else stop()
+  }
+  el.addEventListener('touchstart', stop, { passive: true })
+  el.addEventListener('wheel', stop, { passive: true })
+  frame = requestAnimationFrame(step)
+  return stop
+}
+
 const supportLabel: Partial<Record<Answer['support'], string>> = {
   related: 'Related, not a direct match',
   unavailable: 'Not in the portfolio',
@@ -133,15 +162,9 @@ export default function AssistantPanel({ conversation, onChange, onClose, onClea
   useLayoutEffect(() => {
     const log = logRef.current
     if (!log) return
-    const behavior = prefersReducedMotion() ? 'auto' : 'smooth'
     const last = messages[messages.length - 1]
-    // Not returned: newer browsers return a promise from scrollTo, which React would call as a cleanup.
-    if (last?.role !== 'assistant') {
-      log.scrollTo({ top: log.scrollHeight, behavior })
-      return
-    }
-    const question = [...log.querySelectorAll<HTMLElement>('[data-question]')].pop()
-    if (question) log.scrollTo({ top: question.offsetTop - 16, behavior })
+    const question = last?.role === 'assistant' ? [...log.querySelectorAll<HTMLElement>('[data-question]')].pop() : undefined
+    return glide(log, question ? question.offsetTop - 16 : log.scrollHeight)
   }, [messages, thinking])
 
   // Grow the textarea with its content, up to its max height.
