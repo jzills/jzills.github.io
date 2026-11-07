@@ -124,11 +124,22 @@ export default function AssistantPanel({ conversation, onChange, onClose, onClea
     inputRef.current?.focus()
   }, [])
 
-  // Keep the newest message in view.
+  // While searching, show the question and the typing dots at the bottom. Once the
+  // answer lands, bring its question to the top so the answer reads from its start
+  // instead of from its end.
   useLayoutEffect(() => {
     const log = logRef.current
-    if (log) log.scrollTo({ top: log.scrollHeight, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
-  }, [messages.length, thinking])
+    if (!log) return
+    const behavior = prefersReducedMotion() ? 'auto' : 'smooth'
+    const last = messages[messages.length - 1]
+    // Not returned: newer browsers return a promise from scrollTo, which React would call as a cleanup.
+    if (last?.role !== 'assistant') {
+      log.scrollTo({ top: log.scrollHeight, behavior })
+      return
+    }
+    const question = [...log.querySelectorAll<HTMLElement>('[data-question]')].pop()
+    if (question) log.scrollTo({ top: question.offsetTop - 16, behavior })
+  }, [messages, thinking])
 
   // Grow the textarea with its content, up to its max height.
   useLayoutEffect(() => {
@@ -210,7 +221,7 @@ export default function AssistantPanel({ conversation, onChange, onClose, onClea
         </div>
       </header>
 
-      <div ref={logRef} role="log" aria-live="polite" aria-relevant="additions" className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-5">
+      <div ref={logRef} role="log" aria-live="polite" aria-relevant="additions" className="relative flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-5">
         <div className="space-y-3 text-sm text-fg/90 leading-relaxed">
           <p>
             Hi — I answer questions about Joshua's experience, skills and open-source projects, using only what's on this site. If the
@@ -221,7 +232,7 @@ export default function AssistantPanel({ conversation, onChange, onClose, onClea
 
         {messages.map((m) =>
           m.role === 'user' ? (
-            <div key={m.id} className="flex justify-end">
+            <div key={m.id} data-question className="flex justify-end">
               <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-lg rounded-br-sm border border-accent/25 bg-accent/10 px-3 py-2 text-sm text-fg">
                 <span className="sr-only">You: </span>
                 {m.text}
