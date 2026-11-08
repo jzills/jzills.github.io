@@ -193,8 +193,9 @@ function ShaderCode({ variant, title }: { variant: ShaderVariant; title: string 
 
   return (
     <div className="relative h-[70vh] rounded border border-zinc-800 bg-zinc-950">
-      {/* Focusable so the code can be scrolled from the keyboard. */}
-      <pre tabIndex={0} aria-label={`${title} source`} className="h-full overflow-auto p-4 pr-12 font-mono text-xs leading-relaxed text-zinc-300 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent">
+      {/* Focusable so the code can be scrolled from the keyboard. Long lines wrap so the code
+          only scrolls vertically, which matters most on a phone. */}
+      <pre tabIndex={0} aria-label={`${title} source`} className="h-full overflow-auto whitespace-pre-wrap break-words p-4 pr-12 font-mono text-xs leading-relaxed text-zinc-300 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent">
         <code>
           {tokens.map((token, i) => (token.kind === 'plain' ? token.text : <span key={i} className={tokenClass[token.kind]}>{token.text}</span>))}
         </code>
