@@ -220,7 +220,9 @@ function LightboxShader({ item, variant, showCode }: { item: ShaderItem; variant
   return (
     <div className={showCode ? 'grid gap-3 lg:grid-cols-2' : undefined}>
       <div className={`group/card relative ${showCode ? 'max-lg:hidden' : ''}`}>
-        <ShaderCanvas variant={current} playing={playing} className="w-full h-[70vh] rounded bg-black" />
+        {/* Most shaders scale to the canvas height, so a tall portrait canvas shows only a narrow
+            slice of them and looks zoomed in. On portrait screens it stays square instead. */}
+        <ShaderCanvas variant={current} playing={playing} className="w-full h-[70vh] portrait:h-auto portrait:aspect-square portrait:max-h-[70vh] rounded bg-black" />
         {!current.still && (
           <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-3 right-3" />
         )}

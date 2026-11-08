@@ -97,6 +97,16 @@ export function Navigation() {
 
         <div className="md:hidden flex items-center gap-1">
           <ThemeToggle />
+          {/* A shortcut to the Lab so it's one tap away on phones; the menu still lists it too. */}
+          <a
+            href={labLink.href}
+            aria-label={labLink.label}
+            title={labLink.label}
+            aria-current={onLab ? 'page' : undefined}
+            className={`p-2 hover:text-fg transition-colors ${labLit ? 'text-accent' : 'text-muted'}`}
+          >
+            <FlaskConical size={20} aria-hidden="true" />
+          </a>
           <button
             className="p-2 text-muted hover:text-fg transition-colors"
             onClick={() => setOpen((v) => !v)}
