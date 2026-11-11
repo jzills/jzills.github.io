@@ -117,28 +117,6 @@ body {
   animation: typing-caret 1s steps(1) infinite;
 }
 
-/* Project cards: an accent glow follows the cursor. --spot is registered so the
-   card's transition can fade it in and out. */
-@property --spot {
-  syntax: "<percentage>";
-  inherits: false;
-  initial-value: 0%;
-}
-
-.card-spotlight {
-  background-image: radial-gradient(
-    280px circle at var(--mx, 50%) var(--my, 0%),
-    color-mix(in srgb, var(--color-accent) var(--spot), transparent),
-    transparent 70%
-  );
-}
-
-@media (hover: hover) {
-  .card-spotlight:hover {
-    --spot: 14%;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .typing-caret {
     animation: none;
