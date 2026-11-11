@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useReducedMotion } from 'framer-motion'
 import { initialTypeState, typewriterStep } from '@/lib/textEffects'
 
 interface Props {
@@ -11,13 +10,13 @@ interface Props {
 // A terminal-style line that types, holds and deletes each phrase in turn. The
 // first phrase is rendered in full on the server, so there is never an empty
 // line before JavaScript runs; typing starts after hydration. Screen readers get
-// one static sentence instead of every keystroke.
+// one static sentence instead of every keystroke. It runs under reduced motion
+// too: text changing in place isn't the kind of movement that setting guards.
 export function TypingLine({ phrases, label, className = '' }: Props) {
-  const reduce = useReducedMotion()
   const [state, setState] = useState(() => initialTypeState(phrases))
 
   useEffect(() => {
-    if (reduce || phrases.length < 2) return
+    if (phrases.length < 2) return
     let current = initialTypeState(phrases)
     let timer: number
     const tick = (delay: number) => {
@@ -33,7 +32,7 @@ export function TypingLine({ phrases, label, className = '' }: Props) {
     }
     tick(2200)
     return () => window.clearTimeout(timer)
-  }, [reduce, phrases])
+  }, [phrases])
 
   const text = phrases[state.index].slice(0, state.length)
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ExperienceEntry } from '@/data/experience'
-import { m, useMotionValueEvent, useReducedMotion, useScroll } from 'framer-motion'
+import { m, useMotionValueEvent, useScroll } from 'framer-motion'
 import { slug } from '@/lib/anchors'
 import { revealOnScroll, rise } from '@/lib/motion'
 
@@ -16,11 +16,11 @@ const DOT_OFFSET = 13
 export function Timeline({ entries }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const entryRefs = useRef<(HTMLDivElement | null)[]>([])
-  const reduce = useReducedMotion()
   const [lit, setLit] = useState(0)
 
   // 0 when the timeline's top reaches the tip line, 1 when its bottom does, so
-  // progress × height is exactly where the tip line crosses the timeline.
+  // progress × height is exactly where the tip line crosses the timeline. Kept
+  // under reduced motion: the line only tracks the scroll the reader is doing.
   const { scrollYProgress } = useScroll({ target: ref, offset: [`start ${TIP * 100}%`, `end ${TIP * 100}%`] })
 
   const update = useCallback((progress: number) => {
@@ -35,19 +35,17 @@ export function Timeline({ entries }: Props) {
   // Arriving mid-page (a #hash or a reload) lights what's already scrolled past.
   useEffect(() => update(scrollYProgress.get()), [update, scrollYProgress])
 
-  const allLit = reduce ?? false
-
   return (
     <div ref={ref} className="relative pl-8">
       <div className="absolute left-0 top-2 bottom-2 w-px bg-border" />
       <m.div
         aria-hidden="true"
         className="absolute left-0 top-2 bottom-2 w-px bg-accent origin-top shadow-[0_0_8px] shadow-accent/60"
-        style={{ scaleY: allLit ? 1 : scrollYProgress }}
+        style={{ scaleY: scrollYProgress }}
       />
       <m.div {...revealOnScroll} className="space-y-12">
         {entries.map((entry, i) => {
-          const on = allLit || i < lit
+          const on = i < lit
           return (
             <m.div
               key={i}

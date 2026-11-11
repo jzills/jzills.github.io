@@ -39,7 +39,8 @@ function WaveformCanvas() {
 
     // Interaction state, all eased per frame. A mouse swells the lines near it
     // and draws them toward it; a tap or click plucks a ripple outward; scrolling
-    // adds energy to every line, which is what phones see most.
+    // adds energy to every line, which is what phones see most. This is the one
+    // effect reduced motion turns off: large movement across the whole screen.
     const interactive = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const pointer = { x: -1e4, y: 0, tx: -1e4, ty: 0, strength: 0, target: 0 }
     const pluck = { x: 0, age: 0, amp: 0 }
