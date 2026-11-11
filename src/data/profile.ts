@@ -6,6 +6,15 @@ export const profile = {
   firstName: 'Joshua',
   headline: 'Platform & Software Engineer',
   tagline: 'Building developer platforms and cloud infrastructure, with a focus on AI-assisted engineering.',
+  // Cycled by the hero's typing line; keep each short enough for one line on a phone.
+  focus: [
+    'platform engineering',
+    'kubernetes & service mesh',
+    'ci/cd automation',
+    '.net & asp.net core',
+    'ai-assisted engineering',
+    'generative audio',
+  ],
   links: {
     resume: 'https://docs.google.com/document/d/1Cn8XP9f3FjcqYxIxBOgPaePRyFFD69YliEm-djYhK0k/export?format=pdf',
     github: 'https://github.com/jzills',

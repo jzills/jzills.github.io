@@ -4,6 +4,7 @@ import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 import { m } from 'framer-motion'
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/Button'
+import { TypingLine } from '@/components/ui/TypingLine'
 import { experience } from '@/data/experience'
 import { LAB_PATH } from '@/lib/pages'
 import { profile } from '@/data/profile'
@@ -36,6 +37,55 @@ function WaveformCanvas() {
     let raf: number
     let t = 0
 
+    // Interaction state, all eased per frame. A mouse swells the lines near it
+    // and draws them toward it; a tap or click plucks a ripple outward; scrolling
+    // adds energy to every line, which is what phones see most.
+    const interactive = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const pointer = { x: -1e4, y: 0, tx: -1e4, ty: 0, strength: 0, target: 0 }
+    const pluck = { x: 0, age: 0, amp: 0 }
+    let energy = 0
+    let lastScroll = window.scrollY
+
+    const local = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top, inside: e.clientY >= rect.top && e.clientY <= rect.bottom }
+    }
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return
+      const { x, y, inside } = local(e)
+      // Snap rather than glide in from wherever the cursor last left.
+      if (pointer.strength < 0.01) {
+        pointer.x = x
+        pointer.y = y
+      }
+      pointer.tx = x
+      pointer.ty = y
+      pointer.target = inside ? 1 : 0
+    }
+    const onPointerLeave = () => {
+      pointer.target = 0
+    }
+    const onPointerDown = (e: PointerEvent) => {
+      const { x, inside } = local(e)
+      if (!inside) return
+      pluck.x = x
+      pluck.age = 0
+      pluck.amp = 1
+    }
+    const onScroll = () => {
+      const dy = Math.abs(window.scrollY - lastScroll)
+      lastScroll = window.scrollY
+      energy = Math.min(0.9, energy + Math.min(dy, 60) * 0.006)
+    }
+
+    if (interactive) {
+      window.addEventListener('pointermove', onPointerMove, { passive: true })
+      document.documentElement.addEventListener('pointerleave', onPointerLeave)
+      window.addEventListener('pointerdown', onPointerDown, { passive: true })
+      window.addEventListener('scroll', onScroll, { passive: true })
+    }
+
     const resize = () => {
       canvas.width = canvas.offsetWidth
       canvas.height = canvas.offsetHeight
@@ -53,16 +103,39 @@ function WaveformCanvas() {
         { freq: 0.005, amp: 0.06, speed: 0.002, phase: Math.PI * 1.3 },
       ]
 
+      pointer.x += (pointer.tx - pointer.x) * 0.12
+      pointer.y += (pointer.ty - pointer.y) * 0.12
+      pointer.strength += (pointer.target - pointer.strength) * 0.05
+      pluck.age += 0.016
+      pluck.amp *= 0.975
+      energy *= 0.95
+
       ctx.strokeStyle = strokeRef.current
       ctx.lineWidth = 1.5
 
-      waves.forEach((wave) => {
+      const cy = canvas.height / 2
+      const sigma = Math.max(120, canvas.width * 0.12)
+      const spread = 2 * sigma * sigma
+      // How far toward the cursor the lines bend, capped so they never leave the band.
+      const pull = Math.max(-0.3, Math.min(0.3, (pointer.y - cy) / canvas.height)) * canvas.height
+
+      waves.forEach((wave, w) => {
         ctx.beginPath()
-        const cy = canvas.height / 2
+        const weight = 1 - w * 0.25
 
         for (let x = 0; x <= canvas.width; x += 2) {
           const noiseVal = noise(x * 0.003 + t * 0.5 + wave.phase)
-          const y = cy + Math.sin(x * wave.freq + t * wave.speed * 60 + wave.phase) * canvas.height * wave.amp * (1 + noiseVal * 0.4)
+          const dx = x - pointer.x
+          const bump = pointer.strength * Math.exp(-(dx * dx) / spread)
+          const amp = canvas.height * wave.amp * (1 + noiseVal * 0.4) * (1 + energy + bump * 2.2)
+          let y = cy + Math.sin(x * wave.freq + t * wave.speed * 60 + wave.phase) * amp
+          y += pull * bump * weight
+
+          if (pluck.amp > 0.01) {
+            const px = x - pluck.x
+            const envelope = Math.exp(-(px * px) / (spread * 4))
+            y += Math.sin(Math.abs(px) * 0.03 - pluck.age * 9 + w) * envelope * pluck.amp * canvas.height * 0.07 * weight
+          }
 
           if (x === 0) ctx.moveTo(x, y)
           else ctx.lineTo(x, y)
@@ -90,6 +163,10 @@ function WaveformCanvas() {
       cancelAnimationFrame(raf)
       observer.disconnect()
       visibility.disconnect()
+      window.removeEventListener('pointermove', onPointerMove)
+      document.documentElement.removeEventListener('pointerleave', onPointerLeave)
+      window.removeEventListener('pointerdown', onPointerDown)
+      window.removeEventListener('scroll', onScroll)
     }
   }, [])
 
@@ -128,9 +205,14 @@ export function Hero() {
           <h1 className="text-5xl sm:text-6xl font-bold text-fg tracking-tight leading-none mb-4">
             {profile.name}
           </h1>
-          <p className="text-xl text-muted mb-4">
+          <p className="text-xl text-muted mb-3">
             {profile.headline}
           </p>
+          <TypingLine
+            phrases={profile.focus}
+            label={`Focus areas: ${profile.focus.join(', ')}.`}
+            className="text-sm text-accent mb-4"
+          />
           <p className="text-base text-muted font-mono max-w-lg mb-10 leading-relaxed">
             {profile.tagline}
           </p>

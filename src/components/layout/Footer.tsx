@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { Check, Copy, Mail } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
+import { CopyIcon } from '@/components/ui/CopyIcon'
+import { useCopyToClipboard } from '@/lib/useCopyToClipboard'
 import { experience } from '@/data/experience'
 import { projects } from '@/data/projects'
 import { LAB_PATH, homeHref } from '@/lib/pages'
@@ -43,18 +44,12 @@ const columns = [
 
 const linkClass = 'text-muted hover:text-fg transition-colors'
 
-function CopyEmail() {
-  const [copied, setCopied] = useState(false)
+const openMail = () => {
+  window.location.href = `mailto:${email}`
+}
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(email)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1500)
-    } catch {
-      window.location.href = `mailto:${email}`
-    }
-  }
+function CopyEmail() {
+  const { copied, copy } = useCopyToClipboard(email, openMail)
 
   return (
     <div className="mt-5 inline-flex max-w-full items-center gap-3 rounded border border-border bg-surface pl-3 pr-1.5 py-1.5">
@@ -65,7 +60,7 @@ function CopyEmail() {
         aria-label={copied ? 'Email copied' : 'Copy email address'}
         className={`shrink-0 p-1.5 rounded transition-colors ${copied ? 'text-accent' : 'text-muted hover:text-fg'}`}
       >
-        {copied ? <Check size={14} /> : <Copy size={14} />}
+        <CopyIcon copied={copied} />
       </button>
     </div>
   )

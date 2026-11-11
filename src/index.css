@@ -99,6 +99,52 @@ body {
   }
 }
 
+/* Hero typing line: a block caret that blinks while idle. */
+@keyframes typing-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.typing-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: -0.2em;
+  background: currentColor;
+  opacity: 0.8;
+  animation: typing-caret 1s steps(1) infinite;
+}
+
+/* Project cards: an accent glow follows the cursor. --spot is registered so the
+   card's transition can fade it in and out. */
+@property --spot {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+.card-spotlight {
+  background-image: radial-gradient(
+    280px circle at var(--mx, 50%) var(--my, 0%),
+    color-mix(in srgb, var(--color-accent) var(--spot), transparent),
+    transparent 70%
+  );
+}
+
+@media (hover: hover) {
+  .card-spotlight:hover {
+    --spot: 14%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing-caret {
+    animation: none;
+  }
+}
+
 /* Portfolio assistant: the panel rises in from the launcher; the typing dots pulse. */
 @keyframes assistant-pop {
   from {
