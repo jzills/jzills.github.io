@@ -5,11 +5,27 @@ import { m } from 'framer-motion'
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/Button'
 import { TypingLine } from '@/components/ui/TypingLine'
+import { HeroMarkCanvas, MarkFallback, SHOCKWAVE_EVENT, type ShockwaveDetail } from '@/components/sections/HeroMark'
 import { experience } from '@/data/experience'
 import { LAB_PATH } from '@/lib/pages'
 import { profile } from '@/data/profile'
 
 const current = experience[0]
+
+// The name splits into letters so the blast can scatter them one by one. Each
+// word stays unbreakable so the letters still wrap as words.
+function BlastableName({ text }: { text: string }) {
+  return text.split(' ').map((word, w) => (
+    <span key={w}>
+      {w > 0 && ' '}
+      <span className="inline-block whitespace-nowrap">
+        {[...word].map((ch, i) => (
+          <span key={i} data-blast="" className="inline-block">{ch}</span>
+        ))}
+      </span>
+    </span>
+  ))
+}
 
 const iconLinkClass = 'inline-flex items-center justify-center w-9 h-9 rounded bg-surface border border-border text-muted hover:text-fg hover:border-accent/40 transition-all duration-200'
 
@@ -74,6 +90,14 @@ function WaveformCanvas() {
       pluck.age = 0
       pluck.amp = 1
     }
+    // The hero mark bursting hits the waveform with a big ripple.
+    const onShockwave = (e: Event) => {
+      const { clientX } = (e as CustomEvent<ShockwaveDetail>).detail
+      pluck.x = clientX - canvas.getBoundingClientRect().left
+      pluck.age = 0
+      pluck.amp = 1.8
+      energy = 0.9
+    }
     const onScroll = () => {
       const dy = Math.abs(window.scrollY - lastScroll)
       lastScroll = window.scrollY
@@ -85,6 +109,7 @@ function WaveformCanvas() {
       document.documentElement.addEventListener('pointerleave', onPointerLeave)
       window.addEventListener('pointerdown', onPointerDown, { passive: true })
       window.addEventListener('scroll', onScroll, { passive: true })
+      window.addEventListener(SHOCKWAVE_EVENT, onShockwave)
     }
 
     const resize = () => {
@@ -168,6 +193,7 @@ function WaveformCanvas() {
       document.documentElement.removeEventListener('pointerleave', onPointerLeave)
       window.removeEventListener('pointerdown', onPointerDown)
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener(SHOCKWAVE_EVENT, onShockwave)
     }
   }, [])
 
@@ -182,6 +208,7 @@ function WaveformCanvas() {
 
 export function Hero() {
   const [scrolled, setScrolled] = useState(false)
+  const markRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80)
@@ -195,32 +222,50 @@ export function Hero() {
       <div className="relative max-w-[1100px] mx-auto px-6 w-full pt-20 pb-16">
         {/* A CSS animation rather than framer-motion: it starts from the prerendered
             HTML, so the hero paints before any JavaScript has loaded. */}
-        <div className="page-rise">
-          <p className="inline-flex items-center gap-2.5 mb-6 px-3 py-1 rounded-full border border-border bg-surface/60 text-xs font-mono text-muted">
+        {/* Positioned so the desktop mark anchors to this block whether or not
+            the entrance animation's transform is still running. */}
+        <div className="page-rise relative">
+          <p data-blast="" className="inline-flex items-center gap-2.5 mb-6 px-3 py-1 rounded-full border border-border bg-surface/60 text-xs font-mono text-muted">
             <span className="relative flex w-2 h-2" aria-hidden="true">
               <span className="absolute inline-flex w-full h-full rounded-full bg-accent opacity-60 animate-ping" />
               <span className="relative inline-flex w-2 h-2 rounded-full bg-accent" />
             </span>
             {current.role} <span className="text-accent">@ {current.company}</span>
           </p>
-          <h1 className="text-5xl sm:text-6xl font-bold text-fg tracking-tight leading-none mb-4">
-            {profile.name}
-          </h1>
-          <p className="text-xl text-muted mb-3">
+          <div className="flex items-center gap-3 mb-4">
+            <h1 aria-label={profile.name} className="text-5xl sm:text-6xl font-bold text-fg tracking-tight leading-none">
+              <BlastableName text={profile.name} />
+            </h1>
+            {/* Hit area for the oscilloscope mark; its dots are drawn on the
+                full-hero canvas so the burst can spill across the whole section.
+                Beside the name on phones (hidden where there's no room), large in
+                the empty right half on desktop. */}
+            <button
+              ref={markRef}
+              type="button"
+              aria-label="Blow up the page"
+              className="hero-mark shrink-0 block w-[84px] h-[68px] max-[359px]:hidden lg:absolute lg:right-0 lg:top-1/2 lg:-translate-y-1/2 lg:w-[340px] lg:h-[300px] cursor-pointer rounded outline-offset-4"
+            >
+              <MarkFallback />
+            </button>
+          </div>
+          <p data-blast="" className="text-xl text-muted mb-3 w-fit">
             {profile.headline}
           </p>
-          <TypingLine
-            phrases={profile.focus}
-            label={`Focus areas: ${profile.focus.join(', ')}.`}
-            className="text-sm text-accent mb-4"
-          />
-          <p className="text-base text-muted font-mono max-w-lg mb-10 leading-relaxed">
+          <div data-blast="" className="w-fit">
+            <TypingLine
+              phrases={profile.focus}
+              label={`Focus areas: ${profile.focus.join(', ')}.`}
+              className="text-sm text-accent mb-4"
+            />
+          </div>
+          <p data-blast="" className="text-base text-muted font-mono max-w-lg mb-10 leading-relaxed">
             {profile.tagline}
           </p>
 
           {/* On phones the icons drop to their own row rather than wrapping one at a time. */}
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-3">
+            <div data-blast-group="" className="flex items-center gap-3">
               <Button
                 variant="primary"
                 href={profile.links.resume}
@@ -235,7 +280,7 @@ export function Hero() {
                 Lab
               </Button>
             </div>
-            <div className="flex items-center gap-3">
+            <div data-blast-group="" className="flex items-center gap-3">
               <a
                 href={profile.links.github}
                 target="_blank"
@@ -268,6 +313,8 @@ export function Hero() {
           </div>
         </div>
       </div>
+
+      <HeroMarkCanvas anchorRef={markRef} />
 
       <m.a
         href="#about"

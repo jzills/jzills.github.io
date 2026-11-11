@@ -117,6 +117,23 @@ body {
   animation: typing-caret 1s steps(1) infinite;
 }
 
+/* Hero blast (src/lib/blast.ts). Debris can't be clicked mid-flight, and per-element
+   transitions are paused so the physics isn't smoothed into slow motion. */
+html[data-blasting] {
+  overflow-x: clip;
+}
+
+html[data-blasting] [data-blast],
+html[data-blasting] [data-blast-group] > * {
+  pointer-events: none;
+  transition: none !important;
+}
+
+/* The static curve gives way once the live canvas is drawing. */
+.hero-mark[data-live] .mark-fallback {
+  opacity: 0;
+}
+
 /* Portfolio assistant: the panel rises in from the launcher; the typing dots pulse. */
 @keyframes assistant-pop {
   from {
