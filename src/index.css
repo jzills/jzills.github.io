@@ -117,12 +117,6 @@ body {
   animation: typing-caret 1s steps(1) infinite;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .typing-caret {
-    animation: none;
-  }
-}
-
 /* Portfolio assistant: the panel rises in from the launcher; the typing dots pulse. */
 @keyframes assistant-pop {
   from {
