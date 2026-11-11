@@ -1,7 +1,50 @@
 import { useRef } from 'react'
-import { m, useInView } from 'framer-motion'
+import { AnimatePresence, m, useInView } from 'framer-motion'
 import { Mail } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
+import { CopyIcon } from '@/components/ui/CopyIcon'
+import { DecodeText } from '@/components/ui/DecodeText'
+import { useCopyToClipboard } from '@/lib/useCopyToClipboard'
+import { profile } from '@/data/profile'
+
+const openMail = () => {
+  window.location.href = `mailto:${profile.links.email}`
+}
+
+// Copies the address for people without a mail client set up; the mailto link
+// beside it opens one for everyone else.
+function CopyEmailButton() {
+  const { copied, copy } = useCopyToClipboard(profile.links.email, openMail)
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      aria-label={copied ? 'Email address copied' : 'Copy email address'}
+      title="Copy email address"
+      className={`relative inline-flex items-center justify-center w-[42px] h-[42px] rounded border transition-all duration-200 ${
+        copied ? 'border-accent/60 text-accent bg-accent/5' : 'border-border bg-surface text-muted hover:text-fg hover:border-accent/40'
+      }`}
+    >
+      <CopyIcon copied={copied} size={15} />
+      <AnimatePresence>
+        {copied && (
+          <m.span
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18 }}
+            className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 rounded bg-accent text-bg text-xs font-mono pointer-events-none"
+            aria-hidden="true"
+          >
+            Copied!
+          </m.span>
+        )}
+      </AnimatePresence>
+      <span className="sr-only" aria-live="polite">{copied ? 'Copied' : ''}</span>
+    </button>
+  )
+}
 
 export function Contact() {
   const ref = useRef<HTMLElement>(null)
@@ -16,7 +59,9 @@ export function Contact() {
           transition={{ duration: 0.5, ease: 'easeOut' }}
           className="max-w-2xl"
         >
-          <p className="text-xs font-mono text-accent uppercase tracking-widest mb-4">Get in touch</p>
+          <p className="text-xs font-mono text-accent uppercase tracking-widest mb-4">
+            <DecodeText text="Get in touch" />
+          </p>
           <h2 className="text-3xl font-bold text-fg tracking-tight mb-4">Let's connect.</h2>
           <p className="text-muted leading-relaxed mb-10">
             Whether it's platform work, developer tooling, or something on the
@@ -50,6 +95,7 @@ export function Contact() {
               <Mail size={15} />
               joshua.zillwood@gmail.com
             </a>
+            <CopyEmailButton />
           </div>
         </m.div>
       </div>
