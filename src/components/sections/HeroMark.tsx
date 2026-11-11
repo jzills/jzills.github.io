@@ -1,6 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { blastPage } from '@/lib/blast'
 import { curve, curvePoints } from '@/lib/lissajous'
+import { fbm2 } from '@/lib/noise'
 
 // The hero's easter egg: an oscilloscope figure drawn in dots beside the name.
 // Tap it and it swells, spins and twists, bursts, blows the page apart, then
@@ -30,6 +31,10 @@ export function MarkFallback() {
   )
 }
 
+// fbm2 has a standard deviation of about 0.23; rescale to roughly unit spread
+// (clamped) so its weights below read as real amplitudes.
+const unit = (n: number) => Math.max(-1.6, Math.min(1.6, n / 0.23))
+
 const readAccent = () =>
   getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '#22d3ee'
 
@@ -50,6 +55,11 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
     let shown = false
     // How much the figure swells during the wind-up: small marks grow more.
     let grow = 0.3
+    // Fresh for every tap, so each wind-up and burst churns differently.
+    let seed = 0
+    let spinDir = 1
+    // The wind-up's rotation, integrated from a noisy spin speed each frame.
+    let spinAngle = 0
     let dots: Dot[] = []
     let figure = 0
     let phase: Phase = 'idle'
@@ -109,17 +119,24 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
       const reach = Math.max(w, h) / 900
       for (const d of dots) {
         const len = Math.hypot(d.x, d.y) || 1
-        const ux = d.x / len, uy = d.y / len
-        const speed = (7 + Math.random() * 18) * reach
-        d.vx = ux * speed - uy * speed * 0.45 + (Math.random() - 0.5) * 3
-        d.vy = uy * speed + ux * speed * 0.45 + (Math.random() - 0.5) * 3
+        const ox = d.x / len, oy = d.y / len
+        // Noise around the circle turns the spray into uneven jets and lobes,
+        // bent off straight-out, and different for every seed.
+        const jet = fbm2(ox * 1.6 + seed, oy * 1.6 - seed * 0.7)
+        const bend = fbm2(ox * 1.1 - seed * 0.4 + 31.3, oy * 1.1 + seed + 5.9) * 1.1
+        const cos = Math.cos(bend), sin = Math.sin(bend)
+        const ux = ox * cos - oy * sin, uy = ox * sin + oy * cos
+        const speed = (6 + Math.random() * 10 + Math.max(0, jet) * 26) * reach
+        const swirl = 0.45 * spinDir
+        d.vx = ux * speed - uy * speed * swirl + (Math.random() - 0.5) * 2
+        d.vy = uy * speed + ux * speed * swirl + (Math.random() - 0.5) * 2
       }
       phase = 'fly'
       phaseStart = now
       const host = canvas.getBoundingClientRect()
       const clientX = host.left + cx, clientY = host.top + cy
       window.dispatchEvent(new CustomEvent<ShockwaveDetail>(SHOCKWAVE_EVENT, { detail: { clientX, clientY } }))
-      blastPage(clientX, clientY)
+      blastPage(clientX, clientY, seed)
     }
 
     const paint = (now: number) => {
@@ -155,6 +172,17 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
       const fade = phase === 'fade-out' ? 1 - tNow / FADE : phase === 'fade-in' ? tNow / FADE : 1
       let settled = phase === 'rebuild'
 
+      // Per-frame wind-up state, shared by every dot.
+      let breath = 1
+      if (phase === 'spin') {
+        const k = Math.min(1, tNow / SPIN)
+        // Spin speed in rad/s: a floor that builds, plus noise surges that can
+        // whip it to several times that, or let it all but stall.
+        const surge = Math.max(0, 0.35 + unit(fbm2(tNow * 6.5 + seed, 0.37)) * 0.75)
+        spinAngle += spinDir * (2 * k + 16 * k * surge) * (f / 60)
+        breath = 1 + 0.45 * unit(fbm2(tNow * 7.5 - seed, 4.2))
+      }
+
       for (let i = 0; i < n; i++) {
         const d = dots[i]
         let alpha = 1
@@ -165,15 +193,25 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
           const behind = (head - i + n) % n
           alpha = (0.3 + 0.7 * Math.exp(-behind / (n * 0.15))) * Math.max(0, Math.min(1, fade))
         } else if (phase === 'spin') {
-          // Swells first (easing out with a little overshoot), while the spin and
-          // twist build up to the burst.
+          // Noise drives the motion rather than decorating it: the spin speed
+          // lurches and stalls (spinAngle, integrated once per frame above),
+          // sections of the curve twist apart and bulge out unevenly, and the
+          // whole thing breathes. Calm at the tap, churning by the burst.
+          //
+          // The noise is sampled by position *along* the curve (a point on a
+          // circle), broad and with two octaves, so neighbouring dots move
+          // together and the line bends instead of shredding. Bulges add to
+          // the growth rather than multiply it, so no section can collapse.
           const k = Math.min(1, tNow / SPIN)
-          const e = k * k * k
           const g = Math.min(1, k / 0.55)
           const swell = 1 + 2.2 * (g - 1) ** 3 + 1.2 * (g - 1) ** 2
-          const r = Math.hypot(d.sx, d.sy)
-          const ang = e * Math.PI * 2.4 + e * r * 0.03
-          const sc = 1 + grow * swell
+          const churn = Math.min(1, k * 1.4) ** 2
+          const along = (i / n) * Math.PI * 2
+          const ux = Math.cos(along), uy = Math.sin(along)
+          const lump = unit(fbm2(ux * 1.2 + tNow * 2.6 + seed, uy * 1.2 - tNow * 1.9, 2))
+          const twist = unit(fbm2(ux * 0.9 - tNow * 2.2 + seed + 11.7, uy * 0.9 + tNow * 1.5 + 3.1, 2))
+          const ang = spinAngle + spinDir * twist * 0.9 * churn
+          const sc = Math.max(0.6, 1 + grow * swell * breath + (grow * 0.7 + 0.3) * lump * churn)
           const cos = Math.cos(ang), sin = Math.sin(ang)
           d.x = (d.sx * cos - d.sy * sin) * sc
           d.y = (d.sx * sin + d.sy * cos) * sc
@@ -225,6 +263,9 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
         d.sx = d.x
         d.sy = d.y
       }
+      seed = Math.random() * 1000
+      spinDir = Math.random() < 0.5 ? -1 : 1
+      spinAngle = 0
       phase = 'spin'
     }
 

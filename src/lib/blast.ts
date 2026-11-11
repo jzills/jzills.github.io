@@ -1,3 +1,5 @@
+import { fbm2 } from '@/lib/noise'
+
 // Throws page elements away from a point, then springs them home: the page
 // "blowing up" when the hero mark bursts.
 //
@@ -16,6 +18,21 @@ interface Body {
 
 export interface Impulse { vx: number; vy: number; vr: number }
 
+// How one blast bends and scales the push in each direction. Sampled from noise
+// around the blast point, so neighbouring pieces get swept the same way like a
+// gust, and a new seed per blast makes every blast different.
+export interface Gust { deflect: number; boost: number }
+
+export function gustAt(angle: number, seed: number): Gust {
+  const cx = Math.cos(angle), cy = Math.sin(angle)
+  return {
+    // Up to about ±50° off straight-out.
+    deflect: fbm2(cx * 1.2 + seed, cy * 1.2 + seed * 0.61) * 0.9,
+    // Some directions blow much harder than others.
+    boost: 1 + 0.7 * fbm2(cx * 1.7 - seed * 0.3 + 19.1, cy * 1.7 + seed + 7.7),
+  }
+}
+
 const FLY = 0.85
 const RETURN_STAGGER = 0.8
 // Seconds for a returning piece's pull to build from gentle to full strength.
@@ -33,14 +50,18 @@ export function impulse(
   origin: { x: number; y: number },
   reach: number,
   rand: () => number = Math.random,
+  gust: Gust = { deflect: 0, boost: 1 },
 ): Impulse {
   const dx = center.x - origin.x
   const dy = center.y - origin.y
   const dist = Math.hypot(dx, dy)
-  const ux = dist > 1 ? dx / dist : rand() - 0.5
-  const uy = dist > 1 ? dy / dist : rand() - 0.5
+  const ox = dist > 1 ? dx / dist : rand() - 0.5
+  const oy = dist > 1 ? dy / dist : rand() - 0.5
+  const cos = Math.cos(gust.deflect), sin = Math.sin(gust.deflect)
+  const ux = ox * cos - oy * sin
+  const uy = ox * sin + oy * cos
   const light = size.width < 60 && size.height < 90
-  const force = ((reach * 0.075) / (1 + dist / (reach * 0.3))) * (light ? 1.25 : 1) * (0.8 + rand() * 0.4)
+  const force = ((reach * 0.075) / (1 + dist / (reach * 0.3))) * (light ? 1.25 : 1) * (0.8 + rand() * 0.4) * gust.boost
   return {
     vx: ux * force + (rand() - 0.5) * force * 0.35,
     vy: uy * force - rand() * force * 0.25,
@@ -55,7 +76,7 @@ function collect(): HTMLElement[] {
   return [...found]
 }
 
-export function blastPage(originX: number, originY: number) {
+export function blastPage(originX: number, originY: number, seed = Math.random() * 1000) {
   if (active) return
   const vh = window.innerHeight
   const reach = Math.max(window.innerWidth, vh)
@@ -67,10 +88,11 @@ export function blastPage(originX: number, originY: number) {
     // Skip hidden (display: none) and off-screen pieces.
     if (!rect.width || rect.bottom < 0 || rect.top > vh) continue
     const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+    const gust = gustAt(Math.atan2(center.y - originY, center.x - originX), seed)
     bodies.push({
       el,
       x: 0, y: 0, r: 0,
-      ...impulse(center, rect, origin, reach),
+      ...impulse(center, rect, origin, reach, Math.random, gust),
       returnAt: FLY + Math.random() * RETURN_STAGGER,
     })
   }
