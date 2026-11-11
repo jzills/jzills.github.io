@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FIGURES, curve, curvePoints } from './lissajous'
-import { impulse } from './blast'
+import { gustAt, impulse } from './blast'
 
 describe('curve', () => {
   it('stays inside -1..1 on both axes for every figure', () => {
@@ -57,5 +57,32 @@ describe('impulse', () => {
     const letter = impulse({ x: 700, y: 400 }, { width: 30, height: 50 }, origin, 1000, mid)
     const line = impulse({ x: 700, y: 400 }, block, origin, 1000, mid)
     expect(letter.vx).toBeGreaterThan(line.vx)
+  })
+})
+
+describe('gustAt', () => {
+  it('bends by at most about 50 degrees and never reverses the push', () => {
+    for (let i = 0; i < 64; i++) {
+      const { deflect, boost } = gustAt((i / 64) * Math.PI * 2, 42.5)
+      expect(Math.abs(deflect)).toBeLessThanOrEqual(0.9)
+      expect(boost).toBeGreaterThan(0)
+    }
+  })
+
+  it('differs between seeds, so every blast is different', () => {
+    const a = gustAt(1, 10), b = gustAt(1, 500)
+    expect(a).not.toEqual(b)
+  })
+
+  it('is the same for the same direction and seed', () => {
+    expect(gustAt(2.1, 77)).toEqual(gustAt(2.1, 77))
+  })
+
+  it('rotates the push by its deflection', () => {
+    const origin = { x: 0, y: 0 }
+    const straight = impulse({ x: 300, y: 0 }, { width: 200, height: 40 }, origin, 1000, () => 0.5)
+    const bent = impulse({ x: 300, y: 0 }, { width: 200, height: 40 }, origin, 1000, () => 0.5, { deflect: Math.PI / 2, boost: 1 })
+    expect(straight.vx).toBeGreaterThan(0)
+    expect(bent.vy).toBeGreaterThan(Math.abs(bent.vx))
   })
 })
