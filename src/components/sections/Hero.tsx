@@ -112,15 +112,20 @@ function WaveformCanvas() {
       window.addEventListener(SHOCKWAVE_EVENT, onShockwave)
     }
 
+    // Resizing a canvas wipes it, and the observer runs after this frame's draw
+    // but before it's painted, so repaint at once or a blank frame shows. On
+    // iPhones the hero resizes constantly while scrolling, as Safari's toolbar
+    // collapses and expands, which made the canvas blink.
     const resize = () => {
+      if (canvas.width === canvas.offsetWidth && canvas.height === canvas.offsetHeight) return
       canvas.width = canvas.offsetWidth
       canvas.height = canvas.offsetHeight
+      paint()
     }
 
     const noise = (x: number) => Math.sin(x * 1.7) * 0.5 + Math.sin(x * 3.3) * 0.3 + Math.sin(x * 0.7) * 0.2
 
-    const draw = () => {
-      if (!ctx || !canvas) return
+    const paint = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       const waves = [
@@ -171,6 +176,10 @@ function WaveformCanvas() {
       })
 
       t += 0.016
+    }
+
+    const draw = () => {
+      paint()
       raf = requestAnimationFrame(draw)
     }
 
