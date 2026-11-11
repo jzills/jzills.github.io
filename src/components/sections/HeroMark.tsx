@@ -44,7 +44,8 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
     if (!ctx) return
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
 
-    let w = 0, h = 0, cx = 0, cy = 0, rx = 0, ry = 0, radius = 1.5
+    let w = 0, h = 0, dpr = 0, cx = 0, cy = 0, rx = 0, ry = 0, radius = 1.5
+    let boxW = -1, boxH = -1
     // False when the hit area is hidden (narrow phones): nothing is drawn then.
     let shown = false
     // How much the figure swells during the wind-up: small marks grow more.
@@ -72,24 +73,36 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
       cy = box.top - host.top + box.height / 2
     }
 
+    // Runs on every resize. On iPhones that's constantly while scrolling (the
+    // hero tracks the screen height as Safari's toolbar collapses), so it only
+    // touches what actually changed, and repaints straight away: resizing a
+    // canvas wipes it after this frame's draw, and a blank frame would show.
     const layout = () => {
-      const dpr = Math.min(2, window.devicePixelRatio || 1)
-      w = canvas.offsetWidth
-      h = canvas.offsetHeight
-      canvas.width = w * dpr
-      canvas.height = h * dpr
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const nextDpr = Math.min(2, window.devicePixelRatio || 1)
+      if (canvas.offsetWidth !== w || canvas.offsetHeight !== h || nextDpr !== dpr) {
+        w = canvas.offsetWidth
+        h = canvas.offsetHeight
+        dpr = nextDpr
+        canvas.width = w * dpr
+        canvas.height = h * dpr
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      }
       const box = anchor.getBoundingClientRect()
       shown = box.width > 0
-      locate()
-      rx = box.width * 0.46
-      ry = box.height * 0.46
-      radius = Math.max(1.3, box.width / 200)
-      grow = Math.min(1.1, Math.max(0.2, 170 / box.width - 0.9))
-      const count = Math.round(Math.min(340, Math.max(160, box.width * 1.1)))
-      dots = Array.from({ length: count }, () => ({ x: 0, y: 0, vx: 0, vy: 0, sx: 0, sy: 0 }))
-      phase = 'idle'
-      idleStart = performance.now()
+      // Only a change to the figure's own box restarts it.
+      if (box.width !== boxW || box.height !== boxH) {
+        boxW = box.width
+        boxH = box.height
+        rx = box.width * 0.46
+        ry = box.height * 0.46
+        radius = Math.max(1.3, box.width / 200)
+        grow = Math.min(1.1, Math.max(0.2, 170 / box.width - 0.9))
+        const count = Math.round(Math.min(340, Math.max(160, box.width * 1.1)))
+        dots = Array.from({ length: count }, () => ({ x: 0, y: 0, vx: 0, vy: 0, sx: 0, sy: 0 }))
+        phase = 'idle'
+        idleStart = performance.now()
+      }
+      paint(performance.now())
     }
 
     const burst = (now: number) => {
@@ -109,18 +122,15 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
       blastPage(clientX, clientY)
     }
 
-    const draw = (now: number) => {
-      const f = Math.min(3, (now - last) / (1000 / 60))
+    const paint = (now: number) => {
+      const f = Math.min(3, Math.max(0, (now - last) / (1000 / 60)))
       last = now
       if (++frame % 30 === 1) color = readAccent()
       locate()
       const t = (now - phaseStart) / 1000
 
       ctx.clearRect(0, 0, w, h)
-      if (!shown) {
-        raf = requestAnimationFrame(draw)
-        return
-      }
+      if (!shown) return
 
       if (phase === 'spin' && t >= SPIN) burst(now)
       else if (phase === 'fly' && t >= FLY) {
@@ -197,6 +207,10 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
         phase = 'idle'
         idleStart = now
       }
+    }
+
+    const draw = (now: number) => {
+      paint(now)
       raf = requestAnimationFrame(draw)
     }
 
