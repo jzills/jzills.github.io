@@ -1,15 +1,17 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { blastPage } from '@/lib/blast'
+import { SHOCKWAVE_EVENT, type ShockwaveDetail } from '@/lib/events'
 import { curve, curvePoints, pulseAt } from '@/lib/lissajous'
 import { fbm2 } from '@/lib/noise'
+import { MARK_TAP_EVENT } from '@/lib/party'
 
 // The hero's easter egg: an oscilloscope figure drawn in dots beside the name.
 // Tap it and it swells, spins and twists, bursts, blows the page apart, then
 // redraws itself as the next figure, pen-stroke style along the curve. Under
 // reduced motion a tap just fades to the next figure.
 
-export const SHOCKWAVE_EVENT = 'hero-shockwave'
-export type ShockwaveDetail = { clientX: number; clientY: number }
+// Re-exported for the hero's waveform, which reacts to the burst.
+export { SHOCKWAVE_EVENT, type ShockwaveDetail }
 
 const SPIN = 0.7
 const FLY = 0.8
@@ -263,6 +265,7 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
     const trigger = () => {
       if (phase !== 'idle' || !shown) return
       found = true
+      window.dispatchEvent(new Event(MARK_TAP_EVENT))
       phaseStart = performance.now()
       if (reduce.matches) {
         phase = 'fade-out'
@@ -302,5 +305,5 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
     }
   }, [anchorRef])
 
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-10" aria-hidden="true" />
+  return <canvas ref={canvasRef} className="party-hue absolute inset-0 w-full h-full pointer-events-none z-10" aria-hidden="true" />
 }

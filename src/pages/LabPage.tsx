@@ -3,6 +3,7 @@ import { m } from 'framer-motion'
 import { Navigation } from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
 import { MotionProvider } from '@/components/layout/MotionProvider'
+import { PartyLayer } from '@/components/layout/PartyLayer'
 import { CreativeCard } from '@/components/ui/CreativeCard'
 import { Lightbox } from '@/components/ui/Lightbox'
 import { AssistantWidget } from '@/components/assistant/AssistantWidget'
@@ -79,7 +80,7 @@ export function LabPage() {
 
   return (
     <MotionProvider>
-      <div className="min-h-screen bg-bg">
+      <div className="app-shell min-h-screen bg-bg">
         <Navigation />
         <main className="max-w-[1100px] mx-auto px-6 pt-32 pb-24">
           <header className="page-rise mb-12">
@@ -144,6 +145,7 @@ export function LabPage() {
           </m.div>
         </main>
         <Footer />
+        <PartyLayer />
         <AssistantWidget />
 
         <Lightbox items={openable} index={openIndex} initialVariant={openVariant} initialCode={openCode} onIndexChange={setOpenIndex} />

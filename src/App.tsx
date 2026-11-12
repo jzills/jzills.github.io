@@ -10,6 +10,7 @@ import { Skills } from '@/components/sections/Skills'
 import { Creative } from '@/components/sections/Creative'
 import { Contact } from '@/components/sections/Contact'
 import { AssistantWidget } from '@/components/assistant/AssistantWidget'
+import { PartyLayer } from '@/components/layout/PartyLayer'
 import { scrollToHash } from '@/lib/pages'
 
 export default function App() {
@@ -18,7 +19,7 @@ export default function App() {
 
   return (
     <MotionProvider>
-      <div className="min-h-screen bg-bg">
+      <div className="app-shell min-h-screen bg-bg">
         <Navigation />
         <main>
           <Hero />
@@ -31,6 +32,7 @@ export default function App() {
         </main>
         <Footer />
         <AssistantWidget />
+        <PartyLayer />
       </div>
     </MotionProvider>
   )

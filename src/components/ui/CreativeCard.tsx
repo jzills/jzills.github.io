@@ -442,6 +442,7 @@ function AudioCard({ item }: { item: AudioItem }) {
 const bandcampColors = {
   dark: { bg: '111113', link: '22d3ee' },
   light: { bg: 'ffffff', link: '0e7490' },
+  party: { bg: '000080', link: '39ff14' },
 }
 
 function MusicCard({ item }: { item: MusicItem }) {
