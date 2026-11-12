@@ -116,17 +116,25 @@ function WaveformCanvas() {
     // but before it's painted, so repaint at once or a blank frame shows. On
     // iPhones the hero resizes constantly while scrolling, as Safari's toolbar
     // collapses and expands, which made the canvas blink.
+    // Sized in device pixels (capped at 2x) so the lines stay crisp on high-DPI
+    // screens; w and h are the CSS size the drawing works in.
+    let w = 0, h = 0, dpr = 0
     const resize = () => {
-      if (canvas.width === canvas.offsetWidth && canvas.height === canvas.offsetHeight) return
-      canvas.width = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
+      const nextDpr = Math.min(2, window.devicePixelRatio || 1)
+      if (w === canvas.offsetWidth && h === canvas.offsetHeight && dpr === nextDpr) return
+      w = canvas.offsetWidth
+      h = canvas.offsetHeight
+      dpr = nextDpr
+      canvas.width = w * dpr
+      canvas.height = h * dpr
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       paint()
     }
 
     const noise = (x: number) => Math.sin(x * 1.7) * 0.5 + Math.sin(x * 3.3) * 0.3 + Math.sin(x * 0.7) * 0.2
 
     const paint = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, w, h)
 
       const waves = [
         { freq: 0.008, amp: 0.04, speed: 0.004, phase: 0 },
@@ -144,28 +152,28 @@ function WaveformCanvas() {
       ctx.strokeStyle = strokeRef.current
       ctx.lineWidth = 1.5
 
-      const cy = canvas.height / 2
-      const sigma = Math.max(120, canvas.width * 0.12)
+      const cy = h / 2
+      const sigma = Math.max(120, w * 0.12)
       const spread = 2 * sigma * sigma
       // How far toward the cursor the lines bend, capped so they never leave the band.
-      const pull = Math.max(-0.3, Math.min(0.3, (pointer.y - cy) / canvas.height)) * canvas.height
+      const pull = Math.max(-0.3, Math.min(0.3, (pointer.y - cy) / h)) * h
 
-      waves.forEach((wave, w) => {
+      waves.forEach((wave, i) => {
         ctx.beginPath()
-        const weight = 1 - w * 0.25
+        const weight = 1 - i * 0.25
 
-        for (let x = 0; x <= canvas.width; x += 2) {
+        for (let x = 0; x <= w; x += 2) {
           const noiseVal = noise(x * 0.003 + t * 0.5 + wave.phase)
           const dx = x - pointer.x
           const bump = pointer.strength * Math.exp(-(dx * dx) / spread)
-          const amp = canvas.height * wave.amp * (1 + noiseVal * 0.4) * (1 + energy + bump * 2.2)
+          const amp = h * wave.amp * (1 + noiseVal * 0.4) * (1 + energy + bump * 2.2)
           let y = cy + Math.sin(x * wave.freq + t * wave.speed * 60 + wave.phase) * amp
           y += pull * bump * weight
 
           if (pluck.amp > 0.01) {
             const px = x - pluck.x
             const envelope = Math.exp(-(px * px) / (spread * 4))
-            y += Math.sin(Math.abs(px) * 0.03 - pluck.age * 9 + w) * envelope * pluck.amp * canvas.height * 0.07 * weight
+            y += Math.sin(Math.abs(px) * 0.03 - pluck.age * 9 + i) * envelope * pluck.amp * h * 0.07 * weight
           }
 
           if (x === 0) ctx.moveTo(x, y)

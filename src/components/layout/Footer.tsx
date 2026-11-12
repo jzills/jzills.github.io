@@ -1,12 +1,14 @@
+import { useSyncExternalStore } from 'react'
 import { Mail } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 import { CopyIcon } from '@/components/ui/CopyIcon'
 import { useCopyToClipboard } from '@/lib/useCopyToClipboard'
 import { experience } from '@/data/experience'
+import { profile } from '@/data/profile'
 import { projects } from '@/data/projects'
 import { LAB_PATH, homeHref } from '@/lib/pages'
 
-const email = 'joshua.zillwood@gmail.com'
+const { email, github, linkedin, resume } = profile.links
 
 interface FooterLink {
   label: string
@@ -26,14 +28,14 @@ const siteLinks: FooterLink[] = [
 // The projects with docs sites, linked the same way their cards are.
 const projectLinks: FooterLink[] = [
   ...projects.filter((p) => p.docsUrl).map((p) => ({ label: p.name, href: p.docsUrl! })),
-  { label: 'All repositories', href: 'https://github.com/jzills?tab=repositories' },
+  { label: 'All repositories', href: `${github}?tab=repositories` },
 ]
 
 const moreLinks: FooterLink[] = [
-  { label: 'Resume', href: 'https://docs.google.com/document/d/1Cn8XP9f3FjcqYxIxBOgPaePRyFFD69YliEm-djYhK0k/export?format=pdf' },
-  { label: 'LinkedIn', href: 'https://linkedin.com/in/jzillss' },
-  { label: 'GitHub', href: 'https://github.com/jzills' },
-  { label: 'Source for this site', href: 'https://github.com/jzills/jzills.github.io' },
+  { label: 'Resume', href: resume },
+  { label: 'LinkedIn', href: linkedin },
+  { label: 'GitHub', href: github },
+  { label: 'Source for this site', href: `${github}/jzills.github.io` },
 ]
 
 const columns = [
@@ -66,8 +68,20 @@ function CopyEmail() {
   )
 }
 
+// The prerendered HTML carries the build's year. Hydration renders that same
+// year (the server snapshot) so the markup matches, then React re-renders with
+// the visitor's year if the calendar has moved on since the build.
+const noSubscribe = () => () => {}
+const currentYear = () => new Date().getFullYear()
+const buildYear = () => __BUILD_YEAR__
+
+function useCurrentYear() {
+  return useSyncExternalStore(noSubscribe, currentYear, buildYear)
+}
+
 export function Footer() {
   const current = experience[0]
+  const year = useCurrentYear()
 
   return (
     <footer className="relative border-t border-border pt-12 pb-10 text-sm">
@@ -120,13 +134,13 @@ export function Footer() {
           ZILLS
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
-          <p className="text-xs text-muted font-mono">© {new Date().getFullYear()} Joshua Zillwood</p>
+          <p className="text-xs text-muted font-mono">© {year} {profile.name}</p>
           <div className="flex items-center gap-4 text-muted">
             <span className="text-xs font-semibold">Let's connect</span>
-            <a href="https://github.com/jzills" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className={linkClass}>
+            <a href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className={linkClass}>
               <GitHubIcon size={16} />
             </a>
-            <a href="https://linkedin.com/in/jzillss" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className={linkClass}>
+            <a href={linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className={linkClass}>
               <LinkedInIcon size={16} />
             </a>
             <a href={`mailto:${email}`} aria-label="Email" className={linkClass}>

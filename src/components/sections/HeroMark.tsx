@@ -1,6 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { blastPage } from '@/lib/blast'
-import { curve, curvePoints } from '@/lib/lissajous'
+import { curve, curvePoints, pulseAt } from '@/lib/lissajous'
 import { fbm2 } from '@/lib/noise'
 
 // The hero's easter egg: an oscilloscope figure drawn in dots beside the name.
@@ -17,6 +17,8 @@ const REDRAW = 1.3
 // Seconds for a returning dot's pull to build to full strength.
 const DOT_RAMP = 0.6
 const FADE = 0.3
+// How much the hint pulse swells the idle figure (see pulseAt).
+const PULSE_SCALE = 0.12
 
 type Phase = 'idle' | 'spin' | 'fly' | 'rebuild' | 'fade-out' | 'fade-in'
 interface Dot { x: number; y: number; vx: number; vy: number; sx: number; sy: number }
@@ -67,6 +69,8 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
     let idleStart = phaseStart
     let raf = 0, last = phaseStart, frame = 0
     let color = readAccent()
+    // Set by the first tap; the hint pulse stops for good after that.
+    let found = false
 
     const home = (i: number, fig: number, drift: number) => {
       const [x, y] = curve(fig, (i / dots.length) * Math.PI * 2, drift)
@@ -171,6 +175,9 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
       const tNow = (now - phaseStart) / 1000
       const fade = phase === 'fade-out' ? 1 - tNow / FADE : phase === 'fade-in' ? tNow / FADE : 1
       let settled = phase === 'rebuild'
+      // The hint pulse: a brightness lift always, plus a swell unless motion is reduced.
+      const pulse = phase === 'idle' && !found ? pulseAt((now - idleStart) / 1000) : 0
+      const pulseScale = reduce.matches ? 1 : 1 + PULSE_SCALE * pulse
 
       // Per-frame wind-up state, shared by every dot.
       let breath = 1
@@ -188,10 +195,11 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
         let alpha = 1
         if (idle) {
           const [hx, hy] = home(i, figure, drift)
-          d.x = hx
-          d.y = hy
+          d.x = hx * pulseScale
+          d.y = hy * pulseScale
           const behind = (head - i + n) % n
-          alpha = (0.3 + 0.7 * Math.exp(-behind / (n * 0.15))) * Math.max(0, Math.min(1, fade))
+          const trace = 0.3 + 0.7 * Math.exp(-behind / (n * 0.15))
+          alpha = Math.min(1, trace + 0.5 * pulse) * Math.max(0, Math.min(1, fade))
         } else if (phase === 'spin') {
           // Noise drives the motion rather than decorating it: the spin speed
           // lurches and stalls (spinAngle, integrated once per frame above),
@@ -254,6 +262,7 @@ export function HeroMarkCanvas({ anchorRef }: { anchorRef: RefObject<HTMLButtonE
 
     const trigger = () => {
       if (phase !== 'idle' || !shown) return
+      found = true
       phaseStart = performance.now()
       if (reduce.matches) {
         phase = 'fade-out'
