@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { BANANA_PALETTE, BANANA_SPRITE, SHOWER, SPARKLE_COLORS, UNLOCK_AT, bananaAt, makeShower, makeSparkle, nextShowerDelay, recordTap, stepSparkle, tapCount, tickerItems } from './party'
+import { NAME_PIECES, litLetters, getLitPieces, setLitPieces, subscribeLitPieces, BANANA_PALETTE, BANANA_SPRITE, SHOWER, SPARKLE_COLORS, UNLOCK_AT, bananaAt, makeShower, makeSparkle, nextShowerDelay, recordTap, stepSparkle, tapCount, tickerItems } from './party'
 import { nextTheme } from './theme'
 
 describe('recordTap', () => {
-  it('enters party on every fifth tap, counting every tap for the banner', () => {
+  it('enters party on every fourth tap, counting every tap for the banner', () => {
     const before = tapCount()
     const results = Array.from({ length: UNLOCK_AT * 2 }, () => recordTap())
     expect(results.map((r, i) => (r ? i : -1)).filter((i) => i >= 0)).toEqual([UNLOCK_AT - 1, UNLOCK_AT * 2 - 1])
     expect(tapCount() - before).toBe(UNLOCK_AT * 2)
   })
 
-  it('ignores taps made while already partying, so leaving takes five fresh taps to return', () => {
+  it('ignores taps made while already partying, so leaving takes four fresh taps to return', () => {
     for (let i = 0; i < 7; i++) expect(recordTap(false)).toBe(false)
     const back = Array.from({ length: UNLOCK_AT }, () => recordTap())
     expect(back.indexOf(true)).toBe(UNLOCK_AT - 1)
@@ -90,5 +90,39 @@ describe('banana rain', () => {
     expect(later.angle).not.toBe(start.angle)
     expect(start.gone).toBe(false)
     expect(bananaAt(b, b.delay + 5, 800).gone).toBe(true)
+  })
+})
+
+describe('name progress', () => {
+  it('lights Josh, ua, Zill, wood: one piece per tap, the whole name by the last', () => {
+    expect(NAME_PIECES).toHaveLength(UNLOCK_AT)
+    expect(litLetters(0)).toBe(0)
+    expect(litLetters(1)).toBe(4)
+    expect(litLetters(2)).toBe(6)
+    expect(litLetters(3)).toBe(10)
+    expect(litLetters(UNLOCK_AT)).toBe('JoshuaZillwood'.length)
+  })
+
+  it('splits the name at the right letters', () => {
+    const letters = [...'JoshuaZillwood']
+    const pieces: string[] = []
+    let at = 0
+    for (const n of NAME_PIECES) {
+      pieces.push(letters.slice(at, at + n).join(''))
+      at += n
+    }
+    expect(pieces).toEqual(['Josh', 'ua', 'Zill', 'wood'])
+  })
+
+  it('notifies subscribers only when the lit count changes', () => {
+    let calls = 0
+    const off = subscribeLitPieces(() => calls++)
+    setLitPieces(2)
+    setLitPieces(2)
+    setLitPieces(3)
+    off()
+    setLitPieces(0)
+    expect(calls).toBe(2)
+    expect(getLitPieces()).toBe(0)
   })
 })

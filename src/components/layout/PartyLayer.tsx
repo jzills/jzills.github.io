@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { SHOCKWAVE_EVENT } from '@/lib/events'
 import {
   BANANA_PALETTE, BANANA_SPRITE, MARK_TAP_EVENT, SHOWER, bananaAt, makeShower, makeSparkle, nextShowerDelay,
-  recordTap, stepSparkle, tapCount, tickerItems, type Banana, type Sparkle,
+  recordTap, setLitPieces, stepSparkle, streakCount, tapCount, tickerItems, type Banana, type Sparkle,
 } from '@/lib/party'
 import { getTheme, setTheme, useTheme } from '@/lib/theme'
 
@@ -251,17 +251,27 @@ export function PartyLayer() {
 
   useEffect(() => {
     const onTap = () => {
-      const entersParty = recordTap(getTheme() !== 'party')
+      const partying = getTheme() === 'party'
+      const entersParty = recordTap(!partying)
       setCount(tapCount())
-      if (!entersParty) return
-      const go = () => {
+      if (partying) return
+      // On the burst, the next piece of the name lights (and its letters fly
+      // home lit), or, on the last one, the explosion reveals party mode.
+      // Under reduced motion there is no burst (the figure just fades), so
+      // it happens straight away.
+      const pieces = streakCount()
+      const land = () => {
+        if (!entersParty) {
+          setLitPieces(pieces)
+          return
+        }
+        // Party paints the name rainbow; it comes back unlit after leaving.
+        setLitPieces(0)
         setTheme('party')
         setAnnounce(true)
       }
-      // The burst itself reveals party mode. Under reduced motion there is no
-      // burst (the figure just fades), so switch straight away.
-      if (reducedMotion()) go()
-      else window.addEventListener(SHOCKWAVE_EVENT, go, { once: true })
+      if (reducedMotion()) land()
+      else window.addEventListener(SHOCKWAVE_EVENT, land, { once: true })
     }
     window.addEventListener(MARK_TAP_EVENT, onTap)
     return () => window.removeEventListener(MARK_TAP_EVENT, onTap)

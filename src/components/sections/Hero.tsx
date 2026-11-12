@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Mail, FileText, ChevronDown, FlaskConical } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 import { m } from 'framer-motion'
@@ -8,24 +8,32 @@ import { TypingLine } from '@/components/ui/TypingLine'
 import { HeroMarkCanvas, MarkFallback, SHOCKWAVE_EVENT, type ShockwaveDetail } from '@/components/sections/HeroMark'
 import { experience } from '@/data/experience'
 import { LAB_PATH } from '@/lib/pages'
+import { getLitPieces, litLetters, subscribeLitPieces } from '@/lib/party'
 import { profile } from '@/data/profile'
 
 const current = experience[0]
 
 // The name splits into letters so the blast can scatter them one by one. Each
-// word stays unbreakable so the letters still wrap as words.
-function BlastableName({ text }: { text: string }) {
+// word stays unbreakable so the letters still wrap as words. The first `lit`
+// letters glow in the accent: progress toward party mode (src/lib/party.ts).
+function BlastableName({ text, lit }: { text: string; lit: number }) {
+  let index = 0
   return text.split(' ').map((word, w) => (
     <span key={w}>
       {w > 0 && ' '}
       <span className="inline-block whitespace-nowrap">
-        {[...word].map((ch, i) => (
-          <span key={i} data-blast="" className="inline-block">{ch}</span>
-        ))}
+        {[...word].map((ch, i) => {
+          const on = index++ < lit
+          return (
+            <span key={i} data-blast="" className={`inline-block${on ? ' name-lit' : ''}`}>{ch}</span>
+          )
+        })}
       </span>
     </span>
   ))
 }
+
+const serverLit = () => 0
 
 const iconLinkClass = 'inline-flex items-center justify-center w-9 h-9 rounded bg-surface border border-border text-muted hover:text-fg hover:border-accent/40 transition-all duration-200'
 
@@ -227,6 +235,7 @@ function WaveformCanvas() {
 export function Hero() {
   const [scrolled, setScrolled] = useState(false)
   const markRef = useRef<HTMLButtonElement>(null)
+  const litPieces = useSyncExternalStore(subscribeLitPieces, getLitPieces, serverLit)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80)
@@ -252,7 +261,7 @@ export function Hero() {
           </p>
           <div className="flex items-center gap-3 mb-4">
             <h1 aria-label={profile.name} className="text-5xl sm:text-6xl font-bold text-fg tracking-tight leading-none">
-              <BlastableName text={profile.name} />
+              <BlastableName text={profile.name} lit={litLetters(litPieces)} />
             </h1>
             {/* Hit area for the oscilloscope mark; its dots are drawn on the
                 full-hero canvas so the burst can spill across the whole section.
