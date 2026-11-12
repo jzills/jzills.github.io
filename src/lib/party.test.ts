@@ -3,14 +3,14 @@ import { NAME_PIECES, litLetters, getLitPieces, setLitPieces, subscribeLitPieces
 import { nextTheme } from './theme'
 
 describe('recordTap', () => {
-  it('enters party on every fourth tap, counting every tap for the banner', () => {
+  it('enters party on every third tap, counting every tap for the banner', () => {
     const before = tapCount()
     const results = Array.from({ length: UNLOCK_AT * 2 }, () => recordTap())
     expect(results.map((r, i) => (r ? i : -1)).filter((i) => i >= 0)).toEqual([UNLOCK_AT - 1, UNLOCK_AT * 2 - 1])
     expect(tapCount() - before).toBe(UNLOCK_AT * 2)
   })
 
-  it('ignores taps made while already partying, so leaving takes four fresh taps to return', () => {
+  it('ignores taps made while already partying, so leaving takes three fresh taps to return', () => {
     for (let i = 0; i < 7; i++) expect(recordTap(false)).toBe(false)
     const back = Array.from({ length: UNLOCK_AT }, () => recordTap())
     expect(back.indexOf(true)).toBe(UNLOCK_AT - 1)
@@ -94,13 +94,11 @@ describe('banana rain', () => {
 })
 
 describe('name progress', () => {
-  it('lights Josh, ua, Zill, wood: one piece per tap, the whole name by the last', () => {
-    expect(NAME_PIECES).toHaveLength(UNLOCK_AT)
+  it('lights Joshua, then Zillwood: the whole name just before the party tap', () => {
+    expect(NAME_PIECES).toHaveLength(UNLOCK_AT - 1)
     expect(litLetters(0)).toBe(0)
-    expect(litLetters(1)).toBe(4)
-    expect(litLetters(2)).toBe(6)
-    expect(litLetters(3)).toBe(10)
-    expect(litLetters(UNLOCK_AT)).toBe('JoshuaZillwood'.length)
+    expect(litLetters(1)).toBe(6)
+    expect(litLetters(UNLOCK_AT - 1)).toBe('JoshuaZillwood'.length)
   })
 
   it('splits the name at the right letters', () => {
@@ -111,7 +109,7 @@ describe('name progress', () => {
       pieces.push(letters.slice(at, at + n).join(''))
       at += n
     }
-    expect(pieces).toEqual(['Josh', 'ua', 'Zill', 'wood'])
+    expect(pieces).toEqual(['Joshua', 'Zillwood'])
   })
 
   it('notifies subscribers only when the lit count changes', () => {
