@@ -71,7 +71,7 @@ export function Contact() {
 
           <div className="flex flex-wrap gap-4">
             <a
-              href="https://github.com/jzills"
+              href={profile.links.github}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded bg-surface border border-border text-sm text-fg hover:border-accent/40 transition-all duration-200"
@@ -80,7 +80,7 @@ export function Contact() {
               GitHub
             </a>
             <a
-              href="https://linkedin.com/in/jzillss"
+              href={profile.links.linkedin}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded bg-surface border border-border text-sm text-fg hover:border-accent/40 transition-all duration-200"
@@ -89,11 +89,11 @@ export function Contact() {
               LinkedIn
             </a>
             <a
-              href="mailto:joshua.zillwood@gmail.com"
+              href={`mailto:${profile.links.email}`}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded border border-accent/50 text-sm text-accent hover:bg-accent/5 transition-all duration-200"
             >
               <Mail size={15} />
-              joshua.zillwood@gmail.com
+              {profile.links.email}
             </a>
             <CopyEmailButton />
           </div>

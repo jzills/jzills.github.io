@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FIGURES, curve, curvePoints } from './lissajous'
+import { FIGURES, PULSE, curve, curvePoints, pulseAt } from './lissajous'
 import { gustAt, impulse } from './blast'
 
 describe('curve', () => {
@@ -84,5 +84,28 @@ describe('gustAt', () => {
     const bent = impulse({ x: 300, y: 0 }, { width: 200, height: 40 }, origin, 1000, () => 0.5, { deflect: Math.PI / 2, boost: 1 })
     expect(straight.vx).toBeGreaterThan(0)
     expect(bent.vy).toBeGreaterThan(Math.abs(bent.vx))
+  })
+})
+
+describe('pulseAt', () => {
+  it('stays still before the first pulse is due', () => {
+    for (let t = 0; t < PULSE.delay; t += 0.1) expect(pulseAt(t)).toBe(0)
+  })
+
+  it('peaks at 1 midway through each pulse and is still between them', () => {
+    for (let k = 0; k < 3; k++) {
+      const start = PULSE.delay + k * PULSE.every
+      expect(pulseAt(start)).toBeCloseTo(0)
+      expect(pulseAt(start + PULSE.length / 2)).toBeCloseTo(1)
+      expect(pulseAt(start + PULSE.length + 0.5)).toBe(0)
+    }
+  })
+
+  it('stays within 0..1', () => {
+    for (let t = 0; t < 30; t += 0.05) {
+      const v = pulseAt(t)
+      expect(v).toBeGreaterThanOrEqual(0)
+      expect(v).toBeLessThanOrEqual(1)
+    }
   })
 })

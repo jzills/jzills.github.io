@@ -24,3 +24,15 @@ export function curvePoints(figure: number, steps = 240, scale = 0.92): string {
     return `${(x * scale).toFixed(3)},${(y * scale).toFixed(3)}`
   }).join(' ')
 }
+
+// The hint that the mark can be tapped: until the first tap, the idle figure
+// swells and brightens briefly every few seconds. Seconds throughout.
+export const PULSE = { delay: 3, every: 5, length: 0.7 }
+
+// 0 except during a pulse, where it rises and falls smoothly to 1 and back.
+// `idleFor` is seconds since the figure last came to rest.
+export function pulseAt(idleFor: number): number {
+  if (idleFor < PULSE.delay) return 0
+  const p = ((idleFor - PULSE.delay) % PULSE.every) / PULSE.length
+  return p < 1 ? Math.sin(Math.PI * p) ** 2 : 0
+}
