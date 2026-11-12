@@ -140,6 +140,7 @@ export function startWind(look: WindLook, originX: number, originY: number, seed
   canvas.width = W * dpr
   canvas.height = H * dpr
   canvas.setAttribute('aria-hidden', 'true')
+  canvas.className = 'party-hue'
   Object.assign(canvas.style, { position: 'fixed', inset: '0', width: '100%', height: '100%', pointerEvents: 'none', zIndex: '60' })
   document.body.appendChild(canvas)
   const ctx = canvas.getContext('2d')

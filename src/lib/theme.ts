@@ -1,10 +1,16 @@
 import { useSyncExternalStore } from 'react'
 
-export type Theme = 'light' | 'dark'
+// Party is a hidden third theme: a loud 90s homepage. It unlocks on the
+// visitor's fifth blast of the hero mark (src/lib/party.ts), after which the
+// theme toggle cycles through it too.
+export type Theme = 'light' | 'dark' | 'party'
+
+const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark' || value === 'party'
 
 // Must match the key read by public/theme-init.js, which applies the
 // theme before first paint so light-mode visitors never see a dark flash.
 const STORAGE_KEY = 'theme'
+const UNLOCK_KEY = 'party-unlocked'
 
 // Absent while prerendering, which has no window.
 const systemQuery = typeof window === 'undefined' ? null : window.matchMedia('(prefers-color-scheme: light)')
@@ -13,7 +19,7 @@ const listeners = new Set<() => void>()
 function readStored(): Theme | null {
   try {
     const value = localStorage.getItem(STORAGE_KEY)
-    return value === 'light' || value === 'dark' ? value : null
+    return isTheme(value) ? value : null
   } catch {
     return null
   }
@@ -30,7 +36,37 @@ systemQuery?.addEventListener('change', () => {
 })
 
 export function getTheme(): Theme {
-  return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+  const value = document.documentElement.dataset.theme
+  return isTheme(value) ? value : 'dark'
+}
+
+// Kept in memory too, so unlocking still works when storage is unavailable.
+let unlocked = false
+
+export function isPartyUnlocked(): boolean {
+  if (unlocked) return true
+  try {
+    return localStorage.getItem(UNLOCK_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function unlockParty() {
+  unlocked = true
+  try {
+    localStorage.setItem(UNLOCK_KEY, '1')
+  } catch {
+    // Unlocked for this page view only.
+  }
+}
+
+// What the toggle switches to next: dark and light alternate, with party
+// joining the loop once it's unlocked.
+export function nextTheme(theme: Theme, partyUnlocked: boolean): Theme {
+  if (theme === 'dark') return 'light'
+  if (theme === 'light') return partyUnlocked ? 'party' : 'dark'
+  return 'dark'
 }
 
 export function setTheme(theme: Theme) {

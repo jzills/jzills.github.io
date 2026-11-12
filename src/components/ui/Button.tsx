@@ -10,7 +10,7 @@ type ButtonProps = BaseProps & ButtonHTMLAttributes<HTMLButtonElement> & { href?
 type AnchorProps = BaseProps & AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }
 type Props = ButtonProps | AnchorProps
 
-const base = 'inline-flex items-center gap-2 text-sm font-medium transition-all duration-200 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2'
+const base = 'btn inline-flex items-center gap-2 text-sm font-medium transition-all duration-200 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2'
 
 const variants = {
   primary: 'px-4 py-2 rounded bg-accent text-bg hover:bg-accent-dim',
@@ -19,7 +19,7 @@ const variants = {
 }
 
 export function Button({ variant = 'ghost', children, className = '', ...props }: Props) {
-  const cls = `${base} ${variants[variant]} ${className}`
+  const cls = `${base} btn-${variant} ${variants[variant]} ${className}`
 
   if ('href' in props && props.href !== undefined) {
     const { href, ...rest } = props as AnchorProps
