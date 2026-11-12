@@ -1,18 +1,24 @@
 // Party mode: the hidden 90s theme. The hero mark announces each tap with
-// MARK_TAP_EVENT; every fifth tap made outside party mode switches it on
-// (PartyLayer), so after leaving it takes five more to come back. Taps count
-// rather than blasts, so it works under reduced motion too, where a tap just
-// fades the figure instead of blowing up the page.
+// MARK_TAP_EVENT; every fourth tap made outside party mode switches it on
+// (PartyLayer), so after leaving it takes four more to come back. Each tap
+// lights the next piece of the name in the hero ("Josh", "ua", "Zill", "wood")
+// so the progress shows. Taps count rather than blasts, so it works under
+// reduced motion too, where a tap just fades the figure instead of blowing up
+// the page.
 
 export const MARK_TAP_EVENT = 'hero-mark-tap'
-export const UNLOCK_AT = 5
+export const UNLOCK_AT = 4
+
+// How many letters of the name each tap lights, in order: Josh, ua, Zill, wood.
+// One piece per tap toward party mode.
+export const NAME_PIECES = [4, 2, 4, 4] as const
 
 // Module state so remounting the layer doesn't reset it. `taps` is every tap
 // this page view (the banner shows it); `streak` counts toward party mode.
 let taps = 0
 let streak = 0
 
-// Counts one tap; true when it's the fifth toward party mode. Taps made while
+// Counts one tap; true when it's the fourth toward party mode. Taps made while
 // already partying (`towardParty` false) don't count toward the next entry.
 export function recordTap(towardParty = true): boolean {
   taps++
@@ -24,6 +30,30 @@ export function recordTap(towardParty = true): boolean {
 }
 
 export const tapCount = () => taps
+export const streakCount = () => streak
+
+// Letters of the name lit after `pieces` pieces.
+export const litLetters = (pieces: number) =>
+  NAME_PIECES.slice(0, Math.max(0, pieces)).reduce((sum, n) => sum + n, 0)
+
+// How many pieces of the name are lit, as a tiny store the hero subscribes to.
+let lit = 0
+const litListeners = new Set<() => void>()
+
+export const getLitPieces = () => lit
+
+export function setLitPieces(pieces: number) {
+  if (pieces === lit) return
+  lit = pieces
+  litListeners.forEach((listener) => listener())
+}
+
+export function subscribeLitPieces(listener: () => void) {
+  litListeners.add(listener)
+  return () => {
+    litListeners.delete(listener)
+  }
+}
 
 // The scrolling banner along the top, as a 90s homepage would have it.
 export function tickerItems(count: number): string[] {

@@ -381,3 +381,11 @@ html[data-blasting] [data-blast-group] > * {
     animation: none;
   }
 }
+
+/* Progress toward party mode: each tap of the hero mark lights the next piece
+   of the name in the accent (src/lib/party.ts). Party mode's rainbow wins. */
+.name-lit {
+  color: var(--color-accent);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--color-accent) 55%, transparent);
+  transition: color 0.4s ease, text-shadow 0.4s ease;
+}
