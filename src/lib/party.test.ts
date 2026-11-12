@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SPARKLE_COLORS, UNLOCK_AT, makeSparkle, recordTap, stepSparkle, tapCount, tickerItems } from './party'
+import { BANANA_PALETTE, BANANA_SPRITE, SHOWER, SPARKLE_COLORS, UNLOCK_AT, bananaAt, makeShower, makeSparkle, nextShowerDelay, recordTap, stepSparkle, tapCount, tickerItems } from './party'
 import { nextTheme } from './theme'
 
 describe('recordTap', () => {
@@ -51,5 +51,44 @@ describe('sparkles', () => {
     while (stepSparkle(s, 1)) frames++
     expect(s.vy).toBeGreaterThan(0)
     expect(frames).toBeLessThanOrEqual(Math.ceil(s.life * 60))
+  })
+})
+
+describe('banana rain', () => {
+  it('has a rectangular sprite drawn only in palette colours', () => {
+    const width = BANANA_SPRITE[0].length
+    for (const row of BANANA_SPRITE) {
+      expect(row).toHaveLength(width)
+      for (const ch of row) if (ch !== '.') expect(BANANA_PALETTE[ch]).toBeDefined()
+    }
+  })
+
+  it('waits 20 to 40 seconds between showers', () => {
+    expect(nextShowerDelay(() => 0)).toBe(SHOWER.min)
+    expect(nextShowerDelay(() => 0.999)).toBeLessThan(SHOWER.max)
+  })
+
+  it('drops 15 to 25 bananas, all starting above the screen and across its width', () => {
+    for (const r of [0, 0.5, 0.999]) {
+      const shower = makeShower(400, () => r)
+      expect(shower.length).toBeGreaterThanOrEqual(15)
+      expect(shower.length).toBeLessThanOrEqual(25)
+      for (const b of shower) {
+        expect(b.y).toBeLessThan(0)
+        expect(b.x).toBeGreaterThanOrEqual(0)
+        expect(b.x).toBeLessThanOrEqual(400)
+        expect(b.scale).toBeGreaterThanOrEqual(2)
+        expect(b.scale).toBeLessThanOrEqual(4)
+      }
+    }
+  })
+
+  it('falls, spins, and is gone a few seconds later', () => {
+    const [b] = makeShower(400, () => 0.5)
+    const start = bananaAt(b, 0, 800), later = bananaAt(b, b.delay + 1, 800)
+    expect(later.y).toBeGreaterThan(start.y)
+    expect(later.angle).not.toBe(start.angle)
+    expect(start.gone).toBe(false)
+    expect(bananaAt(b, b.delay + 5, 800).gone).toBe(true)
   })
 })
