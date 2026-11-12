@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from 'react'
 
-// Party is a hidden third theme: a loud 90s homepage. It unlocks on the
-// visitor's fifth blast of the hero mark (src/lib/party.ts), after which the
-// theme toggle cycles through it too.
+// Party is a hidden third theme: a loud 90s homepage. Five blasts of the hero
+// mark switch it on (src/lib/party.ts); its banner's exit button, or the
+// theme toggle, switch it off. The toggle itself only offers dark and light.
 export type Theme = 'light' | 'dark' | 'party'
 
 const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark' || value === 'party'
@@ -10,7 +10,6 @@ const isTheme = (value: unknown): value is Theme => value === 'light' || value =
 // Must match the key read by public/theme-init.js, which applies the
 // theme before first paint so light-mode visitors never see a dark flash.
 const STORAGE_KEY = 'theme'
-const UNLOCK_KEY = 'party-unlocked'
 
 // Absent while prerendering, which has no window.
 const systemQuery = typeof window === 'undefined' ? null : window.matchMedia('(prefers-color-scheme: light)')
@@ -40,33 +39,9 @@ export function getTheme(): Theme {
   return isTheme(value) ? value : 'dark'
 }
 
-// Kept in memory too, so unlocking still works when storage is unavailable.
-let unlocked = false
-
-export function isPartyUnlocked(): boolean {
-  if (unlocked) return true
-  try {
-    return localStorage.getItem(UNLOCK_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
-export function unlockParty() {
-  unlocked = true
-  try {
-    localStorage.setItem(UNLOCK_KEY, '1')
-  } catch {
-    // Unlocked for this page view only.
-  }
-}
-
-// What the toggle switches to next: dark and light alternate, with party
-// joining the loop once it's unlocked.
-export function nextTheme(theme: Theme, partyUnlocked: boolean): Theme {
-  if (theme === 'dark') return 'light'
-  if (theme === 'light') return partyUnlocked ? 'party' : 'dark'
-  return 'dark'
+// What the toggle switches to: dark and light alternate, and party leaves to dark.
+export function nextTheme(theme: Theme): Theme {
+  return theme === 'dark' ? 'light' : 'dark'
 }
 
 export function setTheme(theme: Theme) {

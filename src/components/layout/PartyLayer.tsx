@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { SHOCKWAVE_EVENT } from '@/lib/events'
 import { MARK_TAP_EVENT, makeSparkle, recordTap, stepSparkle, tapCount, tickerItems, type Sparkle } from '@/lib/party'
-import { setTheme, unlockParty, useTheme } from '@/lib/theme'
+import { getTheme, setTheme, useTheme } from '@/lib/theme'
 
 // Fonts only party mode uses, fetched the first time it switches on.
 const PARTY_FONTS = 'https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap'
@@ -146,7 +146,7 @@ function Ticker({ count }: { count: number }) {
 }
 
 // Everything party mode adds on top of the theme's CSS (index.css). Always
-// mounted, so it can count the hero mark's taps and unlock the mode.
+// mounted, so it can count the hero mark's taps and switch the mode on.
 export function PartyLayer() {
   const theme = useTheme()
   const [count, setCount] = useState(tapCount)
@@ -154,10 +154,9 @@ export function PartyLayer() {
 
   useEffect(() => {
     const onTap = () => {
-      const unlocksNow = recordTap()
+      const entersParty = recordTap(getTheme() !== 'party')
       setCount(tapCount())
-      if (!unlocksNow) return
-      unlockParty()
+      if (!entersParty) return
       const go = () => {
         setTheme('party')
         setAnnounce(true)
