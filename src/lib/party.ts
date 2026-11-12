@@ -1,18 +1,26 @@
 // Party mode: the hidden 90s theme. The hero mark announces each tap with
-// MARK_TAP_EVENT; the fifth in one visit unlocks party mode and switches to it
-// (PartyLayer). Taps count rather than blasts, so it unlocks under reduced
-// motion too, where a tap just fades the figure instead of blowing up the page.
+// MARK_TAP_EVENT; every fifth tap made outside party mode switches it on
+// (PartyLayer), so after leaving it takes five more to come back. Taps count
+// rather than blasts, so it works under reduced motion too, where a tap just
+// fades the figure instead of blowing up the page.
 
 export const MARK_TAP_EVENT = 'hero-mark-tap'
 export const UNLOCK_AT = 5
 
-// Taps this page view. Module state so remounting the layer doesn't reset it.
+// Module state so remounting the layer doesn't reset it. `taps` is every tap
+// this page view (the banner shows it); `streak` counts toward party mode.
 let taps = 0
+let streak = 0
 
-// Counts one tap; true on exactly the tap that unlocks.
-export function recordTap(): boolean {
+// Counts one tap; true when it's the fifth toward party mode. Taps made while
+// already partying (`towardParty` false) don't count toward the next entry.
+export function recordTap(towardParty = true): boolean {
   taps++
-  return taps === UNLOCK_AT
+  if (!towardParty) return false
+  streak++
+  if (streak < UNLOCK_AT) return false
+  streak = 0
+  return true
 }
 
 export const tapCount = () => taps
