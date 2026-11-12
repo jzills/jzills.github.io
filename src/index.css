@@ -349,3 +349,35 @@ html[data-blasting] [data-blast-group] > * {
   0%, 80% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* Party headings (WavyText): letters bob and rock in a ripple through the
+   word, and all spin once on hover or tap. Other themes leave them inline. */
+@keyframes party-wave {
+  0%, 60%, 100% { transform: translateY(0) rotate(0); }
+  15% { transform: translateY(-0.22em) rotate(-9deg); }
+  30% { transform: translateY(0.04em) rotate(5deg); }
+  45% { transform: translateY(-0.06em) rotate(-2deg); }
+}
+@keyframes party-spin {
+  0% { transform: translateY(0) rotate(0); }
+  40% { transform: translateY(-0.35em) rotate(200deg); }
+  100% { transform: translateY(0) rotate(360deg); }
+}
+:root[data-theme="party"] .wavy {
+  cursor: pointer;
+}
+:root[data-theme="party"] .wavy-letter {
+  display: inline-block;
+  animation: party-wave 2.2s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.09s);
+}
+:root[data-theme="party"] .wavy-spin .wavy-letter {
+  animation: party-spin 0.7s ease-in-out both;
+  animation-delay: calc(var(--i) * 0.05s);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="party"] .wavy-letter,
+  :root[data-theme="party"] .wavy-spin .wavy-letter {
+    animation: none;
+  }
+}
