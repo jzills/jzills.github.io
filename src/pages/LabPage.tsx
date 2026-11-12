@@ -12,6 +12,7 @@ import type { CreativeItem } from '@/data/creative'
 import { labId } from '@/lib/anchors'
 import { revealOnScroll, rise } from '@/lib/motion'
 import { scrollToHash } from '@/lib/pages'
+import { WavyText } from '@/components/ui/WavyText'
 
 type Kind = CreativeItem['kind']
 
@@ -85,7 +86,9 @@ export function LabPage() {
         <main className="max-w-[1100px] mx-auto px-6 pt-32 pb-24">
           <header className="page-rise mb-12">
             <p className="text-xs font-mono text-accent uppercase tracking-widest mb-3">Creative &amp; Experimental</p>
-            <h1 className="text-4xl sm:text-5xl font-bold text-fg tracking-tight mb-4">Lab</h1>
+            <h1 className="text-4xl sm:text-5xl font-bold text-fg tracking-tight mb-4">
+              <WavyText text="Lab" />
+            </h1>
             <p className="text-muted text-base max-w-2xl leading-relaxed">
               Shaders, computer vision experiments, and other generative work. The shaders run live in
               your browser. Select any piece to view it full-size.
