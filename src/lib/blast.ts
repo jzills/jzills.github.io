@@ -1,4 +1,5 @@
-import { fbm2 } from '@/lib/noise'
+import { gustAt, type Gust } from '@/lib/gust'
+import { lookCycle, rollTailStyle, startWind } from '@/lib/wind'
 
 // Throws page elements away from a point, then springs them home: the page
 // "blowing up" when the hero mark bursts.
@@ -7,9 +8,12 @@ import { fbm2 } from '@/lib/noise'
 // [data-blast-group]. Each piece is a small rigid body written straight to its
 // inline transform, so React never re-renders mid-blast. Elements whose
 // transform is owned by something else (framer-motion) must not be marked.
+// Each blast also raises visible wind (wind.ts) that trails the pieces.
 
 interface Body {
   el: HTMLElement
+  // Where the piece sits at rest (its centre on screen) and its size, for the wind.
+  cx: number; cy: number; w: number; h: number
   x: number; y: number; r: number
   vx: number; vy: number; vr: number
   // Seconds after the blast when this piece starts heading home.
@@ -18,21 +22,6 @@ interface Body {
 
 export interface Impulse { vx: number; vy: number; vr: number }
 
-// How one blast bends and scales the push in each direction. Sampled from noise
-// around the blast point, so neighbouring pieces get swept the same way like a
-// gust, and a new seed per blast makes every blast different.
-export interface Gust { deflect: number; boost: number }
-
-export function gustAt(angle: number, seed: number): Gust {
-  const cx = Math.cos(angle), cy = Math.sin(angle)
-  return {
-    // Up to about ±50° off straight-out.
-    deflect: fbm2(cx * 1.2 + seed, cy * 1.2 + seed * 0.61) * 0.9,
-    // Some directions blow much harder than others.
-    boost: 1 + 0.7 * fbm2(cx * 1.7 - seed * 0.3 + 19.1, cy * 1.7 + seed + 7.7),
-  }
-}
-
 const FLY = 0.85
 const RETURN_STAGGER = 0.8
 // Seconds for a returning piece's pull to build from gentle to full strength.
@@ -40,6 +29,7 @@ const RETURN_RAMP = 0.9
 const SHAKE_TARGETS = ['header', '#hero']
 
 let active = false
+const nextLook = lookCycle()
 
 // The kick a piece gets: away from the blast, weaker with distance, with some
 // sideways scatter and spin. Light pieces (single letters) fly further and
@@ -91,6 +81,7 @@ export function blastPage(originX: number, originY: number, seed = Math.random()
     const gust = gustAt(Math.atan2(center.y - originY, center.x - originX), seed)
     bodies.push({
       el,
+      cx: center.x, cy: center.y, w: rect.width, h: rect.height,
       x: 0, y: 0, r: 0,
       ...impulse(center, rect, origin, reach, Math.random, gust),
       returnAt: FLY + Math.random() * RETURN_STAGGER,
@@ -103,6 +94,8 @@ export function blastPage(originX: number, originY: number, seed = Math.random()
   active = true
   document.documentElement.dataset.blasting = ''
   const start = performance.now()
+  const wind = startWind(nextLook(), originX, originY, seed, rollTailStyle())
+  let windAlive = true
   let last = start
 
   const step = (now: number) => {
@@ -121,6 +114,11 @@ export function blastPage(originX: number, originY: number, seed = Math.random()
     let settled = t > FLY
     for (const b of bodies) {
       if (t < b.returnAt) {
+        // The sweep look shoves pieces as its front passes them.
+        const gust = wind.push(b.cx + b.x, b.cy + b.y, t)
+        b.vx += gust.vx * f
+        b.vy += gust.vy * f
+        b.vr += gust.vx * 0.3 * f
         b.vx *= 0.9 ** f
         // Gravity only while flying, so waiting pieces don't sink off screen.
         b.vy = b.vy * 0.9 ** f + (t < FLY ? 0.45 * f : 0)
@@ -142,7 +140,9 @@ export function blastPage(originX: number, originY: number, seed = Math.random()
       b.el.style.transform = `translate(${b.x}px, ${b.y}px) rotate(${b.r}deg)`
     }
 
-    if (!settled) {
+    // The wind can outlast the pieces by a moment while its tails retract.
+    if (windAlive) windAlive = wind.step(t, f, bodies)
+    if (!settled || windAlive) {
       requestAnimationFrame(step)
       return
     }

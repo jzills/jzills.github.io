@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { FIGURES, PULSE, curve, curvePoints, pulseAt } from './lissajous'
-import { gustAt, impulse } from './blast'
+import { impulse } from './blast'
+import { gustAt } from './gust'
 
 describe('curve', () => {
   it('stays inside -1..1 on both axes for every figure', () => {
