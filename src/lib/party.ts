@@ -70,3 +70,88 @@ export function stepSparkle(s: Sparkle, f: number): boolean {
   s.spin += 0.12 * f
   return true
 }
+
+// ── Banana rain ──────────────────────────────────────────────────────────
+// Every so often in party mode (and on every blast) a shower of pixel-art
+// bananas spins down the screen, 90s clip-art style.
+
+// The banana sprite, one character per pixel: K outline, Y yellow, L light,
+// D shade, B brown tip, G green stem, W shine, . transparent.
+export const BANANA_SPRITE = [
+  '.............KK.',
+  '............KGGK',
+  '...........KGK..',
+  '...........KYK..',
+  '..........KYYDK.',
+  '..........KYYDK.',
+  '.........KLYYDK.',
+  '........KLYYYDK.',
+  '.......KLYYYDDK.',
+  '.....KKLYYYYDK..',
+  '...KKLLYYYYDDK..',
+  '.KKWLYYYYYDDK...',
+  'KBLYYYYYYDDK....',
+  'KKBYYYDDDKK.....',
+  '.KKKKKKKK.......',
+] as const
+
+export const BANANA_PALETTE: Record<string, readonly [number, number, number]> = {
+  K: [0, 0, 0],
+  Y: [255, 229, 0],
+  L: [255, 248, 170],
+  D: [224, 168, 0],
+  B: [107, 62, 0],
+  G: [110, 150, 20],
+  W: [255, 255, 255],
+}
+
+// Seconds between showers, after the first one shortly after party starts.
+export const SHOWER = { first: 3, min: 20, max: 40 }
+
+export const nextShowerDelay = (rand: () => number = Math.random) =>
+  SHOWER.min + rand() * (SHOWER.max - SHOWER.min)
+
+export interface Banana {
+  x: number; y: number; vy: number
+  // Screen pixels per sprite pixel, so 16px of sprite is 32 to 64 on screen.
+  scale: number
+  angle: number; spin: number
+  // Sideways sway: how far, how fast, and where in the swing it starts.
+  sway: number; swaySpeed: number; phase: number
+  // Seconds into the shower before this one appears, so they don't all drop at once.
+  delay: number
+}
+
+// One shower: 15 to 25 bananas spread across a screen `width` wide, starting
+// just above it with a little stagger.
+export function makeShower(width: number, rand: () => number = Math.random): Banana[] {
+  const count = 15 + Math.floor(rand() * 11)
+  return Array.from({ length: count }, () => {
+    const scale = 2 + Math.floor(rand() * 3)
+    return {
+      x: rand() * width,
+      y: -BANANA_SPRITE.length * scale * 1.5,
+      vy: 2.6 + rand() * 3,
+      scale,
+      angle: rand() * Math.PI * 2,
+      spin: (rand() < 0.5 ? -1 : 1) * (0.04 + rand() * 0.08),
+      sway: 10 + rand() * 30,
+      swaySpeed: 1.5 + rand() * 2,
+      phase: rand() * Math.PI * 2,
+      delay: rand() * 1.2,
+    }
+  })
+}
+
+// Where a banana is t seconds into its shower (after its delay), falling at
+// vy px per 60 Hz frame; and whether it has dropped past a screen `height` tall.
+export function bananaAt(b: Banana, t: number, height: number) {
+  const s = Math.max(0, t - b.delay)
+  const y = b.y + b.vy * 60 * s
+  return {
+    x: b.x + Math.sin(b.phase + s * b.swaySpeed) * b.sway,
+    y,
+    angle: b.angle + b.spin * 60 * s,
+    gone: y > height + BANANA_SPRITE.length * b.scale * 1.5,
+  }
+}

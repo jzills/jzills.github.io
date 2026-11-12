@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { SHOCKWAVE_EVENT } from '@/lib/events'
-import { MARK_TAP_EVENT, makeSparkle, recordTap, stepSparkle, tapCount, tickerItems, type Sparkle } from '@/lib/party'
+import {
+  BANANA_PALETTE, BANANA_SPRITE, MARK_TAP_EVENT, SHOWER, bananaAt, makeShower, makeSparkle, nextShowerDelay,
+  recordTap, stepSparkle, tapCount, tickerItems, type Banana, type Sparkle,
+} from '@/lib/party'
 import { getTheme, setTheme, useTheme } from '@/lib/theme'
 
 // Fonts only party mode uses, fetched the first time it switches on.
@@ -117,6 +120,100 @@ function SparkleTrail() {
   return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-[70]" aria-hidden="true" />
 }
 
+// The banana sprite as a tiny canvas, drawn scaled up with sharp pixels.
+function bananaSprite(): HTMLCanvasElement {
+  const h = BANANA_SPRITE.length, w = BANANA_SPRITE[0].length
+  const sprite = document.createElement('canvas')
+  sprite.width = w
+  sprite.height = h
+  const sctx = sprite.getContext('2d')
+  if (!sctx) return sprite
+  const img = sctx.createImageData(w, h)
+  BANANA_SPRITE.forEach((row, y) => {
+    for (let x = 0; x < w; x++) {
+      const rgb = BANANA_PALETTE[row[x]]
+      if (!rgb) continue
+      img.data.set([...rgb, 255], (y * w + x) * 4)
+    }
+  })
+  sctx.putImageData(img, 0, 0)
+  return sprite
+}
+
+// Every 20 to 40 seconds, and on every blast, a shower of spinning pixel
+// bananas falls down the screen. The loop runs only while one is falling.
+function BananaRain() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const ctx = canvas?.getContext('2d')
+    if (!canvas || !ctx || reducedMotion()) return
+    const sprite = bananaSprite()
+    const sw = sprite.width, sh = sprite.height
+
+    // Each shower keeps its own clock, so a blast can start one mid-shower.
+    let showers: { start: number; bananas: Banana[] }[] = []
+    let raf = 0, timer = 0
+
+    const resize = () => {
+      const dpr = Math.min(2, window.devicePixelRatio || 1)
+      canvas.width = window.innerWidth * dpr
+      canvas.height = window.innerHeight * dpr
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    }
+
+    const frame = (now: number) => {
+      const W = window.innerWidth, H = window.innerHeight
+      ctx.clearRect(0, 0, W, H)
+      ctx.imageSmoothingEnabled = false
+      showers = showers.filter((shower) => {
+        const t = (now - shower.start) / 1000
+        let falling = false
+        for (const b of shower.bananas) {
+          const at = bananaAt(b, t, H)
+          if (at.gone) continue
+          falling = true
+          if (t < b.delay) continue
+          ctx.save()
+          ctx.translate(at.x, at.y)
+          ctx.rotate(at.angle)
+          ctx.drawImage(sprite, (-sw * b.scale) / 2, (-sh * b.scale) / 2, sw * b.scale, sh * b.scale)
+          ctx.restore()
+        }
+        return falling
+      })
+      raf = showers.length ? requestAnimationFrame(frame) : 0
+    }
+
+    const shower = () => {
+      showers.push({ start: performance.now(), bananas: makeShower(window.innerWidth) })
+      if (!raf) raf = requestAnimationFrame(frame)
+    }
+
+    // Skipped while the tab is hidden; the next one is scheduled either way.
+    const schedule = (seconds: number) => {
+      timer = window.setTimeout(() => {
+        if (!document.hidden) shower()
+        schedule(nextShowerDelay())
+      }, seconds * 1000)
+    }
+
+    resize()
+    schedule(SHOWER.first)
+    window.addEventListener('resize', resize)
+    window.addEventListener(SHOCKWAVE_EVENT, shower)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.clearTimeout(timer)
+      window.removeEventListener('resize', resize)
+      window.removeEventListener(SHOCKWAVE_EVENT, shower)
+    }
+  }, [])
+
+  return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-[65]" aria-hidden="true" />
+}
+
 function Ticker({ count }: { count: number }) {
   const items = tickerItems(count)
   // Two copies side by side, so sliding one width left loops seamlessly.
@@ -185,6 +282,7 @@ export function PartyLayer() {
   return (
     <>
       <Ticker count={count} />
+      <BananaRain />
       <SparkleTrail />
       {announce && (
         <div role="status" className="party-unlocked fixed inset-0 z-[80] grid place-items-center pointer-events-none">
