@@ -64,9 +64,8 @@ export function Projects() {
                     ref={itemRef(index)}
                     id={`project-${slug(project.name)}`}
                     hover
-                    className={`relative h-full ${
-                      focused === index ? 'scale-[1.03] motion-reduce:scale-100 border-accent/40 ring-1 ring-accent/15' : ''
-                    }`}
+                    active={focused === index}
+                    className={`relative h-full ${focused === index ? 'scale-[1.03] motion-reduce:scale-100' : ''}`}
                   >
                     <div className="flex flex-col h-full gap-4">
                       <div className="flex-1">
