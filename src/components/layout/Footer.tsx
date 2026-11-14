@@ -1,9 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { Mail } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
-import { CopyIcon } from '@/components/ui/CopyIcon'
-import { useCopyToClipboard } from '@/lib/useCopyToClipboard'
-import { experience } from '@/data/experience'
 import { profile } from '@/data/profile'
 import { projects } from '@/data/projects'
 import { LAB_PATH, homeHref } from '@/lib/pages'
@@ -46,28 +43,6 @@ const columns = [
 
 const linkClass = 'text-muted hover:text-fg transition-colors'
 
-const openMail = () => {
-  window.location.href = `mailto:${email}`
-}
-
-function CopyEmail() {
-  const { copied, copy } = useCopyToClipboard(email, openMail)
-
-  return (
-    <div className="mt-5 inline-flex max-w-full items-center gap-3 rounded border border-border bg-surface pl-3 pr-1.5 py-1.5">
-      <code className="truncate text-xs font-mono text-fg">{email}</code>
-      <button
-        type="button"
-        onClick={copy}
-        aria-label={copied ? 'Email copied' : 'Copy email address'}
-        className={`shrink-0 p-1.5 rounded transition-colors ${copied ? 'text-accent' : 'text-muted hover:text-fg'}`}
-      >
-        <CopyIcon copied={copied} />
-      </button>
-    </div>
-  )
-}
-
 // The prerendered HTML carries the build's year. Hydration renders that same
 // year (the server snapshot) so the markup matches, then React re-renders with
 // the visitor's year if the calendar has moved on since the build.
@@ -80,7 +55,6 @@ function useCurrentYear() {
 }
 
 export function Footer() {
-  const current = experience[0]
   const year = useCurrentYear()
 
   return (
@@ -98,11 +72,6 @@ export function Footer() {
               Platform &amp; Software Engineer building developer platforms and cloud infrastructure,
               with a focus on AI-assisted engineering.
             </p>
-            <p className="mt-4 flex items-center gap-2 text-xs font-mono text-muted">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-              {current.role} @ {current.company}
-            </p>
-            <CopyEmail />
           </div>
 
           <nav aria-label="Footer" className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 sm:gap-x-16">
