@@ -243,8 +243,10 @@ export function Hero() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // svh, not dvh: dvh follows the phone's address bar as it shows and hides
+  // while scrolling, which resized the hero and jolted everything below it.
   return (
-    <section id="hero" className="relative min-h-[100dvh] flex items-center overflow-hidden">
+    <section id="hero" className="relative min-h-[100svh] flex items-center overflow-hidden">
       <WaveformCanvas />
       <div className="relative max-w-[1100px] mx-auto px-6 w-full pt-20 pb-16">
         {/* A CSS animation rather than framer-motion: it starts from the prerendered
