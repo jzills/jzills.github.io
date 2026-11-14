@@ -69,7 +69,7 @@ export function Footer() {
               jz.
             </a>
             <p className="mt-4 text-muted leading-relaxed">
-              Platform &amp; Software Engineer building developer platforms and cloud infrastructure,
+              Platform and software engineer building developer platforms and cloud infrastructure,
               with a focus on AI-assisted engineering.
             </p>
           </div>
