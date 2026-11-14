@@ -7,6 +7,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Card } from '@/components/ui/Card'
 import { Chip } from '@/components/ui/Chip'
 import { projects } from '@/data/projects'
+import { useCenterFocus } from '@/lib/useCenterFocus'
 import { slug } from '@/lib/anchors'
 import { revealOnScroll, rise } from '@/lib/motion'
 import type { PackageRegistry } from '@/data/projects'
@@ -34,6 +35,9 @@ const raisedClass = 'relative z-20'
 export function Projects() {
   const ref = useRef<HTMLElement>(null)
   const inView = useInView(ref, { once: true, margin: '-15% 0px' })
+  // On phones, where the cards stack, the one in the middle of the screen
+  // takes the hover look (and grows a touch), since touch has no hover.
+  const { focused, itemRef } = useCenterFocus('(max-width: 767px)')
 
   return (
     <section id="projects" ref={ref} className="py-24 px-6 border-t border-border">
@@ -50,13 +54,20 @@ export function Projects() {
           />
 
           <m.div {...revealOnScroll} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {projects.map((project) => {
+            {projects.map((project, index) => {
               // Docs are the card's destination when they exist, GitHub otherwise.
               const docsIsStretched = Boolean(project.docsUrl)
 
               return (
                 <m.div key={project.name} variants={rise}>
-                  <Card id={`project-${slug(project.name)}`} hover className="relative h-full">
+                  <Card
+                    ref={itemRef(index)}
+                    id={`project-${slug(project.name)}`}
+                    hover
+                    className={`relative h-full ${
+                      focused === index ? 'scale-[1.03] motion-reduce:scale-100 border-accent/40 ring-1 ring-accent/15' : ''
+                    }`}
+                  >
                     <div className="flex flex-col h-full gap-4">
                       <div className="flex-1">
                         <h3 className="text-base font-semibold text-fg mb-2">{project.name}</h3>
