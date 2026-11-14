@@ -21,9 +21,12 @@ const registryMeta: Record<PackageRegistry, { label: string; Icon: React.Compone
   krew:        { label: 'Krew',        Icon: Puzzle          },
 }
 
-const linkBase = 'inline-flex items-center gap-1.5 text-xs text-muted transition-colors'
-const linkClass = `${linkBase} hover:text-fg`
-const demoLinkClass = `${linkBase} hover:text-accent`
+const linkBase = 'inline-flex items-center gap-1.5 text-xs transition-colors'
+const linkClass = `${linkBase} text-muted hover:text-fg`
+const demoLinkClass = `${linkBase} text-muted hover:text-accent`
+// The card's destination link, lit while the card is centred on a phone, as
+// hovering the card lights it on desktop.
+const destinationClass = (lit: boolean) => `${linkBase} hover:text-fg ${lit ? 'text-fg' : 'text-muted'}`
 
 // Stretched-link pattern: one anchor per card spreads its ::after over the whole
 // card, making the card clickable without nesting anchors. The stretched anchor
@@ -57,6 +60,7 @@ export function Projects() {
             {projects.map((project, index) => {
               // Docs are the card's destination when they exist, GitHub otherwise.
               const docsIsStretched = Boolean(project.docsUrl)
+              const centred = focused === index
 
               return (
                 <m.div key={project.name} variants={rise}>
@@ -64,8 +68,8 @@ export function Projects() {
                     ref={itemRef(index)}
                     id={`project-${slug(project.name)}`}
                     hover
-                    active={focused === index}
-                    className={`relative h-full ${focused === index ? 'scale-[1.03] motion-reduce:scale-100' : ''}`}
+                    active={centred}
+                    className={`relative h-full ${centred ? 'scale-[1.03] motion-reduce:scale-100' : ''}`}
                   >
                     <div className="flex flex-col h-full gap-4">
                       <div className="flex-1">
@@ -85,7 +89,7 @@ export function Projects() {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`${project.name} on GitHub`}
-                          className={`${linkClass} ${docsIsStretched ? raisedClass : stretchClass}`}
+                          className={docsIsStretched ? `${linkClass} ${raisedClass}` : `${destinationClass(centred)} ${stretchClass}`}
                         >
                           <GitHubIcon size={13} />
                           GitHub
@@ -96,7 +100,7 @@ export function Projects() {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={`${project.name} documentation`}
-                            className={`${linkClass} ${stretchClass}`}
+                            className={`${destinationClass(centred)} ${stretchClass}`}
                           >
                             <BookOpen size={13} />
                             Docs
