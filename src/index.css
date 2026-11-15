@@ -64,6 +64,11 @@ body {
   scroll-margin-top: 4.5rem;
 }
 
+/* Sections stop flush with the nav (h-14), their top border hidden behind its own. */
+section[id] {
+  scroll-margin-top: 3.5rem;
+}
+
 /* Briefly rings the item a search result jumped to. */
 @keyframes search-flash {
   0%, 35% {
@@ -268,6 +273,12 @@ html[data-blasting] [data-blast-group] > * {
 
 :root[data-theme="party"] [id] {
   scroll-margin-top: 6.25rem;
+}
+
+/* Under the ticker (top-14 + h-7) instead, which has no border of its own to
+   cover the section's, so tuck that border 1px up behind the ticker. */
+:root[data-theme="party"] section[id] {
+  scroll-margin-top: calc(5.25rem - 1px);
 }
 
 /* Canvases drawn in the accent spin through every hue. */
