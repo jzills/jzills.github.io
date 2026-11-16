@@ -123,8 +123,7 @@ function neighborImages(items: CreativeItem[], index: number, variant: number): 
 }
 
 // Keeps the current image on screen until the next one has decoded, so stepping
-// never flashes an empty frame or the browser's alt text in its place. The box has
-// a fixed height so the caption below doesn't jump between images of different shapes.
+// never flashes an empty frame or the browser's alt text in its place.
 function LightboxImage({ image, alt }: { image: LabImage; alt: string }) {
   const [shown, setShown] = useState({ image, alt })
 
@@ -142,11 +141,10 @@ function LightboxImage({ image, alt }: { image: LabImage; alt: string }) {
     }
   }, [image, alt, shown.image.src])
 
-  // A fixed height, so the controls below don't jump as images of different shapes come and go.
-  // On portrait screens it's a square instead, like the shader canvas, so a phone doesn't spend
-  // most of the screen on bands above and below the image.
+  // Fills the media box (see the Lightbox), which keeps one height across images of
+  // different shapes, so the controls below don't jump while stepping.
   return (
-    <div className="flex items-center justify-center h-[70vh] portrait:h-auto portrait:aspect-square portrait:max-h-[70vh]">
+    <div className="flex h-full w-full items-center justify-center">
       <img
         src={shown.image.src}
         alt={shown.alt}
@@ -197,7 +195,7 @@ function ShaderCode({ variant, title }: { variant: ShaderVariant; title: string 
   }
 
   return (
-    <div className="relative h-[70vh] rounded border border-zinc-800 bg-zinc-950">
+    <div className="relative h-full rounded border border-zinc-800 bg-zinc-950">
       {/* Focusable so the code can be scrolled from the keyboard. Long lines wrap so the code
           only scrolls vertically, which matters most on a phone. */}
       <pre tabIndex={0} aria-label={`${title} source`} className="h-full overflow-auto whitespace-pre-wrap break-words p-4 pr-12 font-mono text-xs leading-relaxed text-zinc-300 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent">
@@ -224,11 +222,17 @@ function LightboxShader({ item, variant, showCode }: { item: ShaderItem; variant
   const [playing, setPlaying] = useState(true)
   const current = item.variants[variant]
   return (
-    <div className={showCode ? 'grid gap-3 lg:grid-cols-2' : undefined}>
-      <div className={`group/card relative ${showCode ? 'max-lg:hidden' : ''}`}>
+    // With the code open, one row the height of the media box; the code scrolls inside it.
+    <div className={showCode ? 'grid h-full w-full grid-rows-[minmax(0,1fr)] gap-3 lg:grid-cols-2' : 'flex h-full w-full items-center justify-center'}>
+      <div className={`group/card relative h-full w-full portrait:h-auto portrait:w-auto ${showCode ? 'max-lg:hidden' : ''}`}>
         {/* Most shaders scale to the canvas height, so a tall portrait canvas shows only a narrow
-            slice of them and looks zoomed in. On portrait screens it stays square instead. */}
-        <ShaderCanvas variant={current} playing={playing} className="w-full h-[70vh] portrait:h-auto portrait:aspect-square portrait:max-h-[70vh] rounded bg-black" />
+            slice of them and looks zoomed in. On portrait screens it's a square instead, as big as
+            the media box allows (container units: the box's width and height). */}
+        <ShaderCanvas
+          variant={current}
+          playing={playing}
+          className="block h-full w-full portrait:h-[min(100cqw,100cqh)] portrait:w-[min(100cqw,100cqh)] rounded bg-black"
+        />
         {!current.still && (
           <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-3 right-3" />
         )}
@@ -261,7 +265,7 @@ function LightboxMedia({ item, variant, showCode }: { item: CreativeItem; varian
           muted={!item.sound}
           loop
           playsInline
-          className="max-w-full max-h-[70vh] mx-auto rounded"
+          className="max-h-full max-w-full rounded"
         />
       )
     }
@@ -357,16 +361,24 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
     >
       {item && (
         <>
-        {/* Scrolls when open credits or a short screen make the content taller than it. */}
-        <div ref={scrollerRef} className="h-full overflow-y-auto overscroll-contain">
-        {/* Centres the content when it fits. The padding keeps it clear of the close button above
-            on phones, and from lg of the arrows at the sides. */}
-        <div ref={frameRef} className="flex min-h-full items-center justify-center px-4 pt-16 pb-6 lg:px-[4.5rem] lg:py-4">
-        <div className="relative w-full max-w-[1100px]">
-          <LightboxMedia item={item} variant={variant} showCode={showCode} />
+        {/* Scrolls only when the text alone is too tall, e.g. with credits open. On phones it starts
+            below the close button, so nothing scrolls behind it. */}
+        <div
+          ref={scrollerRef}
+          className="absolute inset-x-0 bottom-0 top-[calc(env(safe-area-inset-top)+4rem)] overflow-y-auto overscroll-contain lg:top-0"
+        >
+        {/* A column the height of the screen. The media box takes what the controls and caption leave,
+            so everything fits; the auto margins centre the group when there's room to spare and,
+            unlike centring, never push its top out of reach when there isn't. The side padding keeps
+            it clear of the arrows from lg. */}
+        <div ref={frameRef} className="flex h-full flex-col items-center px-4 pb-4 lg:px-[4.5rem] lg:py-4">
+        <div className="relative flex w-full max-w-[1100px] flex-1 flex-col">
+          <div className="mt-auto flex min-h-[30vh] max-h-[70vh] flex-1 items-center justify-center [container-type:size]">
+            <LightboxMedia item={item} variant={variant} showCode={showCode} />
+          </div>
 
           {item.kind === 'shader' && item.variants.length > 1 && (
-            <div role="group" aria-label="Variants" className="mt-3 flex flex-wrap justify-center gap-2">
+            <div role="group" aria-label="Variants" className="mt-3 flex shrink-0 flex-wrap justify-center gap-2">
               {item.variants.map((_, i) => (
                 <button
                   key={i}
@@ -385,7 +397,7 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
           )}
 
           {(thumbnails(item)?.length ?? 0) > 1 && (
-            <div role="group" aria-label="Variants" className="mt-3 flex flex-wrap justify-center gap-2">
+            <div role="group" aria-label="Variants" className="mt-3 flex shrink-0 flex-wrap justify-center gap-2">
               {thumbnails(item)!.map((thumb, i, all) => (
                 <button
                   key={thumb}
@@ -406,7 +418,7 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
           {/* Centred under the media. From lg the arrows are at the screen's edges instead (below),
               and only the count stays here. */}
           {canStep && (
-            <div className="mt-4 flex items-center justify-center gap-3">
+            <div className="mt-4 flex shrink-0 items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => step(-1)}
@@ -430,7 +442,7 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
           )}
 
           {/* Stacked on phones, so the caption gets the full width rather than a column beside the button. */}
-          <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="mt-4 mb-auto flex shrink-0 flex-col-reverse gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="min-w-0">
               <p className="text-base font-medium text-white">{item.title}</p>
               <p className="mt-1 text-sm text-zinc-300 leading-relaxed">{item.description}</p>
