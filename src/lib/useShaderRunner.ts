@@ -8,7 +8,38 @@ const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coa
 // shaders runs about one at a time; on desktop it's the grid row most on screen.
 const animateBand = '-35% 0px -35% 0px'
 
-function watchAnimate(el: HTMLElement, onChange: (on: boolean) => void) {
+// With a mouse, a shader given a hover target plays only while the pointer is over
+// it or focus is inside it, so a grid of them runs one at a time.
+function watchHover(target: HTMLElement, onChange: (on: boolean) => void) {
+  let hovered = false
+  let focused = false
+  const update = () => onChange(hovered || focused)
+  const enter = () => { hovered = true; update() }
+  const leave = () => { hovered = false; update() }
+  const focusIn = () => { focused = true; update() }
+  const focusOut = (e: FocusEvent) => {
+    if (target.contains(e.relatedTarget as Node | null)) return
+    focused = false
+    update()
+  }
+  target.addEventListener('pointerenter', enter)
+  target.addEventListener('pointerleave', leave)
+  target.addEventListener('focusin', focusIn)
+  target.addEventListener('focusout', focusOut)
+  // The pointer may already be over the card when the canvas mounts.
+  hovered = target.matches(':hover')
+  focused = target.contains(document.activeElement)
+  update()
+  return () => {
+    target.removeEventListener('pointerenter', enter)
+    target.removeEventListener('pointerleave', leave)
+    target.removeEventListener('focusin', focusIn)
+    target.removeEventListener('focusout', focusOut)
+  }
+}
+
+function watchAnimate(el: HTMLElement, onChange: (on: boolean) => void, hoverTarget?: HTMLElement | null) {
+  if (!coarse && hoverTarget) return watchHover(hoverTarget, onChange)
   if (!coarse) return animateInRow(el, onChange)
   const observer = new IntersectionObserver(([entry]) => onChange(entry.isIntersecting), { rootMargin: animateBand })
   observer.observe(el)
@@ -40,7 +71,9 @@ export function useShaderRunner(
   // False holds the current frame, e.g. when the visitor pauses the shader.
   active: boolean,
   // For shaders that don't use u_time: draw one frame and never start the loop.
-  still = false
+  still = false,
+  // With a mouse, play only while this element is hovered or holds focus (see watchHover).
+  hoverTargetRef?: React.RefObject<HTMLElement | null>
 ) {
   const rafRef = useRef<number>(0)
   const stateRef = useRef<ShaderState | null>(null)
@@ -85,11 +118,15 @@ export function useShaderRunner(
 
     // Animate only a few at a time (see watchAnimate): ray-marching several
     // canvases every frame stutters. Paused canvases keep their last frame.
-    const stopWatching = watchAnimate(canvas, (on) => {
-      visible = on
-      if (on) play()
-      else pause()
-    })
+    const stopWatching = watchAnimate(
+      canvas,
+      (on) => {
+        visible = on
+        if (on) play()
+        else pause()
+      },
+      hoverTargetRef?.current,
+    )
 
     const cleanup = () => {
       cancelAnimationFrame(initRaf)
@@ -161,7 +198,7 @@ export function useShaderRunner(
     })
 
     return cleanup
-  }, [active, canvasRef, fragmentShader, still])
+  }, [active, canvasRef, fragmentShader, hoverTargetRef, still])
 
   // Full teardown on unmount only
   useEffect(() => {

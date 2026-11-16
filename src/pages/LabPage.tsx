@@ -139,6 +139,7 @@ export function LabPage() {
                             : undefined
                         }
                         paused={openIndex !== null}
+                        hoverToPlay
                       />
                     </div>
                   )
