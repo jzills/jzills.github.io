@@ -16,7 +16,9 @@ interface Props {
   onIndexChange: (index: number | null) => void
 }
 
-const navButtonClass = 'p-2 rounded bg-bg/70 text-muted hover:text-fg transition-colors cursor-pointer'
+// The backdrop is near-black in either theme, so the controls are dark in both.
+const controlClass =
+  'p-2 rounded border border-white/10 bg-zinc-900/80 text-zinc-300 hover:text-white transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent'
 
 // How many variants an item steps through: a series has several, anything else one.
 const variantCount = (item: CreativeItem) =>
@@ -140,8 +142,11 @@ function LightboxImage({ image, alt }: { image: LabImage; alt: string }) {
     }
   }, [image, alt, shown.image.src])
 
+  // A fixed height, so the controls below don't jump as images of different shapes come and go.
+  // On portrait screens it's a square instead, like the shader canvas, so a phone doesn't spend
+  // most of the screen on bands above and below the image.
   return (
-    <div className="flex items-center justify-center h-[70vh]">
+    <div className="flex items-center justify-center h-[70vh] portrait:h-auto portrait:aspect-square portrait:max-h-[70vh]">
       <img
         src={shown.image.src}
         alt={shown.alt}
@@ -341,8 +346,10 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
       onClick={(e) => e.target === e.currentTarget && close()}
       aria-label={item?.title}
       // Capped at the viewport and scrollable: open credits can make it taller than the screen,
-      // and a centred dialog that overflows would push its top out of reach.
-      className="m-auto w-[min(1100px,calc(100vw-2rem))] max-h-[calc(100dvh-2rem)] overflow-y-auto bg-transparent p-0 text-fg backdrop:bg-black/90 backdrop:backdrop-blur-sm"
+      // and a centred dialog that overflows would push its top out of reach. Below lg the height
+      // leaves room above for the close button; from lg the width leaves room at the sides for the
+      // arrows, which also keeps the dialog clear of the close button in the corner.
+      className="m-auto w-[min(1100px,calc(100vw-2rem))] lg:w-[min(1100px,calc(100vw-9rem))] max-h-[calc(100dvh-7rem)] lg:max-h-[calc(100dvh-2rem)] overflow-y-auto bg-transparent p-0 text-fg backdrop:bg-black/90 backdrop:backdrop-blur-sm"
     >
       {item && (
         <div className="relative">
@@ -386,7 +393,33 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
             </div>
           )}
 
-          {/* Stacked on phones, so the caption gets the full width rather than a column beside the buttons. */}
+          {/* Centred under the media. From lg the arrows move out to the screen's edges, level with
+              its middle, and the count stays here. */}
+          {canStep && (
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => step(-1)}
+                aria-label="Previous"
+                className={`${controlClass} lg:fixed lg:left-6 lg:top-1/2 lg:-translate-y-1/2 lg:p-3`}
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <span className="min-w-16 text-center text-xs font-mono text-zinc-300 tabular-nums">
+                {index! + 1} / {items.length}
+              </span>
+              <button
+                type="button"
+                onClick={() => step(1)}
+                aria-label="Next"
+                className={`${controlClass} lg:fixed lg:right-6 lg:top-1/2 lg:-translate-y-1/2 lg:p-3`}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
+
+          {/* Stacked on phones, so the caption gets the full width rather than a column beside the button. */}
           <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="min-w-0">
               <p className="text-base font-medium text-white">{item.title}</p>
@@ -397,37 +430,31 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
                 <Credits key={item.clips[variant].credits} url={item.clips[variant].credits!} />
               )}
             </div>
-            <div className="flex shrink-0 items-center justify-end gap-2">
-              {item.kind === 'shader' && (
+            {item.kind === 'shader' && (
+              <div className="flex shrink-0 justify-end">
                 <button
                   type="button"
                   onClick={() => setCodeToggled(!showCode)}
                   aria-pressed={showCode}
                   aria-label={showCode ? 'Hide code' : 'Show code'}
                   title={showCode ? 'Hide code' : 'Show code'}
-                  className={`p-2 rounded bg-bg/70 transition-colors cursor-pointer ${showCode ? 'text-accent' : 'text-muted hover:text-fg'}`}
+                  className={`${controlClass} ${showCode ? 'text-accent!' : ''}`}
                 >
                   <CodeXml size={18} />
                 </button>
-              )}
-              {canStep && (
-                <>
-                  <button type="button" onClick={() => step(-1)} aria-label="Previous" className={navButtonClass}>
-                    <ChevronLeft size={18} />
-                  </button>
-                  <span className="text-xs font-mono text-zinc-300 tabular-nums">
-                    {index! + 1} / {items.length}
-                  </span>
-                  <button type="button" onClick={() => step(1)} aria-label="Next" className={navButtonClass}>
-                    <ChevronRight size={18} />
-                  </button>
-                </>
-              )}
-              <button type="button" onClick={close} aria-label="Close" className={navButtonClass}>
-                <X size={18} />
-              </button>
-            </div>
+              </div>
+            )}
           </div>
+
+          {/* Pinned to the screen's corner, so it stays put when a tall lightbox scrolls. */}
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close"
+            className={`${controlClass} fixed z-10 right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.75rem,env(safe-area-inset-top))]`}
+          >
+            <X size={20} />
+          </button>
         </div>
       )}
     </dialog>

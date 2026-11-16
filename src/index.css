@@ -39,12 +39,12 @@
 html {
   scroll-behavior: smooth;
   transition: background-color 0.2s ease, color 0.2s ease;
-  /* Keeps the layout still when the lock below hides the scrollbar. */
-  scrollbar-gutter: stable;
 }
 
 /* While the lightbox (a modal <dialog>) is open, the page behind it doesn't scroll.
-   Chrome already stops it; Safari on iPhone passes swipes through to the page. */
+   Chrome already stops it; Safari on iPhone passes swipes through to the page. Hiding
+   the scrollbar shifts the page a little, but under the backdrop that doesn't show; a
+   stable gutter instead left a strip of page background beside the backdrop. */
 html:has(dialog:modal) {
   overflow: hidden;
 }
