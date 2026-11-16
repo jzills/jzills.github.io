@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { animateInRow } from '@/lib/animateRow'
-import { drawShader, subscribeShader } from '@/lib/shaderPool'
+import { drawShader, shaderTarget, subscribeShader } from '@/lib/shaderPool'
 import type { ShaderProgram } from '@/lib/shaderPool'
 
 // Guarded for prerendering, which has no window; the hook itself only runs in the browser.
@@ -87,7 +87,7 @@ export function useShaderRunner(
   useEffect(() => {
     if (!active || !fragmentShader) return
     const canvas = canvasRef.current
-    const target = canvas?.getContext('2d')
+    const target = canvas ? shaderTarget(canvas) : null
     if (!canvas || !target) return
 
     const now = performance.now()
