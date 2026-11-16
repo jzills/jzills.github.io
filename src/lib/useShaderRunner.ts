@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { animateInRow } from '@/lib/animateRow'
+import { drawShader, subscribeShader } from '@/lib/shaderPool'
+import type { ShaderProgram } from '@/lib/shaderPool'
 
 // Guarded for prerendering, which has no window; the hook itself only runs in the browser.
 const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
@@ -8,15 +10,28 @@ const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coa
 // shaders runs about one at a time; on desktop it's the grid row most on screen.
 const animateBand = '-35% 0px -35% 0px'
 
+// Whether the visitor last moved focus with the keyboard. Escape doesn't count: it
+// closes things, and closing the lightbox hands focus back to the card that opened it,
+// which shouldn't set that card playing for someone using a mouse.
+let keyboardFocus = false
+let trackingInput = false
+function trackInput() {
+  if (trackingInput) return
+  trackingInput = true
+  document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') keyboardFocus = true }, { capture: true })
+  document.addEventListener('pointerdown', () => { keyboardFocus = false }, { capture: true })
+}
+
 // With a mouse, a shader given a hover target plays only while the pointer is over
-// it or focus is inside it, so a grid of them runs one at a time.
+// it or keyboard focus is inside it, so a grid of them runs one at a time.
 function watchHover(target: HTMLElement, onChange: (on: boolean) => void) {
+  trackInput()
   let hovered = false
   let focused = false
   const update = () => onChange(hovered || focused)
   const enter = () => { hovered = true; update() }
   const leave = () => { hovered = false; update() }
-  const focusIn = () => { focused = true; update() }
+  const focusIn = () => { focused = keyboardFocus; update() }
   const focusOut = (e: FocusEvent) => {
     if (target.contains(e.relatedTarget as Node | null)) return
     focused = false
@@ -28,7 +43,7 @@ function watchHover(target: HTMLElement, onChange: (on: boolean) => void) {
   target.addEventListener('focusout', focusOut)
   // The pointer may already be over the card when the canvas mounts.
   hovered = target.matches(':hover')
-  focused = target.contains(document.activeElement)
+  focused = keyboardFocus && target.contains(document.activeElement)
   update()
   return () => {
     target.removeEventListener('pointerenter', enter)
@@ -46,24 +61,14 @@ function watchAnimate(el: HTMLElement, onChange: (on: boolean) => void, hoverTar
   return () => observer.disconnect()
 }
 
-const VERT = `
-attribute vec2 a_position;
-void main() {
-  gl_Position = vec4(a_position, 0.0, 1.0);
-}
-`.trim()
-
-type ShaderState = {
-  gl: WebGLRenderingContext
-  uTime: WebGLUniformLocation | null
-  uRes: WebGLUniformLocation | null
-  observer: ResizeObserver
+type Clock = {
   start: number
   // When the animation stopped, or null while it runs. Resuming shifts start by
   // the time spent stopped, so a shader picks up on the frame it paused on.
   pausedAt: number | null
 }
 
+// Runs a shader in a 2D canvas, drawn through the page's shared WebGL context (see shaderPool).
 export function useShaderRunner(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
   // Empty until the source has loaded; nothing is drawn before then.
@@ -75,46 +80,67 @@ export function useShaderRunner(
   // With a mouse, play only while this element is hovered or holds focus (see watchHover).
   hoverTargetRef?: React.RefObject<HTMLElement | null>
 ) {
-  const rafRef = useRef<number>(0)
-  const stateRef = useRef<ShaderState | null>(null)
+  // Starts paused at t = 0, so a shader that waits outside the animating ones picks
+  // up from the still it has been showing instead of jumping ahead by however long it waited.
+  const clockRef = useRef<Clock | null>(null)
 
   useEffect(() => {
-    cancelAnimationFrame(rafRef.current)
     if (!active || !fragmentShader) return
-
     const canvas = canvasRef.current
-    if (!canvas) return
+    const target = canvas?.getContext('2d')
+    if (!canvas || !target) return
 
+    const now = performance.now()
+    const clock = (clockRef.current ??= { start: now, pausedAt: now })
+    let program: ShaderProgram | null = null
     let visible = false
     let running = false
-    let initRaf = 0
+    let raf = 0
 
-    const render = ({ gl, uTime, uRes, start, pausedAt }: ShaderState) => {
-      gl.uniform1f(uTime, ((pausedAt ?? performance.now()) - start) / 1000)
-      gl.uniform2f(uRes, canvas.width, canvas.height)
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    const render = () => {
+      if (program) drawShader(program, target, ((clock.pausedAt ?? performance.now()) - clock.start) / 1000)
     }
 
     const play = () => {
-      const state = stateRef.current
-      if (still || running || !visible || !state) return
+      if (still || running || !visible || !program) return
       running = true
-      if (state.pausedAt !== null) {
-        state.start += performance.now() - state.pausedAt
-        state.pausedAt = null
+      if (clock.pausedAt !== null) {
+        clock.start += performance.now() - clock.pausedAt
+        clock.pausedAt = null
       }
-      const draw = () => {
-        render(state)
-        rafRef.current = requestAnimationFrame(draw)
+      const loop = () => {
+        render()
+        raf = requestAnimationFrame(loop)
       }
-      rafRef.current = requestAnimationFrame(draw)
+      raf = requestAnimationFrame(loop)
     }
 
     const pause = () => {
-      if (running && stateRef.current) stateRef.current.pausedAt = performance.now()
+      if (running) clock.pausedAt = performance.now()
       running = false
-      cancelAnimationFrame(rafRef.current)
+      cancelAnimationFrame(raf)
     }
+
+    // Sized to the canvas's CSS box. Resizing clears it, so a paused shader redraws its still.
+    const resize = () => {
+      const width = Math.max(1, Math.round(canvas.offsetWidth))
+      const height = Math.max(1, Math.round(canvas.offsetHeight))
+      if (canvas.width === width && canvas.height === height) return
+      canvas.width = width
+      canvas.height = height
+      if (!running) render()
+    }
+    const observer = new ResizeObserver(resize)
+    observer.observe(canvas)
+    resize()
+
+    // Draws a still as soon as the shader compiles, so the ones not animating still show something.
+    const unsubscribe = subscribeShader(fragmentShader, (ready) => {
+      program = ready
+      if (!ready) return pause()
+      render()
+      play()
+    })
 
     // Animate only a few at a time (see watchAnimate): ray-marching several
     // canvases every frame stutters. Paused canvases keep their last frame.
@@ -128,87 +154,11 @@ export function useShaderRunner(
       hoverTargetRef?.current,
     )
 
-    const cleanup = () => {
-      cancelAnimationFrame(initRaf)
+    return () => {
       pause()
+      observer.disconnect()
+      unsubscribe()
       stopWatching()
     }
-
-    if (stateRef.current) return cleanup
-
-    // Defer first init to rAF so canvas has been laid out and has real dimensions
-    initRaf = requestAnimationFrame(() => {
-      if (!canvas) return
-
-      const gl = canvas.getContext('webgl')
-      if (!gl) return
-
-      const compile = (type: number, src: string) => {
-        const shader = gl.createShader(type)!
-        gl.shaderSource(shader, src)
-        gl.compileShader(shader)
-        return shader
-      }
-
-      const prog = gl.createProgram()!
-      gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT))
-      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fragmentShader))
-      gl.linkProgram(prog)
-      gl.useProgram(prog)
-
-      const buf = gl.createBuffer()
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-      gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
-        gl.STATIC_DRAW
-      )
-
-      const pos = gl.getAttribLocation(prog, 'a_position')
-      gl.enableVertexAttribArray(pos)
-      gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
-
-      const resize = () => {
-        canvas.width = Math.max(1, Math.round(canvas.offsetWidth))
-        canvas.height = Math.max(1, Math.round(canvas.offsetHeight))
-        gl.viewport(0, 0, canvas.width, canvas.height)
-        // Resizing clears the canvas; redraw so a paused shader doesn't go blank.
-        if (!running && stateRef.current) render(stateRef.current)
-      }
-      const observer = new ResizeObserver(resize)
-      observer.observe(canvas)
-      resize()
-
-      // Starts paused at t = 0, so a shader that waits outside the animating ones
-      // picks up from the still it has been showing instead of jumping ahead by
-      // however long it waited.
-      const now = performance.now()
-      stateRef.current = {
-        gl,
-        uTime: gl.getUniformLocation(prog, 'u_time'),
-        uRes: gl.getUniformLocation(prog, 'u_resolution'),
-        observer,
-        start: now,
-        pausedAt: now,
-      }
-
-      // Draw one frame up front so shaders outside the animating ones still show a still.
-      render(stateRef.current)
-      play()
-    })
-
-    return cleanup
   }, [active, canvasRef, fragmentShader, hoverTargetRef, still])
-
-  // Full teardown on unmount only
-  useEffect(() => {
-    return () => {
-      cancelAnimationFrame(rafRef.current)
-      if (stateRef.current) {
-        stateRef.current.observer.disconnect()
-        stateRef.current.gl.getExtension('WEBGL_lose_context')?.loseContext()
-        stateRef.current = null
-      }
-    }
-  }, [])
 }
