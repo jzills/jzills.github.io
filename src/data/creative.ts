@@ -116,7 +116,7 @@ export const creativeItems: CreativeItem[] = [
   {
     kind: 'shader',
     title: 'Electric Railway to Nowhere-Ville',
-    description: 'Ray-marched infinite railway assembled from tiled signed distance fields, animated electrical arcs, and procedural atmospheric glow.',
+    description: 'Ray-marched infinite railway built from tiled distance fields, with animated electrical arcs and glow.',
     tags: ['GLSL', 'Ray Marching', 'Generative'],
     variants: [shader('electric-railway')],
     featured: true,
@@ -152,14 +152,14 @@ export const creativeItems: CreativeItem[] = [
   {
     kind: 'shader',
     title: 'Symmetry',
-    description: 'Radially symmetric forms built from repeated, rotated distance fields: spiked rings, studded crowns, and a ribbed blossom.',
+    description: 'Radially symmetric forms from rotated distance fields: spiked rings, studded crowns, and a ribbed blossom.',
     tags: ['GLSL', 'Ray Marching', 'Noise', 'Series'],
     variants: [shader('symmetry08'), shader('symmetry07'), shader('symmetry09'), shader('symmetry11')],
   },
   {
     kind: 'shader',
     title: 'Liquid Chrome',
-    description: 'Cellular patterns with a polished, metallic sheen: a silver honeycomb, a tiled green and violet grid, and a sphere of shards.',
+    description: 'Cellular patterns with a metallic sheen: a silver honeycomb, a green and violet grid, and a sphere of shards.',
     tags: ['GLSL', '2D', 'Noise', 'Voronoi', 'Series'],
     variants: [shader('combo-14'), shader('combo-13'), shader('combo-11')],
   },
@@ -456,7 +456,7 @@ export const creativeItems: CreativeItem[] = [
   {
     kind: 'video',
     title: 'Driftcast',
-    description: 'A shared generative radio station. A server composes an evolving, layered mix from Freesound samples and picks archival footage, and every listener renders it live in the browser with Tone.js and WebGL shaders. Seven 30-second recordings.',
+    description: 'A generative radio station mixing Freesound samples and archival footage, rendered live for each listener.',
     tags: ['Video', 'Audio', 'Generative', 'WebGL', 'Series'],
     alt: 'Glitched, color-graded archival footage and shader textures reacting to a layered generative mix',
     sound: true,
@@ -467,7 +467,7 @@ export const creativeItems: CreativeItem[] = [
     }),
     live: {
       url: 'https://driftcast-d9n9.onrender.com/',
-      note: 'Live station on free hosting, so it may take up to a minute to wake up.',
+      note: 'May take a minute to wake up.',
       wake: 'https://driftcast-d9n9.onrender.com/api/station/time',
     },
   },

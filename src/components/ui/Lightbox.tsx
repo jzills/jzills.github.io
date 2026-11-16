@@ -58,20 +58,27 @@ function CreditLine({ credit }: { credit: Credit }) {
   )
 }
 
-// A clip's sources, fetched the first time the section is expanded.
-function Credits({ url }: { url: string }) {
+// A clip's sources, shown over the media box so opening them never makes the lightbox taller.
+// Fetched when the panel first opens.
+function CreditsPanel({ url }: { url: string }) {
   const [credits, setCredits] = useState<ClipCredits | null>(null)
   const [failed, setFailed] = useState(false)
-  const load = () => {
-    if (credits || failed) return
-    fetch(url).then((r) => r.json()).then(setCredits).catch(() => setFailed(true))
-  }
+  useEffect(() => {
+    let cancelled = false
+    fetch(url)
+      .then((r) => r.json())
+      .then((c) => !cancelled && setCredits(c))
+      .catch(() => !cancelled && setFailed(true))
+    return () => {
+      cancelled = true
+    }
+  }, [url])
   return (
-    <details onToggle={(e) => e.currentTarget.open && load()} className="mt-3 text-xs text-zinc-300">
-      <summary className="cursor-pointer select-none text-zinc-200 hover:text-white">Credits</summary>
-      {failed && <p className="mt-2 text-zinc-400">Couldn't load the credits.</p>}
+    <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain rounded bg-zinc-950/95 p-4 text-xs text-zinc-300">
+      {failed && <p className="text-zinc-400">Couldn't load the credits.</p>}
+      {!credits && !failed && <p className="text-zinc-400">Loading credits…</p>}
       {credits && (
-        <div className="mt-2 grid gap-4 sm:grid-cols-2 max-h-56 overflow-y-auto pr-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <p className="mb-1 font-mono uppercase tracking-widest text-[10px] text-zinc-400">Sounds</p>
             <ul className="space-y-1">{credits.sounds.map((c) => <CreditLine key={c.title + c.url} credit={c} />)}</ul>
@@ -86,18 +93,18 @@ function Credits({ url }: { url: string }) {
           </p>
         </div>
       )}
-    </details>
+    </div>
   )
 }
 
 function LiveLink({ live }: { live: NonNullable<VideoItem['live']> }) {
   return (
-    <p className="mt-2 text-sm">
-      <a href={live.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent hover:underline underline-offset-2">
+    <span className="flex min-w-0 items-center gap-2">
+      <a href={live.url} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-1 text-accent hover:underline underline-offset-2">
         Open live <ArrowUpRight size={14} aria-hidden="true" />
       </a>
-      <span className="ml-2 text-xs text-zinc-400">{live.note}</span>
-    </p>
+      <span className="truncate text-xs text-zinc-400">{live.note}</span>
+    </span>
   )
 }
 
@@ -222,17 +229,11 @@ function LightboxShader({ item, variant, showCode }: { item: ShaderItem; variant
   const [playing, setPlaying] = useState(true)
   const current = item.variants[variant]
   return (
-    // With the code open, one row the height of the media box; the code scrolls inside it.
-    <div className={showCode ? 'grid h-full w-full grid-rows-[minmax(0,1fr)] gap-3 lg:grid-cols-2' : 'flex h-full w-full items-center justify-center'}>
-      <div className={`group/card relative h-full w-full portrait:h-auto portrait:w-auto ${showCode ? 'max-lg:hidden' : ''}`}>
-        {/* Most shaders scale to the canvas height, so a tall portrait canvas shows only a narrow
-            slice of them and looks zoomed in. On portrait screens it's a square instead, as big as
-            the media box allows (container units: the box's width and height). */}
-        <ShaderCanvas
-          variant={current}
-          playing={playing}
-          className="block h-full w-full portrait:h-[min(100cqw,100cqh)] portrait:w-[min(100cqw,100cqh)] rounded bg-black"
-        />
+    // Fills the media box, so every shader shows at the same size. With the code open, one row the
+    // height of the box; the code scrolls inside it.
+    <div className={`grid h-full w-full grid-rows-[minmax(0,1fr)] ${showCode ? 'gap-3 lg:grid-cols-2' : ''}`}>
+      <div className={`group/card relative h-full w-full ${showCode ? 'max-lg:hidden' : ''}`}>
+        <ShaderCanvas variant={current} playing={playing} className="block h-full w-full rounded bg-black" />
         {!current.still && (
           <ShaderPlayToggle playing={playing} onToggle={() => setPlaying((p) => !p)} title={item.title} className="bottom-3 right-3" />
         )}
@@ -291,11 +292,14 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
   // the visitor toggles it, so the lightbox opens however the card asked.
   const [codeToggled, setCodeToggled] = useState<boolean | null>(null)
   const showCode = codeToggled ?? initialCode
+  // The clip whose credits are open over the media, so stepping to another clip closes them.
+  const [creditsFor, setCreditsFor] = useState<string | null>(null)
 
   // Forgets the last position, so reopening a card starts where that card is.
   const close = () => {
     setShown({ index: -1, variant: 0 })
     setCodeToggled(null)
+    setCreditsFor(null)
     onIndexChange(null)
   }
 
@@ -321,6 +325,7 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
   }
 
   const canStep = items.length > 1 || (item !== null && variantCount(item) > 1)
+  const creditsUrl = item?.kind === 'video' ? item.clips[variant].credits : undefined
 
   const wakeUrl = item?.kind === 'video' ? item.live?.wake : undefined
   useEffect(() => {
@@ -357,117 +362,119 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
       // Covers the screen and never scrolls itself. The content scrolls in its own area inside,
       // and the close button and side arrows sit outside that area, so scrolling can't carry them
       // off: Safari on iPhone moved fixed-position buttons along with a scrolling dialog.
-      className="m-0 h-full w-full max-h-none max-w-none overflow-hidden border-0 bg-transparent p-0 text-fg backdrop:bg-black/90 backdrop:backdrop-blur-sm"
+      className="lightbox m-0 h-full w-full max-h-none max-w-none overflow-hidden border-0 bg-transparent p-0 text-fg backdrop:bg-black/90 backdrop:backdrop-blur-sm"
     >
       {item && (
         <>
-        {/* Scrolls only when the text alone is too tall, e.g. with credits open. On phones it starts
-            below the close button, so nothing scrolls behind it. */}
+        {/* Everything fits by construction (see .lightbox in index.css); this only scrolls if the
+            screen is shorter than the layout allows for, e.g. a phone held sideways. On phones it
+            starts below the close button, so nothing passes behind it. */}
         <div
           ref={scrollerRef}
-          className="absolute inset-x-0 bottom-0 top-[calc(env(safe-area-inset-top)+4rem)] overflow-y-auto overscroll-contain lg:top-0"
+          className="absolute inset-x-0 bottom-0 top-[var(--lb-above)] overflow-y-auto overscroll-contain lg:top-0"
         >
-        {/* A column the height of the screen. The media box takes what the controls and caption leave,
-            so everything fits; the auto margins centre the group when there's room to spare and,
-            unlike centring, never push its top out of reach when there isn't. The side padding keeps
-            it clear of the arrows from lg. */}
-        <div ref={frameRef} className="flex h-full flex-col items-center px-4 pb-4 lg:px-[4.5rem] lg:py-4">
-        <div className="relative flex w-full max-w-[1100px] flex-1 flex-col">
-          <div className="mt-auto flex min-h-[30vh] max-h-[70vh] flex-1 items-center justify-center [container-type:size]">
-            <LightboxMedia item={item} variant={variant} showCode={showCode} />
+        <div ref={frameRef} className="flex min-h-full flex-col items-center px-4 pb-4 lg:px-0 lg:py-4">
+        {/* Fixed widths and heights throughout, so every item lines up and the media is the same size. */}
+        {/* The column is the screen's width on phones, so the caption has room even when a short
+            screen makes the square smaller; from lg it's the media's width. */}
+        <div className="my-auto flex w-full max-w-[1100px] flex-col lg:w-[var(--lb-media-w)]">
+          <div className="relative mx-auto h-[var(--lb-media-h)] w-[var(--lb-media-w)] shrink-0">
+            <div className="flex h-full w-full items-center justify-center">
+              <LightboxMedia item={item} variant={variant} showCode={showCode} />
+            </div>
+            {creditsUrl && creditsFor === creditsUrl && <CreditsPanel url={creditsUrl} />}
           </div>
 
-          {item.kind === 'shader' && item.variants.length > 1 && (
-            <div role="group" aria-label="Variants" className="mt-3 flex shrink-0 flex-wrap justify-center gap-2">
-              {item.variants.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setShown({ index: index!, variant: i })}
-                  aria-label={`Variant ${i + 1} of ${item.variants.length}`}
-                  aria-current={i === variant ? 'true' : undefined}
-                  className={`w-9 h-9 rounded border font-mono text-xs cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                    i === variant ? 'border-accent text-accent' : 'border-zinc-600 text-zinc-300 hover:text-white'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+          {/* Variants: numbered buttons for a shader series, thumbnails for images and clips. Always
+              there, empty for a single piece, and one row that scrolls sideways if it's long. */}
+          <div className="mt-3 h-14 shrink-0 overflow-x-auto">
+            <div role="group" aria-label="Variants" className="mx-auto flex h-full w-max items-center gap-2 px-1">
+              {item.kind === 'shader' && item.variants.length > 1 &&
+                item.variants.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setShown({ index: index!, variant: i })}
+                    aria-label={`Variant ${i + 1} of ${item.variants.length}`}
+                    aria-current={i === variant ? 'true' : undefined}
+                    className={`w-9 h-9 rounded border font-mono text-xs cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                      i === variant ? 'border-accent text-accent' : 'border-zinc-600 text-zinc-300 hover:text-white'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              {(thumbnails(item)?.length ?? 0) > 1 &&
+                thumbnails(item)!.map((thumb, i, all) => (
+                  <button
+                    key={thumb}
+                    type="button"
+                    onClick={() => setShown({ index: index!, variant: i })}
+                    aria-label={`Variant ${i + 1} of ${all.length}`}
+                    aria-current={i === variant ? 'true' : undefined}
+                    className={`w-12 h-12 shrink-0 rounded overflow-hidden cursor-pointer outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-accent ${
+                      i === variant ? 'ring-2 ring-accent' : 'opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={thumb} alt="" loading="lazy" className="w-full h-full object-cover" />
+                  </button>
+                ))}
             </div>
-          )}
+          </div>
 
-          {(thumbnails(item)?.length ?? 0) > 1 && (
-            <div role="group" aria-label="Variants" className="mt-3 flex shrink-0 flex-wrap justify-center gap-2">
-              {thumbnails(item)!.map((thumb, i, all) => (
-                <button
-                  key={thumb}
-                  type="button"
-                  onClick={() => setShown({ index: index!, variant: i })}
-                  aria-label={`Variant ${i + 1} of ${all.length}`}
-                  aria-current={i === variant ? 'true' : undefined}
-                  className={`w-14 h-14 rounded overflow-hidden cursor-pointer outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-accent ${
-                    i === variant ? 'ring-2 ring-accent' : 'opacity-60 hover:opacity-100'
-                  }`}
-                >
-                  <img src={thumb} alt="" loading="lazy" className="w-full h-full object-cover" />
+          {/* Paging under the media on phones; from lg the arrows are at the screen's edges and only
+              the count is here. */}
+          <div className="mt-3 flex h-11 shrink-0 items-center justify-center gap-3 lg:h-6">
+            {canStep && (
+              <>
+                <button type="button" onClick={() => step(-1)} aria-label="Previous" className={`${controlClass} lg:hidden`}>
+                  <ChevronLeft size={20} />
                 </button>
-              ))}
-            </div>
-          )}
-
-          {/* Centred under the media. From lg the arrows are at the screen's edges instead (below),
-              and only the count stays here. */}
-          {canStep && (
-            <div className="mt-4 flex shrink-0 items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => step(-1)}
-                aria-label="Previous"
-                className={`${controlClass} lg:hidden`}
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <span className="min-w-16 text-center text-xs font-mono text-zinc-300 tabular-nums">
-                {index! + 1} / {items.length}
-              </span>
-              <button
-                type="button"
-                onClick={() => step(1)}
-                aria-label="Next"
-                className={`${controlClass} lg:hidden`}
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          )}
-
-          {/* Stacked on phones, so the caption gets the full width rather than a column beside the button. */}
-          <div className="mt-4 mb-auto flex shrink-0 flex-col-reverse gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-            <div className="min-w-0">
-              <p className="text-base font-medium text-white">{item.title}</p>
-              <p className="mt-1 text-sm text-zinc-300 leading-relaxed">{item.description}</p>
-              {item.kind === 'video' && item.live && <LiveLink live={item.live} />}
-              {item.kind === 'video' && item.clips[variant].credits && (
-                // Keyed by clip so each one's credits load and collapse separately.
-                <Credits key={item.clips[variant].credits} url={item.clips[variant].credits!} />
-              )}
-            </div>
-            {item.kind === 'shader' && (
-              <div className="flex shrink-0 justify-end">
-                <button
-                  type="button"
-                  onClick={() => setCodeToggled(!showCode)}
-                  aria-pressed={showCode}
-                  aria-label={showCode ? 'Hide code' : 'Show code'}
-                  title={showCode ? 'Hide code' : 'Show code'}
-                  className={`${controlClass} ${showCode ? 'text-accent!' : ''}`}
-                >
-                  <CodeXml size={18} />
+                <span className="min-w-16 text-center text-xs font-mono text-zinc-300 tabular-nums">
+                  {index! + 1} / {items.length}
+                </span>
+                <button type="button" onClick={() => step(1)} aria-label="Next" className={`${controlClass} lg:hidden`}>
+                  <ChevronRight size={20} />
                 </button>
-              </div>
+              </>
             )}
           </div>
 
+          {/* A fixed-height caption: the title on one line and the description on at most three
+              (two from lg); descriptions are kept short enough to fit (see creative.test.ts). */}
+          <div className="mt-3 flex h-[7.75rem] shrink-0 items-start justify-between gap-3 overflow-hidden lg:h-[6.5rem]">
+            <div className="min-w-0">
+              <p className="truncate text-base font-medium text-white">{item.title}</p>
+              <p className="mt-1 line-clamp-3 text-sm leading-relaxed text-zinc-300 lg:line-clamp-2">{item.description}</p>
+              {item.kind === 'video' && (item.live || creditsUrl) && (
+                <div className="mt-2 flex h-5 items-center gap-4 text-sm">
+                  {item.live && <LiveLink live={item.live} />}
+                  {creditsUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setCreditsFor(creditsFor === creditsUrl ? null : creditsUrl)}
+                      aria-expanded={creditsFor === creditsUrl}
+                      className="shrink-0 cursor-pointer text-zinc-200 underline-offset-2 hover:text-white hover:underline"
+                    >
+                      {creditsFor === creditsUrl ? 'Hide credits' : 'Credits'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+            {item.kind === 'shader' && (
+              <button
+                type="button"
+                onClick={() => setCodeToggled(!showCode)}
+                aria-pressed={showCode}
+                aria-label={showCode ? 'Hide code' : 'Show code'}
+                title={showCode ? 'Hide code' : 'Show code'}
+                className={`${controlClass} shrink-0 ${showCode ? 'text-accent!' : ''}`}
+              >
+                <CodeXml size={18} />
+              </button>
+            )}
+          </div>
         </div>
         </div>
         </div>
