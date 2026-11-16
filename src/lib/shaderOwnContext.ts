@@ -13,6 +13,12 @@ void main() {
 }
 `.trim()
 
+// Compiling a shader is the slow part of setting a card up, and normally it blocks the
+// page: right after the lab loads, a tap can wait behind the cards on screen compiling.
+// Where the browser compiles in the background (KHR_parallel_shader_compile), a card only
+// starts the compile and draws once it's done, so the page isn't blocked by it.
+const COMPLETION_STATUS_KHR = 0x91b1
+
 type ShaderState = {
   gl: WebGLRenderingContext
   uTime: WebGLUniformLocation | null
@@ -37,6 +43,8 @@ export function useOwnContextRunner(
 ) {
   const rafRef = useRef<number>(0)
   const stateRef = useRef<ShaderState | null>(null)
+  // The context while its shader is still compiling, so unmounting then still frees it.
+  const pendingGlRef = useRef<WebGLRenderingContext | null>(null)
 
   useEffect(() => {
     cancelAnimationFrame(rafRef.current)
@@ -96,24 +104,9 @@ export function useOwnContextRunner(
 
     if (stateRef.current) return cleanup
 
-    // Defer first init to rAF so canvas has been laid out and has real dimensions
-    initRaf = requestAnimationFrame(() => {
-      if (!canvas) return
-
-      const gl = canvas.getContext('webgl')
-      if (!gl) return
-
-      const compile = (type: number, src: string) => {
-        const shader = gl.createShader(type)!
-        gl.shaderSource(shader, src)
-        gl.compileShader(shader)
-        return shader
-      }
-
-      const prog = gl.createProgram()!
-      gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT))
-      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fragmentShader))
-      gl.linkProgram(prog)
+    const finishSetup = (gl: WebGLRenderingContext, prog: WebGLProgram) => {
+      if (stateRef.current) return
+      pendingGlRef.current = null
       gl.useProgram(prog)
 
       const buf = gl.createBuffer()
@@ -155,6 +148,34 @@ export function useOwnContextRunner(
       // Draw one frame up front so shaders outside the animating ones still show a still.
       render(stateRef.current)
       play()
+    }
+
+    // Deferred a frame so the canvas has been laid out and has real dimensions.
+    initRaf = requestAnimationFrame(() => {
+      const gl = canvas.getContext('webgl')
+      if (!gl) return
+      pendingGlRef.current = gl
+
+      const compile = (type: number, src: string) => {
+        const shader = gl.createShader(type)!
+        gl.shaderSource(shader, src)
+        gl.compileShader(shader)
+        return shader
+      }
+
+      const prog = gl.createProgram()!
+      gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT))
+      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fragmentShader))
+      gl.linkProgram(prog)
+
+      // With background compiling, wait for it before touching the program: using or
+      // querying an unfinished one would block until it's done.
+      if (!gl.getExtension('KHR_parallel_shader_compile')) return finishSetup(gl, prog)
+      const poll = () => {
+        if (gl.getProgramParameter(prog, COMPLETION_STATUS_KHR)) finishSetup(gl, prog)
+        else initRaf = requestAnimationFrame(poll)
+      }
+      poll()
     })
 
     return cleanup
@@ -169,6 +190,8 @@ export function useOwnContextRunner(
         stateRef.current.gl.getExtension('WEBGL_lose_context')?.loseContext()
         stateRef.current = null
       }
+      pendingGlRef.current?.getExtension('WEBGL_lose_context')?.loseContext()
+      pendingGlRef.current = null
     }
   }, [])
 }
