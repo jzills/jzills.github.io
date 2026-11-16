@@ -161,7 +161,7 @@ export function useShaderRunner(
     })
 
     return cleanup
-  }, [active, fragmentShader, still])
+  }, [active, canvasRef, fragmentShader, still])
 
   // Full teardown on unmount only
   useEffect(() => {
