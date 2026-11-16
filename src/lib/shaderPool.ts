@@ -1,5 +1,5 @@
-// One WebGL context draws every shader on the page. Each card keeps a plain 2D
-// canvas, and a frame is drawn here and copied into it. Compared with a context
+// One WebGL context draws every shader on the page. Each card keeps its own
+// canvas, and a frame is drawn here and handed to it. Compared with a context
 // per card, each shader compiles once per visit (scrolling back to a card costs
 // nothing), contexts aren't created and thrown away as cards scroll past, and
 // there's no browser cap on live contexts to stay under.
@@ -7,6 +7,12 @@
 // Compiling is the slow part, so it's queued: at most one shader finishes per
 // frame, and where the browser can compile in the background
 // (KHR_parallel_shader_compile) the page keeps scrolling while it does.
+//
+// Handing a frame over is where it can go wrong: copying a WebGL canvas into a 2D
+// one with drawImage makes the page wait for the GPU to finish the frame, about
+// 14 ms a frame on a phone. So where WebGL runs in an OffscreenCanvas, each frame
+// is passed as an ImageBitmap to the card's bitmaprenderer canvas, which hands it
+// over on the GPU without waiting. Elsewhere (Safari before 17) it falls back to drawImage.
 
 export type ShaderProgram = {
   prog: WebGLProgram
@@ -35,8 +41,16 @@ void main() {
 // From KHR_parallel_shader_compile.
 const COMPLETION_STATUS_KHR = 0x91b1
 
+// Where a card's frames go: a bitmaprenderer canvas when frames move as ImageBitmaps,
+// otherwise a 2D canvas they're copied into.
+export type ShaderTarget =
+  | { canvas: HTMLCanvasElement; bitmap: ImageBitmapRenderingContext }
+  | { canvas: HTMLCanvasElement; copy: CanvasRenderingContext2D }
+
 const entries = new Map<string, Entry>()
-let canvas: HTMLCanvasElement | null = null
+let canvas: HTMLCanvasElement | OffscreenCanvas | null = null
+// Whether the shared context runs in an OffscreenCanvas, so frames can move as ImageBitmaps.
+let offscreen = false
 let gl: WebGLRenderingContext | null = null
 let lost = false
 let parallel = false
@@ -58,12 +72,24 @@ function setup(g: WebGLRenderingContext) {
 function context() {
   if (lost) return null
   if (gl) return gl
-  canvas = document.createElement('canvas')
-  canvas.width = canvas.height = 1
-  gl = canvas.getContext('webgl', { antialias: false, depth: false, stencil: false })
-  if (!gl) return null
+  const options: WebGLContextAttributes = { antialias: false, depth: false, stencil: false }
+  if (typeof OffscreenCanvas !== 'undefined') {
+    const off = new OffscreenCanvas(1, 1)
+    gl = off.getContext('webgl', options)
+    if (gl) {
+      canvas = off
+      offscreen = true
+    }
+  }
+  if (!gl) {
+    const el = document.createElement('canvas')
+    el.width = el.height = 1
+    gl = el.getContext('webgl', options)
+    canvas = el
+  }
+  if (!gl || !canvas) return null
 
-  canvas.addEventListener('webglcontextlost', (e) => {
+  canvas.addEventListener('webglcontextlost', (e: Event) => {
     e.preventDefault()
     lost = true
     cancelAnimationFrame(frame)
@@ -165,20 +191,46 @@ export function subscribeShader(source: string, subscriber: Subscriber) {
   }
 }
 
-// Draws one frame of a ready shader at the target's size and copies it into the target.
-export function drawShader(program: ShaderProgram, target: CanvasRenderingContext2D, time: number) {
+// Sets a card's canvas up to receive frames. A canvas keeps the first kind of
+// context it's given, so each card canvas comes here once.
+export function shaderTarget(el: HTMLCanvasElement): ShaderTarget | null {
+  context()
+  if (offscreen) {
+    const bitmap = el.getContext('bitmaprenderer')
+    if (bitmap) return { canvas: el, bitmap }
+  }
+  const copy = el.getContext('2d')
+  return copy ? { canvas: el, copy } : null
+}
+
+// Draws one frame of a ready shader at the target's size and hands it to the target.
+export function drawShader(program: ShaderProgram, target: ShaderTarget, time: number) {
   const g = context()
   if (!g || !canvas) return
   const { width, height } = target.canvas
-  // The shared canvas only grows; each draw uses its bottom-left corner, which is
-  // where the viewport's origin sits.
-  if (canvas.width < width) canvas.width = width
-  if (canvas.height < height) canvas.height = height
+
+  if ('bitmap' in target) {
+    // The whole canvas becomes the bitmap, so it's sized to the target. Cards
+    // share a size, so this rarely reallocates.
+    if (canvas.width !== width) canvas.width = width
+    if (canvas.height !== height) canvas.height = height
+  } else {
+    // The shared canvas only grows; each draw uses its bottom-left corner, which
+    // is where the viewport's origin sits.
+    if (canvas.width < width) canvas.width = width
+    if (canvas.height < height) canvas.height = height
+  }
+
   g.viewport(0, 0, width, height)
   g.useProgram(program.prog)
   g.uniform1f(program.uTime, time)
   g.uniform2f(program.uRes, width, height)
   g.drawArrays(g.TRIANGLE_STRIP, 0, 4)
-  target.clearRect(0, 0, width, height)
-  target.drawImage(canvas, 0, canvas.height - height, width, height, 0, 0, width, height)
+
+  if ('bitmap' in target) {
+    target.bitmap.transferFromImageBitmap((canvas as OffscreenCanvas).transferToImageBitmap())
+  } else {
+    target.copy.clearRect(0, 0, width, height)
+    target.copy.drawImage(canvas, 0, canvas.height - height, width, height, 0, 0, width, height)
+  }
 }
