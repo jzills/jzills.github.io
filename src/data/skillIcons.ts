@@ -1,9 +1,9 @@
 import type { LucideIcon } from 'lucide-react'
-import { Bot, Box, Cloud, Database, Hash, Infinity as InfinityIcon, Network } from 'lucide-react'
+import { Bot, Box, Cloud, Database, Hash, Infinity as InfinityIcon, Network, Orbit } from 'lucide-react'
 import {
   siArgo, siClaude, siCursor, siDatabricks, siDbt, siDocker, siDotnet, siGithubactions, siGithubcopilot,
   siGnubash, siGo, siHelm, siJavascript, siKubernetes, siModelcontextprotocol, siPrefect, siPython, siReact,
-  siSonar, siTerraform, siTypescript,
+  siRedis, siSonar, siTerraform, siTypescript,
 } from './brandLogos'
 
 // The logo beside each skill and the colour it lights up in. Official logos
@@ -43,6 +43,8 @@ export const skillIcons: Record<string, SkillIcon> = {
   Databricks: brand(siDatabricks),
   dbt: brand(siDbt),
   Prefect: brand(siPrefect),
+  Redis: brand(siRedis),
+  'Azure Cosmos DB': { Icon: Orbit, color: MICROSOFT_BLUE },
   'GitHub Actions': brand(siGithubactions),
   'Azure DevOps': { Icon: InfinityIcon, color: MICROSOFT_BLUE },
   SonarCloud: brand(siSonar),
