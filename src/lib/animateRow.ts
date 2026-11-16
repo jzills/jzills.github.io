@@ -1,7 +1,7 @@
-// Decides which shaders animate on desktop: only those in the grid row with the
-// most of itself on screen, so the lab runs one row of three at a time instead of
-// everything visible. The row keeps playing until another row shows more of
-// itself; the rest hold a still frame.
+// Decides which shaders animate on desktop when they play without a hover (the
+// home page preview, the lightbox): only those in the grid row with the most of
+// itself on screen. The row keeps playing until another row shows more of
+// itself; the rest hold a still frame. The lab grid plays on hover instead.
 
 type Listener = (on: boolean) => void
 

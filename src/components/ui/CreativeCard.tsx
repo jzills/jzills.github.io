@@ -10,7 +10,18 @@ import type { AudioItem, CreativeItem, ImageItem, MusicItem, ShaderItem, ShaderV
 const shellClass = 'h-full bg-surface border border-border rounded overflow-hidden transition-all duration-200 hover:border-accent/40 hover:ring-1 hover:ring-accent/15'
 
 // Key it by variant: a canvas builds its WebGL program once, from the first source it gets.
-export function ShaderCanvas({ variant, playing = true, className = '' }: { variant: ShaderVariant; playing?: boolean; className?: string }) {
+export function ShaderCanvas({
+  variant,
+  playing = true,
+  className = '',
+  hoverTargetRef,
+}: {
+  variant: ShaderVariant
+  playing?: boolean
+  className?: string
+  // With a mouse, animate only while this element is hovered or holds focus.
+  hoverTargetRef?: React.RefObject<HTMLElement | null>
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [source, setSource] = useState('')
   useEffect(() => {
@@ -22,7 +33,7 @@ export function ShaderCanvas({ variant, playing = true, className = '' }: { vari
       cancelled = true
     }
   }, [variant])
-  useShaderRunner(canvasRef, source, playing, variant.still)
+  useShaderRunner(canvasRef, source, playing, variant.still, hoverTargetRef)
   return <canvas ref={canvasRef} className={className} />
 }
 
@@ -145,19 +156,26 @@ function useSeries(count: number) {
   return [variant, step] as const
 }
 
-function ShaderCard({ item, onOpen, paused }: { item: ShaderItem; onOpen?: (variant: number, code?: boolean) => void; paused?: boolean }) {
+function ShaderCard({ item, onOpen, paused, hoverToPlay }: { item: ShaderItem; onOpen?: (variant: number, code?: boolean) => void; paused?: boolean; hoverToPlay?: boolean }) {
   const [playing, setPlaying] = useState(true)
+  const cardRef = useRef<HTMLDivElement>(null)
   const count = item.variants.length
   const [variant, step] = useSeries(count)
   const current = item.variants[variant]
   return (
-    <div className={shellClass}>
+    <div ref={cardRef} className={shellClass}>
       {/* The controls sit beside the media button rather than inside it: buttons can't nest. */}
       <div className="group/card relative">
         <Media item={item} onOpen={onOpen && (() => onOpen(variant))}>
           {/* The black backdrop stands in while the canvas is unmounted off-screen. */}
           <LazyMount className="absolute inset-0 bg-black" enabled={!paused}>
-            <ShaderCanvas key={variant} variant={current} playing={playing} className="absolute inset-0 w-full h-full" />
+            <ShaderCanvas
+              key={variant}
+              variant={current}
+              playing={playing}
+              hoverTargetRef={hoverToPlay ? cardRef : undefined}
+              className="absolute inset-0 w-full h-full"
+            />
           </LazyMount>
           <SeriesBadge variant={variant} count={count} />
         </Media>
@@ -480,12 +498,14 @@ interface CreativeCardProps {
   onOpen?: (variant?: number, code?: boolean) => void
   // Unmounts a shader's canvas and pauses a playing video, e.g. while a lightbox covers the grid.
   paused?: boolean
+  // With a mouse, a shader animates only while hovered or focused, for a grid of them.
+  hoverToPlay?: boolean
 }
 
-export function CreativeCard({ item, onOpen, paused }: CreativeCardProps) {
+export function CreativeCard({ item, onOpen, paused, hoverToPlay }: CreativeCardProps) {
   switch (item.kind) {
     case 'shader':
-      return <ShaderCard item={item} onOpen={onOpen} paused={paused} />
+      return <ShaderCard item={item} onOpen={onOpen} paused={paused} hoverToPlay={hoverToPlay} />
     case 'image':
       return <ImageCard item={item} onOpen={onOpen} />
     case 'video':
