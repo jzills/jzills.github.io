@@ -274,6 +274,10 @@ function LightboxMedia({ item, variant, showCode }: { item: CreativeItem; varian
 // Native <dialog> gives the focus trap, Esc to close, and focus restored to the opener.
 export function Lightbox({ items, index, initialVariant = 0, initialCode = false, onIndexChange }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  // The scrolling area and the frame that centres the content in it: a click on
+  // either one, outside the content, is a click on the backdrop.
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const frameRef = useRef<HTMLDivElement>(null)
   const item = index === null ? null : items[index]
   // The variant shown within a series, stored with the index it belongs to. Until
   // the visitor steps, it's the variant the lightbox was opened on.
@@ -342,17 +346,23 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
     <dialog
       ref={dialogRef}
       onClose={close}
-      // A click on the backdrop lands on the dialog element itself.
-      onClick={(e) => e.target === e.currentTarget && close()}
+      onClick={(e) => {
+        if (e.target === e.currentTarget || e.target === scrollerRef.current || e.target === frameRef.current) close()
+      }}
       aria-label={item?.title}
-      // Capped at the viewport and scrollable: open credits can make it taller than the screen,
-      // and a centred dialog that overflows would push its top out of reach. Below lg the height
-      // leaves room above for the close button; from lg the width leaves room at the sides for the
-      // arrows, which also keeps the dialog clear of the close button in the corner.
-      className="m-auto w-[min(1100px,calc(100vw-2rem))] lg:w-[min(1100px,calc(100vw-9rem))] max-h-[calc(100dvh-7rem)] lg:max-h-[calc(100dvh-2rem)] overflow-y-auto bg-transparent p-0 text-fg backdrop:bg-black/90 backdrop:backdrop-blur-sm"
+      // Covers the screen and never scrolls itself. The content scrolls in its own area inside,
+      // and the close button and side arrows sit outside that area, so scrolling can't carry them
+      // off: Safari on iPhone moved fixed-position buttons along with a scrolling dialog.
+      className="m-0 h-full w-full max-h-none max-w-none overflow-hidden border-0 bg-transparent p-0 text-fg backdrop:bg-black/90 backdrop:backdrop-blur-sm"
     >
       {item && (
-        <div className="relative">
+        <>
+        {/* Scrolls when open credits or a short screen make the content taller than it. */}
+        <div ref={scrollerRef} className="h-full overflow-y-auto overscroll-contain">
+        {/* Centres the content when it fits. The padding keeps it clear of the close button above
+            on phones, and from lg of the arrows at the sides. */}
+        <div ref={frameRef} className="flex min-h-full items-center justify-center px-4 pt-16 pb-6 lg:px-[4.5rem] lg:py-4">
+        <div className="relative w-full max-w-[1100px]">
           <LightboxMedia item={item} variant={variant} showCode={showCode} />
 
           {item.kind === 'shader' && item.variants.length > 1 && (
@@ -393,15 +403,15 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
             </div>
           )}
 
-          {/* Centred under the media. From lg the arrows move out to the screen's edges, level with
-              its middle, and the count stays here. */}
+          {/* Centred under the media. From lg the arrows are at the screen's edges instead (below),
+              and only the count stays here. */}
           {canStep && (
             <div className="mt-4 flex items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => step(-1)}
                 aria-label="Previous"
-                className={`${controlClass} lg:fixed lg:left-6 lg:top-1/2 lg:-translate-y-1/2 lg:p-3`}
+                className={`${controlClass} lg:hidden`}
               >
                 <ChevronLeft size={20} />
               </button>
@@ -412,7 +422,7 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
                 type="button"
                 onClick={() => step(1)}
                 aria-label="Next"
-                className={`${controlClass} lg:fixed lg:right-6 lg:top-1/2 lg:-translate-y-1/2 lg:p-3`}
+                className={`${controlClass} lg:hidden`}
               >
                 <ChevronRight size={20} />
               </button>
@@ -446,16 +456,40 @@ export function Lightbox({ items, index, initialVariant = 0, initialCode = false
             )}
           </div>
 
-          {/* Pinned to the screen's corner, so it stays put when a tall lightbox scrolls. */}
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Close"
-            className={`${controlClass} fixed z-10 right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.75rem,env(safe-area-inset-top))]`}
-          >
-            <X size={20} />
-          </button>
         </div>
+        </div>
+        </div>
+
+        {/* Outside the scrolling area, in the screen's corner, so they never move or get clipped. */}
+        <button
+          type="button"
+          onClick={close}
+          aria-label="Close"
+          className={`${controlClass} absolute z-10 right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.75rem,env(safe-area-inset-top))]`}
+        >
+          <X size={20} />
+        </button>
+        {canStep && (
+          <>
+            <button
+              type="button"
+              onClick={() => step(-1)}
+              aria-label="Previous"
+              className={`${controlClass} absolute z-10 left-6 top-1/2 -translate-y-1/2 p-3! max-lg:hidden`}
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              type="button"
+              onClick={() => step(1)}
+              aria-label="Next"
+              className={`${controlClass} absolute z-10 right-6 top-1/2 -translate-y-1/2 p-3! max-lg:hidden`}
+            >
+              <ChevronRight size={20} />
+            </button>
+          </>
+        )}
+        </>
       )}
     </dialog>
   )
