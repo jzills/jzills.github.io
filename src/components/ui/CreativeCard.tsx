@@ -9,7 +9,7 @@ import type { AudioItem, CreativeItem, ImageItem, MusicItem, ShaderItem, ShaderV
 
 const shellClass = 'h-full bg-surface border border-border rounded overflow-hidden transition-all duration-200 hover:border-accent/40 hover:ring-1 hover:ring-accent/15'
 
-// Key it by variant: a canvas builds its WebGL program once, from the first source it gets.
+// Key it by variant, so switching variants starts the new one from its first frame.
 export function ShaderCanvas({
   variant,
   playing = true,
@@ -167,12 +167,13 @@ function ShaderCard({ item, onOpen, paused, hoverToPlay }: { item: ShaderItem; o
       {/* The controls sit beside the media button rather than inside it: buttons can't nest. */}
       <div className="group/card relative">
         <Media item={item} onOpen={onOpen && (() => onOpen(variant))}>
-          {/* The black backdrop stands in while the canvas is unmounted off-screen. */}
-          <LazyMount className="absolute inset-0 bg-black" enabled={!paused}>
+          {/* The black backdrop stands in until the card first comes near the screen and its shader compiles.
+              Paused (behind the lightbox) it holds its frame rather than unmounting, so closing costs nothing. */}
+          <LazyMount className="absolute inset-0 bg-black" keep>
             <ShaderCanvas
               key={variant}
               variant={current}
-              playing={playing}
+              playing={playing && !paused}
               hoverTargetRef={hoverToPlay ? cardRef : undefined}
               className="absolute inset-0 w-full h-full"
             />
@@ -496,7 +497,7 @@ interface CreativeCardProps {
   // A series passes the variant on show, so the lightbox opens on the same image.
   // Shaders can also ask for their code to show.
   onOpen?: (variant?: number, code?: boolean) => void
-  // Unmounts a shader's canvas and pauses a playing video, e.g. while a lightbox covers the grid.
+  // Pauses a shader or a playing video, e.g. while a lightbox covers the grid.
   paused?: boolean
   // With a mouse, a shader animates only while hovered or focused, for a grid of them.
   hoverToPlay?: boolean

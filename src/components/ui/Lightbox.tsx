@@ -236,8 +236,7 @@ function LightboxShader({ item, variant, showCode }: { item: ShaderItem; variant
 function LightboxMedia({ item, variant, showCode }: { item: CreativeItem; variant: number; showCode: boolean }) {
   switch (item.kind) {
     case 'shader':
-      // Keyed so switching shaders builds a fresh WebGL program instead of reusing the
-      // last one, and starts each one playing.
+      // Keyed so switching shaders starts each one from its first frame, playing.
       return <LightboxShader key={`${item.title}-${variant}`} item={item} variant={variant} showCode={showCode} />
     case 'image': {
       const alt = item.images.length > 1 ? `${item.alt} (${variant + 1} of ${item.images.length})` : item.alt
