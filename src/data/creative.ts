@@ -509,7 +509,7 @@ export const creativeItems: CreativeItem[] = [
     title: 'Blooms',
     description: 'Crowded clusters of saturated petal shapes, each ringed with fine contour lines.',
     tags: ['Series', 'Generative'],
-    images: art('c', square(2)),
+    images: art('blooms', square(2)),
     alt: 'Crowded, brightly colored flower-like shapes outlined with thin lines',
   },
   {
@@ -517,7 +517,7 @@ export const creativeItems: CreativeItem[] = [
     title: 'Interference',
     description: 'Two frames of a red and navy moiré, rings and bands bending through each other.',
     tags: ['Series', 'Generative'],
-    images: art('screen', square(2, 1200)),
+    images: art('interference', square(2, 1200)),
     alt: 'Red and navy interference pattern of rings and warped stripes',
   },
   {
@@ -525,7 +525,7 @@ export const creativeItems: CreativeItem[] = [
     title: 'Thermal',
     description: 'Heat-map color fields of rings and ripples, one scattered and one spiraling into a single center.',
     tags: ['Series', 'Generative'],
-    images: art('screenshots', [[838, 694], [840, 696]]),
+    images: art('thermal', [[838, 694], [840, 696]]),
     alt: 'Rainbow heat-map rings and ripples on a dark background',
   },
   {
@@ -549,7 +549,7 @@ export const creativeItems: CreativeItem[] = [
     title: 'Molten',
     description: 'A cavernous surface mottled in electric blue, violet, and ember orange.',
     tags: ['Still', 'Generative'],
-    images: art('22', square(1)),
+    images: art('molten', square(1)),
     alt: 'Smooth cave-like surface textured in blue, violet, and orange',
   },
   {
@@ -557,7 +557,7 @@ export const creativeItems: CreativeItem[] = [
     title: 'Tendrils',
     description: 'Beaded, segmented tendrils curling in from every side toward a bright core.',
     tags: ['Still', 'Generative'],
-    images: art('t123', [[800, 600]]),
+    images: art('tendrils', [[800, 600]]),
     alt: 'Pink, green, and purple beaded tendrils spiraling toward a center',
   },
   {
@@ -565,7 +565,7 @@ export const creativeItems: CreativeItem[] = [
     title: 'Facets',
     description: 'Angular solids hanging over swirling bands of red, violet, and deep blue.',
     tags: ['Still', 'Generative'],
-    images: art('5421', square(1, 600)),
+    images: art('facets', square(1, 600)),
     alt: 'Faceted brown and red solids over swirling red and blue bands',
   },
   {
@@ -573,7 +573,7 @@ export const creativeItems: CreativeItem[] = [
     title: 'Terraces',
     description: 'Columns of stepped gray ridges, like stacked strata seen side on.',
     tags: ['Still', 'Generative'],
-    images: art('12', square(1, 1250)),
+    images: art('terraces', square(1, 1250)),
     alt: 'Vertical columns of stepped gray ridges',
   },
   {
@@ -581,7 +581,7 @@ export const creativeItems: CreativeItem[] = [
     title: 'Contours',
     description: 'Inked outlines of soft cells, shaded in pale lilac and dark red.',
     tags: ['Still', 'Generative'],
-    images: art('test', [[1366, 758]]),
+    images: art('contours', [[1366, 758]]),
     alt: 'Black outlined blob shapes shaded in lilac and red on white',
   },
   // Add audio items like this:

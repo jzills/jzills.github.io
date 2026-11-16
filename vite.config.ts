@@ -18,6 +18,17 @@ export default defineConfig({
         main: path.resolve(import.meta.dirname, 'index.html'),
         lab: path.resolve(import.meta.dirname, 'lab/index.html'),
       },
+      output: {
+        // The code both pages share would otherwise be named after whichever of its
+        // modules the bundler picks (it was PartyLayer), along with its stylesheet.
+        chunkFileNames: (chunk) =>
+          !chunk.isEntry && !chunk.isDynamicEntry && chunk.moduleIds.some((id) => id.includes('/src/components/layout/'))
+            ? 'assets/shared-[hash].js'
+            : 'assets/[name]-[hash].js',
+        // The site has one stylesheet (Tailwind and index.css), shared by both pages.
+        assetFileNames: (asset) =>
+          asset.names.some((name) => name.endsWith('.css')) ? 'assets/styles-[hash][extname]' : 'assets/[name]-[hash][extname]',
+      },
     },
   },
   resolve: {
