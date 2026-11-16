@@ -1,65 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { animateInRow } from '@/lib/animateRow'
 import { drawShader, shaderTarget, subscribeShader } from '@/lib/shaderPool'
 import type { ShaderProgram } from '@/lib/shaderPool'
-
-// Guarded for prerendering, which has no window; the hook itself only runs in the browser.
-const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
-
-// On touch devices only the middle band of the screen animates, so a page of
-// shaders runs about one at a time; on desktop it's the grid row most on screen.
-const animateBand = '-35% 0px -35% 0px'
-
-// Whether the visitor last moved focus with the keyboard. Escape doesn't count: it
-// closes things, and closing the lightbox hands focus back to the card that opened it,
-// which shouldn't set that card playing for someone using a mouse.
-let keyboardFocus = false
-let trackingInput = false
-function trackInput() {
-  if (trackingInput) return
-  trackingInput = true
-  document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') keyboardFocus = true }, { capture: true })
-  document.addEventListener('pointerdown', () => { keyboardFocus = false }, { capture: true })
-}
-
-// With a mouse, a shader given a hover target plays only while the pointer is over
-// it or keyboard focus is inside it, so a grid of them runs one at a time.
-function watchHover(target: HTMLElement, onChange: (on: boolean) => void) {
-  trackInput()
-  let hovered = false
-  let focused = false
-  const update = () => onChange(hovered || focused)
-  const enter = () => { hovered = true; update() }
-  const leave = () => { hovered = false; update() }
-  const focusIn = () => { focused = keyboardFocus; update() }
-  const focusOut = (e: FocusEvent) => {
-    if (target.contains(e.relatedTarget as Node | null)) return
-    focused = false
-    update()
-  }
-  target.addEventListener('pointerenter', enter)
-  target.addEventListener('pointerleave', leave)
-  target.addEventListener('focusin', focusIn)
-  target.addEventListener('focusout', focusOut)
-  // The pointer may already be over the card when the canvas mounts.
-  hovered = target.matches(':hover')
-  focused = keyboardFocus && target.contains(document.activeElement)
-  update()
-  return () => {
-    target.removeEventListener('pointerenter', enter)
-    target.removeEventListener('pointerleave', leave)
-    target.removeEventListener('focusin', focusIn)
-    target.removeEventListener('focusout', focusOut)
-  }
-}
-
-function watchAnimate(el: HTMLElement, onChange: (on: boolean) => void, hoverTarget?: HTMLElement | null) {
-  if (!coarse && hoverTarget) return watchHover(hoverTarget, onChange)
-  if (!coarse) return animateInRow(el, onChange)
-  const observer = new IntersectionObserver(([entry]) => onChange(entry.isIntersecting), { rootMargin: animateBand })
-  observer.observe(el)
-  return () => observer.disconnect()
-}
+import { coarse, watchAnimate } from '@/lib/shaderPlayback'
+import { useOwnContextRunner } from '@/lib/shaderOwnContext'
 
 type Clock = {
   start: number
@@ -68,8 +11,8 @@ type Clock = {
   pausedAt: number | null
 }
 
-// Runs a shader in a 2D canvas, drawn through the page's shared WebGL context (see shaderPool).
-export function useShaderRunner(
+// Runs a shader in the card's canvas, drawn through the page's shared WebGL context (see shaderPool).
+function useSharedContextRunner(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
   // Empty until the source has loaded; nothing is drawn before then.
   fragmentShader: string,
@@ -162,3 +105,13 @@ export function useShaderRunner(
     }
   }, [active, canvasRef, fragmentShader, hoverTargetRef, still])
 }
+
+// Desktop draws every shader through one shared context: each compiles once and
+// nothing is created or destroyed as cards scroll past. Phones give each card its
+// own context instead, which ran heavy shaders far better there. Chosen once per
+// page load, so the hook a component calls never changes.
+export const useShaderRunner = coarse ? useOwnContextRunner : useSharedContextRunner
+
+// Shader cards can stay mounted after scrolling away only with the shared context;
+// with a context per card, unmounting is what frees them.
+export const sharedShaderContext = !coarse

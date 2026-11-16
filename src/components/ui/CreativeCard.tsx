@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { Play, Pause, Maximize2, Layers, Volume2, VolumeX, ChevronLeft, ChevronRight, CodeXml } from 'lucide-react'
 import { Chip } from '@/components/ui/Chip'
 import { LazyMount } from '@/components/ui/LazyMount'
-import { useShaderRunner } from '@/lib/useShaderRunner'
+import { sharedShaderContext, useShaderRunner } from '@/lib/useShaderRunner'
 import { useTheme } from '@/lib/theme'
 import type { AudioItem, CreativeItem, ImageItem, MusicItem, ShaderItem, ShaderVariant, VideoClip, VideoItem } from '@/data/creative'
 
@@ -167,9 +167,11 @@ function ShaderCard({ item, onOpen, paused, hoverToPlay }: { item: ShaderItem; o
       {/* The controls sit beside the media button rather than inside it: buttons can't nest. */}
       <div className="group/card relative">
         <Media item={item} onOpen={onOpen && (() => onOpen(variant))}>
-          {/* The black backdrop stands in until the card first comes near the screen and its shader compiles.
-              Paused (behind the lightbox) it holds its frame rather than unmounting, so closing costs nothing. */}
-          <LazyMount className="absolute inset-0 bg-black" keep>
+          {/* The black backdrop stands in until the card comes near the screen and its shader compiles.
+              With the shared context (desktop) the card then stays mounted, and behind the lightbox it just
+              pauses. With a context per card (phones) it unmounts off-screen and behind the lightbox, which
+              frees the context. */}
+          <LazyMount className="absolute inset-0 bg-black" keep={sharedShaderContext} enabled={sharedShaderContext || !paused}>
             <ShaderCanvas
               key={variant}
               variant={current}
