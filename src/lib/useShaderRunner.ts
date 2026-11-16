@@ -10,15 +10,28 @@ const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coa
 // shaders runs about one at a time; on desktop it's the grid row most on screen.
 const animateBand = '-35% 0px -35% 0px'
 
+// Whether the visitor last moved focus with the keyboard. Escape doesn't count: it
+// closes things, and closing the lightbox hands focus back to the card that opened it,
+// which shouldn't set that card playing for someone using a mouse.
+let keyboardFocus = false
+let trackingInput = false
+function trackInput() {
+  if (trackingInput) return
+  trackingInput = true
+  document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') keyboardFocus = true }, { capture: true })
+  document.addEventListener('pointerdown', () => { keyboardFocus = false }, { capture: true })
+}
+
 // With a mouse, a shader given a hover target plays only while the pointer is over
-// it or focus is inside it, so a grid of them runs one at a time.
+// it or keyboard focus is inside it, so a grid of them runs one at a time.
 function watchHover(target: HTMLElement, onChange: (on: boolean) => void) {
+  trackInput()
   let hovered = false
   let focused = false
   const update = () => onChange(hovered || focused)
   const enter = () => { hovered = true; update() }
   const leave = () => { hovered = false; update() }
-  const focusIn = () => { focused = true; update() }
+  const focusIn = () => { focused = keyboardFocus; update() }
   const focusOut = (e: FocusEvent) => {
     if (target.contains(e.relatedTarget as Node | null)) return
     focused = false
@@ -30,7 +43,7 @@ function watchHover(target: HTMLElement, onChange: (on: boolean) => void) {
   target.addEventListener('focusout', focusOut)
   // The pointer may already be over the card when the canvas mounts.
   hovered = target.matches(':hover')
-  focused = target.contains(document.activeElement)
+  focused = keyboardFocus && target.contains(document.activeElement)
   update()
   return () => {
     target.removeEventListener('pointerenter', enter)
