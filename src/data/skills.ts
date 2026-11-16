@@ -18,7 +18,7 @@ export const skillGroups: SkillGroup[] = [
   },
   {
     label: 'Data',
-    skills: ['Databricks', 'dbt', 'Prefect'],
+    skills: ['Databricks', 'dbt', 'Prefect', 'Redis', 'Azure Cosmos DB'],
   },
   {
     label: 'Tooling',
