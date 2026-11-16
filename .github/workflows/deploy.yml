@@ -10,6 +10,13 @@ permissions:
   contents: read
   pages: write
   id-token: write
+# One deploy at a time. Pages rejects a deployment while another is in progress,
+# so merges that land close together used to fail the earlier run. Now a newer
+# run waits instead, and a run still waiting is replaced by a newer one. A deploy
+# already running is never cancelled partway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
