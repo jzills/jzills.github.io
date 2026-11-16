@@ -2,7 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import { Bot, Box, Cloud, Database, Hash, Infinity as InfinityIcon, Network, Orbit } from 'lucide-react'
 import {
   siArgo, siClaude, siCursor, siDatabricks, siDbt, siDocker, siDotnet, siGithubactions, siGithubcopilot,
-  siGnubash, siGo, siHelm, siJavascript, siKubernetes, siModelcontextprotocol, siPrefect, siPython, siReact,
+  siGnubash, siGo, siHelm, siKubernetes, siModelcontextprotocol, siPrefect, siPython, siReact,
   siRedis, siSonar, siTerraform, siTypescript,
 } from './brandLogos'
 
@@ -26,7 +26,6 @@ export const skillIcons: Record<string, SkillIcon> = {
   'C#': { Icon: Hash, color: DOTNET_PURPLE },
   Go: brand(siGo),
   TypeScript: brand(siTypescript),
-  JavaScript: brand(siJavascript),
   Python: brand(siPython),
   Bash: brand(siGnubash),
   SQL: { Icon: Database },

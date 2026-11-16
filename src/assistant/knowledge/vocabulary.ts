@@ -24,7 +24,8 @@ export const terms: TermDefinition[] = [
   { name: 'C#', aliases: ['csharp', 'c sharp'], implies: ['.NET'] },
   // "go" is an everyday word, so only "Go", "golang" or "go" after with/in/know/… count (see text.ts).
   { name: 'Go', aliases: ['golang'], token: 'golang' },
-  { name: 'TypeScript', aliases: ['ts'] },
+  // A superset of JavaScript, which the site no longer lists on its own.
+  { name: 'TypeScript', aliases: ['ts'], implies: ['JavaScript'] },
   { name: 'JavaScript', aliases: ['js'] },
   { name: 'Python', aliases: ['py'] },
   { name: 'Bash', aliases: ['shell scripting', 'shell scripts'] },
