@@ -3,6 +3,7 @@ import { SHOCKWAVE_EVENT } from '@/lib/events'
 import {
   BANANA_PALETTE, BANANA_SPRITE, MARK_TAP_EVENT, SHOWER, bananaAt, makeShower, makeSparkle, nextShowerDelay,
   recordTap, setLitPieces, stepSparkle, streakCount, tapCount, tickerItems, type Banana, type Sparkle,
+  PARTY_ENABLED,
 } from '@/lib/party'
 import { getTheme, setTheme, useTheme } from '@/lib/theme'
 
@@ -244,7 +245,7 @@ function Ticker({ count }: { count: number }) {
 
 // Everything party mode adds on top of the theme's CSS (index.css). Always
 // mounted, so it can count the hero mark's taps and switch the mode on.
-export function PartyLayer() {
+function ActivePartyLayer() {
   const theme = useTheme()
   const [count, setCount] = useState(tapCount)
   const [announce, setAnnounce] = useState(false)
@@ -306,3 +307,6 @@ export function PartyLayer() {
     </>
   )
 }
+
+// Nothing at all while party mode is switched off (PARTY_ENABLED).
+export const PartyLayer = PARTY_ENABLED ? ActivePartyLayer : () => null

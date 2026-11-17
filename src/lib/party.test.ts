@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { NAME_PIECES, litLetters, getLitPieces, setLitPieces, subscribeLitPieces, BANANA_PALETTE, BANANA_SPRITE, SHOWER, SPARKLE_COLORS, UNLOCK_AT, bananaAt, makeShower, makeSparkle, nextShowerDelay, recordTap, stepSparkle, tapCount, tickerItems } from './party'
 import { nextTheme } from './theme'
+import { PARTY_ENABLED } from './party'
+import themeInit from '../../public/theme-init.js?raw'
+
+describe('PARTY_ENABLED', () => {
+  it('matches whether theme-init.js lets a saved party theme through', () => {
+    expect(themeInit).toContain("localStorage.getItem('theme')")
+    expect(themeInit.includes("theme !== 'party'")).toBe(PARTY_ENABLED)
+  })
+})
 
 describe('recordTap', () => {
   it('enters party on every third tap, counting every tap for the banner', () => {

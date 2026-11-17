@@ -1,11 +1,13 @@
 import { useSyncExternalStore } from 'react'
+import { PARTY_ENABLED } from '@/lib/party'
 
 // Party is a hidden third theme: a loud 90s homepage. Five blasts of the hero
 // mark switch it on (src/lib/party.ts); its banner's exit button, or the
 // theme toggle, switch it off. The toggle itself only offers dark and light.
 export type Theme = 'light' | 'dark' | 'party'
 
-const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark' || value === 'party'
+const isTheme = (value: unknown): value is Theme =>
+  value === 'light' || value === 'dark' || (PARTY_ENABLED && value === 'party')
 
 // Must match the key read by public/theme-init.js, which applies the
 // theme before first paint so light-mode visitors never see a dark flash.
