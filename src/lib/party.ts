@@ -6,6 +6,11 @@
 // reduced motion too, where a tap just fades the figure instead of blowing up
 // the page.
 
+// Off: the hero mark still blasts, but taps don't light the name or start
+// party mode, and a saved party theme falls back to light or dark. Turning it
+// back on also needs 'party' re-allowed in public/theme-init.js (a test checks).
+export const PARTY_ENABLED = false
+
 export const MARK_TAP_EVENT = 'hero-mark-tap'
 export const UNLOCK_AT = 3
 
