@@ -4,7 +4,6 @@ import { Mail } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 import { CopyIcon } from '@/components/ui/CopyIcon'
 import { DecodeText } from '@/components/ui/DecodeText'
-import { WavyText } from '@/components/ui/WavyText'
 import { useCopyToClipboard } from '@/lib/useCopyToClipboard'
 import { profile } from '@/data/profile'
 
@@ -64,7 +63,7 @@ export function Contact() {
             <DecodeText text="Get in touch" />
           </p>
           <h2 className="text-3xl font-bold text-fg tracking-tight mb-4">
-            <WavyText text="Let's connect." />
+            Let's connect.
           </h2>
           <p className="text-muted leading-relaxed mb-10">
             Whether it's platform work, developer tooling, or something on the

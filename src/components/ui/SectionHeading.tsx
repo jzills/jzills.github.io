@@ -1,5 +1,4 @@
 import { DecodeText } from '@/components/ui/DecodeText'
-import { WavyText } from '@/components/ui/WavyText'
 
 interface Props {
   label: string
@@ -14,7 +13,7 @@ export function SectionHeading({ label, heading, subheading }: Props) {
         <DecodeText text={label} />
       </p>
       <h2 className="text-3xl font-bold text-fg tracking-tight mb-3">
-        <WavyText text={heading} />
+        {heading}
       </h2>
       {subheading && (
         <p className="text-muted text-base max-w-xl">{subheading}</p>

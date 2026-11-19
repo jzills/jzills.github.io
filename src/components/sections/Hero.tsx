@@ -16,7 +16,6 @@ const iconLinkClass = 'inline-flex items-center justify-center w-9 h-9 rounded b
 const waveStroke = {
   dark: 'rgba(34, 211, 238, 0.12)',
   light: 'rgba(14, 116, 144, 0.18)',
-  party: 'rgba(255, 43, 214, 0.55)',
 }
 
 function WaveformCanvas() {
@@ -191,7 +190,7 @@ function WaveformCanvas() {
   return (
     <canvas
       ref={canvasRef}
-      className="party-hue absolute inset-0 w-full h-full pointer-events-none"
+      className="absolute inset-0 w-full h-full pointer-events-none"
       aria-hidden="true"
     />
   )

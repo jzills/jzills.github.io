@@ -3,7 +3,6 @@ import { m } from 'framer-motion'
 import { Navigation } from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
 import { MotionProvider } from '@/components/layout/MotionProvider'
-import { PartyLayer } from '@/components/layout/PartyLayer'
 import { CreativeCard } from '@/components/ui/CreativeCard'
 import { Lightbox } from '@/components/ui/Lightbox'
 import { AssistantWidget } from '@/components/assistant/AssistantWidget'
@@ -12,7 +11,6 @@ import type { CreativeItem } from '@/data/creative'
 import { labId } from '@/lib/anchors'
 import { revealOnScroll, rise } from '@/lib/motion'
 import { scrollToHash } from '@/lib/pages'
-import { WavyText } from '@/components/ui/WavyText'
 
 type Kind = CreativeItem['kind']
 
@@ -87,7 +85,7 @@ export function LabPage() {
           <header className="page-rise mb-12">
             <p className="text-xs font-mono text-accent uppercase tracking-widest mb-3">Creative &amp; Experimental</p>
             <h1 className="text-4xl sm:text-5xl font-bold text-fg tracking-tight mb-4">
-              <WavyText text="Lab" />
+              Lab
             </h1>
             <p className="text-muted text-base max-w-2xl leading-relaxed">
               Shaders, computer vision experiments, and other generative work. The shaders run live in
@@ -149,7 +147,6 @@ export function LabPage() {
           </m.div>
         </main>
         <Footer />
-        <PartyLayer />
         <AssistantWidget />
 
         <Lightbox items={openable} index={openIndex} initialVariant={openVariant} initialCode={openCode} onIndexChange={setOpenIndex} />

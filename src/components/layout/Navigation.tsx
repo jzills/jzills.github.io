@@ -52,11 +52,11 @@ export function Navigation() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/80 backdrop-blur-sm">
       <nav className="max-w-[1100px] mx-auto px-6 h-14 flex items-center justify-between">
-        <a data-blast="" href={homeHref('#hero')} aria-label="J. Zills, home" className="font-sans text-fg font-extrabold text-lg tracking-tight hover:opacity-80 transition-opacity">
+        <a href={homeHref('#hero')} aria-label="J. Zills, home" className="font-sans text-fg font-extrabold text-lg tracking-tight hover:opacity-80 transition-opacity">
           J<span className="text-accent">.</span> Zills
         </a>
 
-        <div data-blast-group="" className="hidden md:flex items-center gap-5 lg:gap-6">
+        <div className="hidden md:flex items-center gap-5 lg:gap-6">
           {navLinks.map((link) => {
             const isActive = active === link.href.slice(1)
             return (
@@ -95,7 +95,7 @@ export function Navigation() {
           </a>
         </div>
 
-        <div data-blast-group="" className="md:hidden flex items-center gap-1">
+        <div className="md:hidden flex items-center gap-1">
           <ThemeToggle />
           {/* A shortcut to the Lab so it's one tap away on phones; the menu still lists it too. */}
           <a
