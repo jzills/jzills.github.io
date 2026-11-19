@@ -141,24 +141,6 @@ section[id] {
   }
 }
 
-/* Hero typing line: a block caret that blinks while idle. */
-@keyframes typing-caret {
-  50% {
-    opacity: 0;
-  }
-}
-
-.typing-caret {
-  display: inline-block;
-  width: 0.55em;
-  height: 1.1em;
-  margin-left: 2px;
-  vertical-align: -0.2em;
-  background: currentColor;
-  opacity: 0.8;
-  animation: typing-caret 1s steps(1) infinite;
-}
-
 /* Hero blast (src/lib/blast.ts). Debris can't be clicked mid-flight, and per-element
    transitions are paused so the physics isn't smoothed into slow motion. */
 html[data-blasting] {
@@ -169,11 +151,6 @@ html[data-blasting] [data-blast],
 html[data-blasting] [data-blast-group] > * {
   pointer-events: none;
   transition: none !important;
-}
-
-/* The static curve gives way once the live canvas is drawing. */
-.hero-mark[data-live] .mark-fallback {
-  opacity: 0;
 }
 
 /* Portfolio assistant: the panel rises in from the launcher; the typing dots pulse. */
@@ -430,10 +407,3 @@ html[data-blasting] [data-blast-group] > * {
   }
 }
 
-/* Progress toward party mode: each tap of the hero mark lights the next piece
-   of the name in the accent (src/lib/party.ts). Party mode's rainbow wins. */
-.name-lit {
-  color: var(--color-accent);
-  text-shadow: 0 0 18px color-mix(in srgb, var(--color-accent) 55%, transparent);
-  transition: color 0.4s ease, text-shadow 0.4s ease;
-}

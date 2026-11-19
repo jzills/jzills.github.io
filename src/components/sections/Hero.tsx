@@ -1,39 +1,14 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { Mail, FileText, ChevronDown, FlaskConical } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Mail, FileText, ChevronDown, FolderGit2 } from 'lucide-react'
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 import { m } from 'framer-motion'
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/Button'
-import { TypingLine } from '@/components/ui/TypingLine'
-import { HeroMarkCanvas, MarkFallback, SHOCKWAVE_EVENT, type ShockwaveDetail } from '@/components/sections/HeroMark'
 import { experience } from '@/data/experience'
-import { LAB_PATH } from '@/lib/pages'
-import { getLitPieces, litLetters, subscribeLitPieces } from '@/lib/party'
 import { profile } from '@/data/profile'
+import { splitStatement } from '@/lib/statement'
 
 const current = experience[0]
-
-// The name splits into letters so the blast can scatter them one by one. Each
-// word stays unbreakable so the letters still wrap as words. The first `lit`
-// letters glow in the accent: progress toward party mode (src/lib/party.ts).
-function BlastableName({ text, lit }: { text: string; lit: number }) {
-  let index = 0
-  return text.split(' ').map((word, w) => (
-    <span key={w}>
-      {w > 0 && ' '}
-      <span className="inline-block whitespace-nowrap">
-        {[...word].map((ch, i) => {
-          const on = index++ < lit
-          return (
-            <span key={i} data-blast="" className={`inline-block${on ? ' name-lit' : ''}`}>{ch}</span>
-          )
-        })}
-      </span>
-    </span>
-  ))
-}
-
-const serverLit = () => 0
 
 const iconLinkClass = 'inline-flex items-center justify-center w-9 h-9 rounded bg-surface border border-border text-muted hover:text-fg hover:border-accent/40 transition-all duration-200'
 
@@ -99,14 +74,6 @@ function WaveformCanvas() {
       pluck.age = 0
       pluck.amp = 1
     }
-    // The hero mark bursting hits the waveform with a big ripple.
-    const onShockwave = (e: Event) => {
-      const { clientX } = (e as CustomEvent<ShockwaveDetail>).detail
-      pluck.x = clientX - canvas.getBoundingClientRect().left
-      pluck.age = 0
-      pluck.amp = 1.8
-      energy = 0.9
-    }
     const onScroll = () => {
       const dy = Math.abs(window.scrollY - lastScroll)
       lastScroll = window.scrollY
@@ -118,7 +85,6 @@ function WaveformCanvas() {
       document.documentElement.addEventListener('pointerleave', onPointerLeave)
       window.addEventListener('pointerdown', onPointerDown, { passive: true })
       window.addEventListener('scroll', onScroll, { passive: true })
-      window.addEventListener(SHOCKWAVE_EVENT, onShockwave)
     }
 
     // Resizing a canvas wipes it, and the observer runs after this frame's draw
@@ -219,7 +185,6 @@ function WaveformCanvas() {
       document.documentElement.removeEventListener('pointerleave', onPointerLeave)
       window.removeEventListener('pointerdown', onPointerDown)
       window.removeEventListener('scroll', onScroll)
-      window.removeEventListener(SHOCKWAVE_EVENT, onShockwave)
     }
   }, [])
 
@@ -234,8 +199,8 @@ function WaveformCanvas() {
 
 export function Hero() {
   const [scrolled, setScrolled] = useState(false)
-  const markRef = useRef<HTMLButtonElement>(null)
-  const litPieces = useSyncExternalStore(subscribeLitPieces, getLitPieces, serverLit)
+  // Non-breaking hyphens, so "AI-assisted" never splits across lines at this size.
+  const statement = splitStatement(profile.tagline.replaceAll('-', '\u2011'))
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80)
@@ -251,50 +216,21 @@ export function Hero() {
       <div className="relative max-w-[1100px] mx-auto px-6 w-full pt-20 pb-16">
         {/* A CSS animation rather than framer-motion: it starts from the prerendered
             HTML, so the hero paints before any JavaScript has loaded. */}
-        {/* Positioned so the desktop mark anchors to this block whether or not
-            the entrance animation's transform is still running. */}
-        <div className="page-rise relative">
-          <p data-blast="" className="inline-flex items-center gap-2.5 mb-6 px-3 py-1 rounded-full border border-border bg-surface/60 text-xs font-mono text-muted">
-            <span className="relative flex w-2 h-2" aria-hidden="true">
-              <span className="absolute inline-flex w-full h-full rounded-full bg-accent opacity-60 animate-ping" />
-              <span className="relative inline-flex w-2 h-2 rounded-full bg-accent" />
-            </span>
-            {current.role} <span className="text-accent">@ {current.company}</span>
+        <div className="page-rise">
+          <p className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-[0.14em] text-muted mb-6">
+            {profile.name} <span aria-hidden="true">·</span> <span className="text-accent">{profile.discipline}</span>
           </p>
-          <div className="flex items-center gap-3 mb-4">
-            <h1 aria-label={profile.name} className="text-5xl sm:text-6xl font-bold text-fg tracking-tight leading-none">
-              <BlastableName text={profile.name} lit={litLetters(litPieces)} />
-            </h1>
-            {/* Hit area for the oscilloscope mark; its dots are drawn on the
-                full-hero canvas so the burst can spill across the whole section.
-                Beside the name on phones (hidden where there's no room), large in
-                the empty right half on desktop. */}
-            <button
-              ref={markRef}
-              type="button"
-              aria-label="Blow up the page"
-              className="hero-mark shrink-0 block w-[84px] h-[68px] max-[359px]:hidden lg:absolute lg:right-0 lg:top-1/2 lg:-translate-y-1/2 lg:w-[340px] lg:h-[300px] cursor-pointer rounded outline-offset-4"
-            >
-              <MarkFallback />
-            </button>
-          </div>
-          <p data-blast="" className="text-xl text-muted mb-3 w-fit">
-            {profile.headline}
-          </p>
-          <div data-blast="" className="w-fit">
-            <TypingLine
-              phrases={profile.focus}
-              label={`Focus areas: ${profile.focus.join(', ')}.`}
-              className="text-sm text-accent mb-4"
-            />
-          </div>
-          <p data-blast="" className="text-base text-muted font-mono max-w-lg mb-10 leading-relaxed">
-            {profile.tagline}
+          <h1 className="text-[2rem] leading-[1.1] sm:text-6xl sm:leading-[1.06] font-semibold text-fg tracking-tight max-w-[860px] text-balance">
+            {statement.lead}
+            {statement.rest && <> <span className="text-muted">{statement.rest}</span></>}
+          </h1>
+          <p className="text-base sm:text-lg text-muted mt-6 mb-10">
+            {current.role} at {current.company}.
           </p>
 
           {/* On phones the icons drop to their own row rather than wrapping one at a time. */}
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-            <div data-blast-group="" className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <Button
                 variant="primary"
                 href={profile.links.resume}
@@ -304,12 +240,12 @@ export function Hero() {
                 <FileText size={15} />
                 Resume
               </Button>
-              <Button href={LAB_PATH}>
-                <FlaskConical size={15} />
-                Lab
+              <Button href="#projects">
+                <FolderGit2 size={15} />
+                Projects
               </Button>
             </div>
-            <div data-blast-group="" className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <a
                 href={profile.links.github}
                 target="_blank"
@@ -343,8 +279,7 @@ export function Hero() {
         </div>
       </div>
 
-      <HeroMarkCanvas anchorRef={markRef} />
-
+      {/* Fades away once the visitor scrolls; it doesn't bob, so nothing in the hero loops. */}
       <m.a
         href="#about"
         className="absolute bottom-8 left-1/2 -translate-x-1/2 text-border hover:text-muted transition-colors"
@@ -352,12 +287,7 @@ export function Hero() {
         animate={{ opacity: scrolled ? 0 : 1, y: scrolled ? 8 : 0 }}
         transition={{ duration: 0.3 }}
       >
-        <m.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <ChevronDown size={20} />
-        </m.div>
+        <ChevronDown size={20} />
       </m.a>
     </section>
   )
