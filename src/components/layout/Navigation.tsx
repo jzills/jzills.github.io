@@ -52,8 +52,8 @@ export function Navigation() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/80 backdrop-blur-sm">
       <nav className="max-w-[1100px] mx-auto px-6 h-14 flex items-center justify-between">
-        <a data-blast="" href={homeHref('#hero')} className="font-mono text-accent font-medium text-sm tracking-tight hover:text-accent-dim transition-colors">
-          jz.
+        <a data-blast="" href={homeHref('#hero')} aria-label="J. Zills, home" className="font-sans text-fg font-extrabold text-lg tracking-tight hover:opacity-80 transition-opacity">
+          J<span className="text-accent">.</span> Zills
         </a>
 
         <div data-blast-group="" className="hidden md:flex items-center gap-5 lg:gap-6">

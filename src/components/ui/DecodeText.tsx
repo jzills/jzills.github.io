@@ -8,7 +8,7 @@ const FRAME = 45
 // Text that flickers through noise and settles into place the first time it
 // scrolls into view, and again whenever it's hovered or tapped. Renders the real text on the server and before reveal, so
 // the prerendered HTML and hydration are unaffected; screen readers get the real
-// text only. Like the hero's typing line, it runs under reduced motion: nothing
+// text only. It runs under reduced motion: nothing
 // moves, the characters just change in place.
 export function DecodeText({ text }: { text: string }) {
   const ref = useRef<HTMLSpanElement>(null)
