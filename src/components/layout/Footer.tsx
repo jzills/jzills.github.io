@@ -99,11 +99,16 @@ export function Footer() {
           </nav>
         </div>
 
-        <div aria-hidden="true" className="mt-14 text-3xl font-extrabold tracking-[0.12em] leading-none text-muted/60 select-none">
-          ZILLS
-        </div>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
-          <p className="text-xs text-muted font-mono">© {year} {profile.name}</p>
+        <div className="mt-14 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+          {/* The family mark, as on every zills site, linking back to the zills.io hub. */}
+          <div className="flex flex-col gap-1">
+            <a
+              href="https://zills.io/"
+              title="zills.io"
+              className="w-fit font-sans text-sm font-extrabold tracking-[-0.03em] text-fg hover:text-accent transition-colors"
+            >Z<span className="font-semibold opacity-55">/</span>LLS</a>
+            <p className="text-[11px] text-muted font-mono">© {year} {profile.name}</p>
+          </div>
           <div className="flex items-center gap-4 text-muted">
             <span className="text-xs font-semibold">Let's connect</span>
             <a href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className={linkClass}>
