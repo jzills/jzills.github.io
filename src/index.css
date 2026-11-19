@@ -9,8 +9,8 @@
   --color-border: #27272a;
   --color-fg: #fafafa;
   --color-muted: #8b8b94;
-  --color-accent: #22d3ee;
-  --color-accent-dim: #0891b2;
+  --color-accent: #6fb7c4;
+  --color-accent-dim: #4f97a4;
 }
 
 /* Matches descendants of <html data-theme="light">, e.g. light:shadow-black/10. */
@@ -28,8 +28,8 @@
   --color-border: #e4e4e7;
   --color-fg: #18181b;
   --color-muted: #464650;
-  --color-accent: #0e7490;
-  --color-accent-dim: #155e75;
+  --color-accent: #367480;
+  --color-accent-dim: #2f6570;
 }
 
 * {

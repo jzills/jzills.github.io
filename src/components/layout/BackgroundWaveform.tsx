@@ -31,7 +31,7 @@ export function BackgroundWaveform() {
 
       waves.forEach((wave) => {
         ctx.beginPath()
-        ctx.strokeStyle = 'rgba(34, 211, 238, 0.07)'
+        ctx.strokeStyle = 'rgba(111, 183, 196, 0.07)'
         ctx.lineWidth = 1.5
 
         const cy = canvas.height / 2

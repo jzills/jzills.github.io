@@ -461,8 +461,8 @@ function AudioCard({ item }: { item: AudioItem }) {
 // Bandcamp's player takes its colours in the URL, so they follow the site's theme
 // tokens by hand (--color-surface and --color-accent in index.css).
 const bandcampColors = {
-  dark: { bg: '111113', link: '22d3ee' },
-  light: { bg: 'ffffff', link: '0e7490' },
+  dark: { bg: '111113', link: '6fb7c4' },
+  light: { bg: 'ffffff', link: '367480' },
 }
 
 function MusicCard({ item }: { item: MusicItem }) {

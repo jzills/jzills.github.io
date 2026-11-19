@@ -14,8 +14,8 @@ const iconLinkClass = 'inline-flex items-center justify-center w-9 h-9 rounded b
 
 // The light-theme stroke is darker and stronger so the lines still read on white.
 const waveStroke = {
-  dark: 'rgba(34, 211, 238, 0.12)',
-  light: 'rgba(14, 116, 144, 0.18)',
+  dark: 'rgba(111, 183, 196, 0.12)',
+  light: 'rgba(54, 116, 128, 0.18)',
 }
 
 function WaveformCanvas() {
