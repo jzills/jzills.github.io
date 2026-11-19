@@ -16,6 +16,17 @@
 /* Matches descendants of <html data-theme="light">, e.g. light:shadow-black/10. */
 @custom-variant light (&:where([data-theme=light] *));
 
+/* Hover styles switch on when any connected pointer can hover, not only the
+   primary one: touchscreen laptops report their primary pointer as touch, so
+   Tailwind's default (hover: hover) left them with no hover at all. */
+@custom-variant hover {
+  @media (any-hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
 :root {
   color-scheme: dark;
 }
