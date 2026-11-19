@@ -16,6 +16,12 @@
 /* Matches descendants of <html data-theme="light">, e.g. light:shadow-black/10. */
 @custom-variant light (&:where([data-theme=light] *));
 
+/* Hover styles switch on while a mouse is in use, as detected by
+   public/pointer-init.js. Tailwind's default (hover: hover) media query is
+   false on some touchscreen laptops even with a mouse, which left them with
+   no hover at all; phones never get the attribute, so taps don't stick. */
+@custom-variant hover (&:where([data-pointer=mouse] *):hover);
+
 :root {
   color-scheme: dark;
 }

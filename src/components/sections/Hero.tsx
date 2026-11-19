@@ -216,8 +216,11 @@ export function Hero() {
         {/* A CSS animation rather than framer-motion: it starts from the prerendered
             HTML, so the hero paints before any JavaScript has loaded. */}
         <div className="page-rise">
-          <p className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-[0.14em] text-muted mb-6">
-            {profile.name} <span aria-hidden="true">·</span> <span className="text-accent">{profile.discipline}</span>
+          {/* Phones stack the name over the discipline rather than wrapping mid-phrase. */}
+          <p className="flex flex-col gap-1.5 sm:block font-mono text-[11px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-[0.14em] text-muted mb-6">
+            <span>{profile.name}</span>
+            <span aria-hidden="true" className="hidden sm:inline"> · </span>
+            <span className="text-accent">{profile.discipline}</span>
           </p>
           <h1 className="text-[2rem] leading-[1.1] sm:text-6xl sm:leading-[1.06] font-semibold text-fg tracking-tight max-w-[860px] text-balance">
             {statement.lead}
