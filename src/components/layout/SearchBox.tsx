@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
 import { ArrowUpRight, Search } from 'lucide-react'
-import { HOME_PATH, currentPath, flashTo } from '@/lib/pages'
+import { flashTo } from '@/lib/pages'
 import type { SearchRecord, SearchResult } from '@/lib/searchIndex'
 
 interface Props {
@@ -44,10 +44,7 @@ function reveal(record: SearchRecord) {
     window.open(record.href, '_blank', 'noopener,noreferrer')
     return
   }
-  const path = record.path ?? HOME_PATH
-  // The target page scrolls to and flashes the hash itself once it loads.
-  if (path !== currentPath()) window.location.href = `${path}#${record.target}`
-  else flashTo(record.target)
+  flashTo(record.target)
 }
 
 // Results grouped by kind, groups ordered by their best match.

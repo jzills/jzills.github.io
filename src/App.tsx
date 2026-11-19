@@ -13,7 +13,7 @@ import { AssistantWidget } from '@/components/assistant/AssistantWidget'
 import { scrollToHash } from '@/lib/pages'
 
 export default function App() {
-  // Arriving from another page (e.g. /lab) with a #section hash.
+  // Arriving with a #section hash, e.g. from a shared link.
   useEffect(scrollToHash, [])
 
   return (

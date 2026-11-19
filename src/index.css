@@ -59,31 +59,6 @@ dialog {
   overscroll-behavior: contain;
 }
 
-/* The lightbox's fixed layout: one media box size for a given screen, so every piece shows at the
-   same size while stepping, and everything fits without scrolling. Heights come from the visible
-   screen height (dvh), never vh: Safari's vh is the height with its toolbars hidden, so vh sizes
-   overflowed the screen whenever they showed. The rows below the media have fixed heights
-   (see Lightbox.tsx), which --lb-below adds up. */
-.lightbox {
-  /* Phones: the strip with the close button above, and below: variants row (0.75 + 3.5),
-     paging row (0.75 + 2.75), caption (0.75 + 7.75) and bottom padding (1). */
-  --lb-above: calc(env(safe-area-inset-top) + 4rem);
-  --lb-below: 17.25rem;
-  --lb-side: min(calc(100vw - 2rem), calc(100dvh - var(--lb-above) - var(--lb-below)));
-  --lb-media-w: var(--lb-side);
-  --lb-media-h: var(--lb-side);
-}
-
-@media (width >= 64rem) {
-  /* Wide screens: variants row (0.75 + 3.5), count (0.75 + 1.5), caption (0.75 + 6.5) and padding
-     (1 + 1). The width leaves room for the arrows at the screen's edges. */
-  .lightbox {
-    --lb-below: 15.75rem;
-    --lb-media-w: min(1100px, calc(100vw - 9rem));
-    --lb-media-h: min(70dvh, calc(100dvh - var(--lb-below)));
-  }
-}
-
 body {
   margin: 0;
   background-color: var(--color-bg);
