@@ -60,7 +60,7 @@ export function Creative() {
                 href={LAB_URL}
                 className="group mt-4 flex w-fit mx-auto items-center gap-1.5 text-sm text-accent hover:text-accent-dim transition-colors"
               >
-                See all work in the lab
+                Go to Lab
                 <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
               </a>
             </div>
