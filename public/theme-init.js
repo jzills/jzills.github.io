@@ -3,8 +3,7 @@
 (function () {
   var theme
   try { theme = localStorage.getItem('theme') } catch (e) {}
-  // Party mode is switched off (PARTY_ENABLED in src/lib/party.ts), so a saved
-  // 'party' falls back too. Add it back here when turning party mode on.
+  // Anything else saved (such as the retired 'party' theme) falls back to the system theme.
   if (theme !== 'light' && theme !== 'dark') {
     theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
   }

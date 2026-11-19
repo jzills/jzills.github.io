@@ -20,7 +20,7 @@ export default defineConfig({
       },
       output: {
         // The code both pages share would otherwise be named after whichever of its
-        // modules the bundler picks (it was PartyLayer), along with its stylesheet.
+        // modules the bundler picks, along with its stylesheet.
         chunkFileNames: (chunk) =>
           !chunk.isEntry && !chunk.isDynamicEntry && chunk.moduleIds.some((id) => id.includes('/src/components/layout/'))
             ? 'assets/shared-[hash].js'

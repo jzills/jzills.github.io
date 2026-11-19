@@ -1,14 +1,12 @@
-import { Moon, PartyPopper, Sun } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
 import { nextTheme, setTheme, useTheme } from '@/lib/theme'
 
-// Outside party mode, shows the theme a click switches to (dark or light).
-// In party mode it shows the party hat, and a click leaves to dark. Party
-// mode itself is only entered by blasting the page.
+// Shows the theme a click switches to (dark or light).
 export function ThemeToggle({ className = '' }: { className?: string }) {
   const theme = useTheme()
   const next = nextTheme(theme)
-  const label = theme === 'party' ? 'Leave party mode' : `Switch to ${next} theme`
-  const Icon = theme === 'party' ? PartyPopper : next === 'light' ? Sun : Moon
+  const label = `Switch to ${next} theme`
+  const Icon = next === 'light' ? Sun : Moon
 
   return (
     <button
