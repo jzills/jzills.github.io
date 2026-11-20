@@ -87,7 +87,7 @@ export function Footer() {
         <div className="mt-14 flex flex-col gap-1">
           <div className="flex items-center gap-2.5">
             {/* Clicking the mark goes to the hub too; the text link beside it is the one keyboards and screen readers get. */}
-            <a href="https://zills.io/" tabIndex={-1} aria-hidden="true" className="font-sans text-sm font-extrabold tracking-[-0.03em] text-fg transition-opacity hover:opacity-80">Z<span className="font-semibold opacity-55">/</span>LLS</a>
+            <a href="https://zills.io/" tabIndex={-1} aria-hidden="true" className="font-sans text-sm font-extrabold tracking-[-0.03em] text-fg transition-opacity hover:opacity-80">z<span aria-hidden="true" className="mx-[0.05em] inline-block h-[0.17em] w-[0.17em] rounded-full bg-accent" /><span className="mr-[0.08em] font-bold tracking-[-0.12em] opacity-55">//</span>s</a>
             <span aria-hidden="true" className="h-3.5 w-px bg-border" />
             <a href="https://zills.io/" className={`font-mono text-[11px] ${linkClass}`}>zills.io <span aria-hidden="true">↗</span></a>
           </div>

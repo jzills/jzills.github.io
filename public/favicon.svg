@@ -1,13 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="5" fill="#000000"/>
-  <text
-    x="16"
-    y="16"
-    font-family="'JetBrains Mono', 'Courier New', monospace"
-    font-size="14"
-    font-weight="700"
-    fill="#ffffff"
-    text-anchor="middle"
-    dominant-baseline="central"
-  >&gt;_</text>
+  <!-- The family symbol: z. — a bold z drawn as a shape (favicons can't load web fonts), with the site's dot. -->
+  <rect width="32" height="32" rx="6" fill="#09090b"/>
+  <path d="M6 9H19.2V12.1L11.2 20.9H19.6V24H5.6V20.9L13.6 12.1H6Z" fill="#fafafa"/>
+  <circle cx="24.6" cy="22.4" r="3.2" fill="#22d3ee"/>
 </svg>
