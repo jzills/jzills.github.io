@@ -13,11 +13,8 @@ describe('Footer mark', () => {
     expect(text).not.toContain('ZILLS')
   })
 
-  it('links back to zills.io by its domain', () => {
+  it('links back to zills.io by its domain, right beside the mark, with the copyright under them', () => {
     expect(html).toMatch(/<a[^>]*href="https:\/\/zills\.io\/"[^>]*>zills\.io <span aria-hidden="true">↗<\/span><\/a>/)
-  })
-
-  it('puts the copyright under it', () => {
-    expect(text).toMatch(/Z\/LLS© \d{4} Joshua Zillwood/)
+    expect(text).toMatch(/Z\/LLSzills\.io ↗© \d{4} Joshua Zillwood/)
   })
 })
