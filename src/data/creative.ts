@@ -437,23 +437,6 @@ export const creativeItems: CreativeItem[] = [
     variants: [shader('gyroid')],
   },
   {
-    kind: 'music',
-    // Not shown on the card (the player names the track); used for search and the card's anchor.
-    title: 'KO',
-    description: 'From Mental Floss by desmata.',
-    tags: ['Music', 'Bandcamp'],
-    bandcamp: { album: 1163472419, track: 802633773 },
-    url: 'https://desmata.bandcamp.com/album/mental-floss',
-  },
-  {
-    kind: 'music',
-    title: 'Blades of Steel',
-    description: 'From Meltman by desmata.',
-    tags: ['Music', 'Bandcamp'],
-    bandcamp: { album: 128538034, track: 1532648264 },
-    url: 'https://desmata.bandcamp.com/album/meltman',
-  },
-  {
     kind: 'video',
     title: 'Driftcast',
     description: 'A generative radio station mixing Freesound samples and archival footage, rendered live for each listener.',
