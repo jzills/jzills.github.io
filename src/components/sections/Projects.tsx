@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import type React from 'react'
 import { m, useInView } from 'framer-motion'
-import { BookOpen, ExternalLink, Puzzle } from 'lucide-react'
+import { ArrowRight, BookOpen, ExternalLink, Puzzle } from 'lucide-react'
 import { GitHubIcon, NuGetIcon, NpmIcon, PyPIIcon, DockerIcon, ArtifactHubIcon } from '@/components/ui/BrandIcons'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Card } from '@/components/ui/Card'
@@ -9,6 +9,7 @@ import { Chip } from '@/components/ui/Chip'
 import { projects } from '@/data/projects'
 import { useCenterFocus } from '@/lib/useCenterFocus'
 import { slug } from '@/lib/anchors'
+import { OSS_URL } from '@/lib/pages'
 import { revealOnScroll, rise } from '@/lib/motion'
 import type { PackageRegistry } from '@/data/projects'
 
@@ -141,6 +142,15 @@ export function Projects() {
               )
             })}
           </m.div>
+
+          {/* A selection lives here; the whole catalogue is on its own site. */}
+          <a
+            href={OSS_URL}
+            className="group mt-8 flex w-fit mx-auto items-center gap-1.5 text-sm text-accent hover:text-accent-dim transition-colors"
+          >
+            All open source
+            <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+          </a>
         </m.div>
       </div>
     </section>

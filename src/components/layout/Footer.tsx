@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { profile } from '@/data/profile'
 import { projects } from '@/data/projects'
-import { LAB_URL } from '@/lib/pages'
+import { LAB_URL, OSS_URL } from '@/lib/pages'
 
 const { github, linkedin, resume } = profile.links
 
@@ -23,7 +23,7 @@ const siteLinks: FooterLink[] = [
 // The projects with docs sites, linked the same way their cards are.
 const projectLinks: FooterLink[] = [
   ...projects.filter((p) => p.docsUrl).map((p) => ({ label: p.name, href: p.docsUrl! })),
-  { label: 'All repositories', href: `${github}?tab=repositories` },
+  { label: 'All open source', href: OSS_URL },
 ]
 
 const moreLinks: FooterLink[] = [
