@@ -8,8 +8,8 @@ describe('Footer mark', () => {
   const html = renderToString(createElement(Footer))
   const text = html.replace(/<!-- -->/g, '').replace(/<[^>]+>/g, '')
 
-  it('shows the Z/LLS mark as plain text, not a link', () => {
-    expect(html).toMatch(/<span[^>]*>Z<span[^>]*>\/<\/span>LLS<\/span>/)
+  it('links the Z/LLS mark to zills.io', () => {
+    expect(html).toMatch(/<a[^>]*href="https:\/\/zills\.io\/"[^>]*>Z<span[^>]*>\/<\/span>LLS<\/a>/)
     expect(text).not.toContain('ZILLS')
   })
 
