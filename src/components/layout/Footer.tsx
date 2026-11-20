@@ -1,4 +1,3 @@
-import { useSyncExternalStore } from 'react'
 import { profile } from '@/data/profile'
 import { projects } from '@/data/projects'
 import { LAB_URL, OSS_URL } from '@/lib/pages'
@@ -41,20 +40,7 @@ const columns = [
 
 const linkClass = 'text-muted hover:text-fg transition-colors'
 
-// The prerendered HTML carries the build's year. Hydration renders that same
-// year (the server snapshot) so the markup matches, then React re-renders with
-// the visitor's year if the calendar has moved on since the build.
-const noSubscribe = () => () => {}
-const currentYear = () => new Date().getFullYear()
-const buildYear = () => __BUILD_YEAR__
-
-function useCurrentYear() {
-  return useSyncExternalStore(noSubscribe, currentYear, buildYear)
-}
-
 export function Footer() {
-  const year = useCurrentYear()
-
   return (
     <footer className="relative border-t border-border pt-12 pb-6 text-sm">
       {/* An accent line fading out at both ends marks the footer as its own band. */}
@@ -97,8 +83,7 @@ export function Footer() {
           </nav>
         </div>
 
-        {/* As on every zills site: the Z/LLS mark beside a link back to the hub, the copyright
-            under them. Contact links live in the Contact section and the More column above. */}
+        {/* As on every zills site: the Z/LLS mark beside a link back to the hub. Contact links live in the Contact section and the More column above. */}
         <div className="mt-14 flex flex-col gap-1">
           <div className="flex items-center gap-2.5">
             {/* Clicking the mark goes to the hub too; the text link beside it is the one keyboards and screen readers get. */}
@@ -106,7 +91,6 @@ export function Footer() {
             <span aria-hidden="true" className="h-3.5 w-px bg-border" />
             <a href="https://zills.io/" className={`font-mono text-[11px] ${linkClass}`}>zills.io <span aria-hidden="true">↗</span></a>
           </div>
-          <p className="text-[11px] text-muted font-mono">© {year} {profile.name}</p>
         </div>
       </div>
     </footer>
