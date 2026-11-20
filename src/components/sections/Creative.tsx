@@ -3,7 +3,7 @@ import { m, useInView } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { CreativeGallery } from '@/components/sections/CreativeGallery'
-import { LAB_PATH } from '@/lib/pages'
+import { LAB_URL } from '@/lib/pages'
 
 export function Creative() {
   const ref = useRef<HTMLElement>(null)
@@ -57,10 +57,10 @@ export function Creative() {
             <div>
               <CreativeGallery />
               <a
-                href={LAB_PATH}
+                href={LAB_URL}
                 className="group mt-4 flex w-fit mx-auto items-center gap-1.5 text-sm text-accent hover:text-accent-dim transition-colors"
               >
-                See all work in the lab
+                Go to Lab
                 <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
               </a>
             </div>

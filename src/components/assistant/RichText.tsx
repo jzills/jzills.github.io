@@ -1,5 +1,5 @@
 import type { MouseEvent, ReactNode } from 'react'
-import { flashTo, homeHref, isLabPage } from '@/lib/pages'
+import { flashTo } from '@/lib/pages'
 
 // Answer text carries [label](href) links. They are parsed into elements, never
 // injected as HTML.
@@ -18,15 +18,14 @@ interface LinkProps {
 export function AnswerLink({ href, className = linkClass, children, onNavigate }: LinkProps) {
   if (href.startsWith('#')) {
     const onClick = (e: MouseEvent) => {
-      // On the home page, scroll to and ring the section; elsewhere follow the link home.
-      if (isLabPage()) return
+      // Scroll to and ring the section.
       e.preventDefault()
       onNavigate?.()
       history.replaceState(null, '', href)
       flashTo(href.slice(1))
     }
     return (
-      <a href={homeHref(href)} onClick={onClick} className={className}>
+      <a href={href} onClick={onClick} className={className}>
         {children}
       </a>
     )

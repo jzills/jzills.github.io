@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Lab moved to lab.zills.io</title>
+    <meta name="robots" content="noindex">
+    <link rel="canonical" href="https://lab.zills.io/">
+    <!-- The Lab moved to its own site. An old #lab-<piece> link goes to that piece's page. -->
+    <script>
+      var piece = /^#lab-([a-z0-9-]+)$/.exec(location.hash)
+      location.replace('https://lab.zills.io/' + (piece ? piece[1] + '/' : ''))
+    </script>
+    <meta http-equiv="refresh" content="0; url=https://lab.zills.io/">
+  </head>
+  <body style="background:#09090b;color:#fafafa;font-family:system-ui,sans-serif">
+    <p>The Lab moved to <a href="https://lab.zills.io/" style="color:#a78bfa">lab.zills.io</a>.</p>
+  </body>
+</html>

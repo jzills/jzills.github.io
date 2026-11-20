@@ -1,20 +1,10 @@
-export const HOME_PATH = '/'
-export const LAB_PATH = '/lab/'
+import { slug } from '@/lib/anchors'
 
-// Prerendering has no window, so the prerender script names the page it is rendering.
-let prerenderPath = HOME_PATH
-export const setPrerenderPath = (path: string) => {
-  prerenderPath = path
-}
+// The Lab moved out to its own site; public/lab/index.html redirects old links there.
+export const LAB_URL = 'https://lab.zills.io/'
 
-const pathname = () => (typeof window === 'undefined' ? prerenderPath : window.location.pathname)
-
-export const isLabPage = () => pathname().startsWith('/lab')
-
-export const currentPath = () => (isLabPage() ? LAB_PATH : HOME_PATH)
-
-// Section anchors live on the home page; from any other page they need the path too.
-export const homeHref = (hash: string) => (isLabPage() ? `${HOME_PATH}${hash}` : hash)
+// A Lab piece's own page, slugged from its title the same way lab.zills.io slugs it.
+export const labPieceUrl = (title: string) => `${LAB_URL}${slug(title)}/`
 
 // Scrolls an element into view and briefly rings it (see .search-flash in index.css).
 // A whole section, or anything taller than the viewport, is aligned to its top as

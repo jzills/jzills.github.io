@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { FlaskConical, Menu, X } from 'lucide-react'
 import { SearchBox } from '@/components/layout/SearchBox'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
-import { LAB_PATH, homeHref, isLabPage } from '@/lib/pages'
+import { LAB_URL } from '@/lib/pages'
 
 // About sits right under the hero and Creative is a teaser for the Lab, so neither
 // gets a link; the footer still lists every section.
@@ -13,7 +13,8 @@ const navLinks = [
   { label: 'Contact', href: '#contact' },
 ]
 
-const labLink = { label: 'Lab', href: LAB_PATH }
+// The Lab is its own site now (lab.zills.io).
+const labLink = { label: 'Lab', href: LAB_URL }
 
 // Every section is observed, linked or not, so scrolling into one without a link
 // (or back to the hero) clears the highlight instead of leaving the previous one lit.
@@ -45,14 +46,13 @@ function useActiveSection() {
 export function Navigation() {
   const [open, setOpen] = useState(false)
   const active = useActiveSection()
-  const onLab = isLabPage()
   // The Creative section previews the Lab, so the Lab link lights up there too.
-  const labLit = onLab || active === 'creative'
+  const labLit = active === 'creative'
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/80 backdrop-blur-sm">
       <nav className="max-w-[1100px] mx-auto px-6 h-14 flex items-center justify-between">
-        <a href={homeHref('#hero')} className="font-mono text-accent font-medium text-sm tracking-tight hover:text-accent-dim transition-colors">
+        <a href="#hero" className="font-mono text-accent font-medium text-sm tracking-tight hover:text-accent-dim transition-colors">
           jz.
         </a>
 
@@ -62,7 +62,7 @@ export function Navigation() {
             return (
               <a
                 key={link.href}
-                href={homeHref(link.href)}
+                href={link.href}
                 aria-current={isActive ? 'location' : undefined}
                 className={`text-sm hover:text-fg transition-colors duration-200 relative group ${isActive ? 'text-fg' : 'text-muted'}`}
               >
@@ -71,11 +71,10 @@ export function Navigation() {
               </a>
             )
           })}
-          {/* The divider and icon mark Lab as its own page rather than another section. */}
+          {/* The divider and icon mark Lab as its own site rather than another section. */}
           <span aria-hidden="true" className="h-4 w-px bg-border" />
           <a
             href={labLink.href}
-            aria-current={onLab ? 'page' : undefined}
             className={`inline-flex items-center gap-1.5 text-sm hover:text-fg transition-colors duration-200 relative group ${labLit ? 'text-fg' : 'text-muted'}`}
           >
             <FlaskConical size={14} aria-hidden="true" />
@@ -102,7 +101,6 @@ export function Navigation() {
             href={labLink.href}
             aria-label={labLink.label}
             title={labLink.label}
-            aria-current={onLab ? 'page' : undefined}
             className={`p-2 hover:text-fg transition-colors ${labLit ? 'text-accent' : 'text-muted'}`}
           >
             <FlaskConical size={20} aria-hidden="true" />
@@ -124,7 +122,7 @@ export function Navigation() {
             {navLinks.map((link) => (
               <a
                 key={link.href}
-                href={homeHref(link.href)}
+                href={link.href}
                 aria-current={active === link.href.slice(1) ? 'location' : undefined}
                 className={`text-sm hover:text-fg transition-colors ${active === link.href.slice(1) ? 'text-fg' : 'text-muted'}`}
                 onClick={() => setOpen(false)}
@@ -134,8 +132,7 @@ export function Navigation() {
             ))}
             <a
               href={labLink.href}
-              aria-current={onLab ? 'page' : undefined}
-              className={`inline-flex items-center gap-1.5 border-t border-border pt-4 text-sm hover:text-fg transition-colors ${labLit ? 'text-fg' : 'text-muted'}`}
+                className={`inline-flex items-center gap-1.5 border-t border-border pt-4 text-sm hover:text-fg transition-colors ${labLit ? 'text-fg' : 'text-muted'}`}
               onClick={() => setOpen(false)}
             >
               <FlaskConical size={14} aria-hidden="true" />

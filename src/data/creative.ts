@@ -2,7 +2,7 @@ type BaseItem = {
   title: string
   description: string
   tags: string[]
-  // Featured items also appear in the landing page carousel; everything appears on /lab.
+  // Featured items also appear in the landing page carousel; everything appears on lab.zills.io.
   featured?: boolean
 }
 
@@ -24,7 +24,7 @@ export type AudioItem = BaseItem & {
   audioSrc: string
 }
 
-// Media files live in public/lab/; width and height reserve layout space before load.
+// Media files live on lab.zills.io (its public/media/); width and height reserve layout space before load.
 export type LabImage = {
   // Full size, for the lightbox.
   src: string
@@ -87,11 +87,11 @@ const shader = (name: string, opts: { still?: boolean } = {}): ShaderVariant => 
 }
 const still = { still: true }
 
-// Images processed into public/lab/art/<slug>/ as 01.webp, 01-card.webp, 02.webp, …
+// Images processed into lab.zills.io's public/media/art/<slug>/ as 01.webp, 01-card.webp, 02.webp, …
 const art = (slug: string, sizes: [width: number, height: number][]): LabImage[] =>
   sizes.map(([width, height], i) => {
     const name = String(i + 1).padStart(2, '0')
-    return { src: `/lab/art/${slug}/${name}.webp`, card: `/lab/art/${slug}/${name}-card.webp`, width, height }
+    return { src: `https://lab.zills.io/media/art/${slug}/${name}.webp`, card: `https://lab.zills.io/media/art/${slug}/${name}-card.webp`, width, height }
   })
 
 const square = (n: number, size = 2000) => Array.from({ length: n }, (): [number, number] => [size, size])
@@ -463,7 +463,7 @@ export const creativeItems: CreativeItem[] = [
     // Recorded from three 20-minute sessions; credits come from the station's own logs.
     clips: Array.from({ length: 7 }, (_, i) => {
       const n = String(i + 1).padStart(2, '0')
-      return { src: `/lab/driftcast/${n}.mp4`, poster: `/lab/driftcast/${n}-poster.webp`, credits: `/lab/driftcast/${n}-credits.json` }
+      return { src: `https://lab.zills.io/media/driftcast/${n}.mp4`, poster: `https://lab.zills.io/media/driftcast/${n}-poster.webp`, credits: `https://lab.zills.io/media/driftcast/${n}-credits.json` }
     }),
     live: {
       url: 'https://driftcast-d9n9.onrender.com/',
@@ -476,7 +476,7 @@ export const creativeItems: CreativeItem[] = [
     title: 'Bloom',
     description: 'Glowing petal forms in violet and blue that fold, open, and turn around a green core, set to sound.',
     tags: ['Video', 'Audio', 'Generative'],
-    clips: [{ src: '/lab/art/bloom.mp4', poster: '/lab/art/bloom-poster.webp' }],
+    clips: [{ src: 'https://lab.zills.io/media/art/bloom.mp4', poster: 'https://lab.zills.io/media/art/bloom-poster.webp' }],
     alt: 'Luminous violet and blue petal shapes unfolding around a green center on black',
     sound: true,
   },

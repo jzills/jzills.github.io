@@ -1,11 +1,9 @@
 import { useSyncExternalStore } from 'react'
-import { Mail } from 'lucide-react'
-import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 import { profile } from '@/data/profile'
 import { projects } from '@/data/projects'
-import { LAB_PATH, homeHref } from '@/lib/pages'
+import { LAB_URL } from '@/lib/pages'
 
-const { email, github, linkedin, resume } = profile.links
+const { github, linkedin, resume } = profile.links
 
 interface FooterLink {
   label: string
@@ -18,7 +16,7 @@ const siteLinks: FooterLink[] = [
   { label: 'Projects', href: '#projects' },
   { label: 'Skills', href: '#skills' },
   { label: 'Creative', href: '#creative' },
-  { label: 'Lab', href: LAB_PATH },
+  { label: 'Lab', href: LAB_URL },
   { label: 'Contact', href: '#contact' },
 ]
 
@@ -58,14 +56,14 @@ export function Footer() {
   const year = useCurrentYear()
 
   return (
-    <footer className="relative border-t border-border pt-12 pb-10 text-sm">
+    <footer className="relative border-t border-border pt-12 pb-6 text-sm">
       {/* An accent line fading out at both ends marks the footer as its own band. */}
       <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
 
       <div className="max-w-[1100px] mx-auto px-6">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-16">
           <div className="max-w-sm">
-            <a href={homeHref('#hero')} className="font-mono text-2xl font-medium text-accent hover:text-accent-dim transition-colors">
+            <a href="#hero" className="font-mono text-2xl font-medium text-accent hover:text-accent-dim transition-colors">
               jz.
             </a>
             <p className="mt-4 text-muted leading-relaxed">
@@ -84,7 +82,7 @@ export function Footer() {
                     return (
                       <li key={label}>
                         <a
-                          href={href.startsWith('#') ? homeHref(href) : href}
+                          href={href}
                           className={linkClass}
                           {...(external && { target: '_blank', rel: 'noopener noreferrer' })}
                         >
@@ -99,23 +97,15 @@ export function Footer() {
           </nav>
         </div>
 
-        <div aria-hidden="true" className="mt-14 text-3xl font-extrabold tracking-[0.12em] leading-none text-muted/60 select-none">
-          ZILLS
-        </div>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
-          <p className="text-xs text-muted font-mono">© {year} {profile.name}</p>
-          <div className="flex items-center gap-4 text-muted">
-            <span className="text-xs font-semibold">Let's connect</span>
-            <a href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className={linkClass}>
-              <GitHubIcon size={16} />
-            </a>
-            <a href={linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className={linkClass}>
-              <LinkedInIcon size={16} />
-            </a>
-            <a href={`mailto:${email}`} aria-label="Email" className={linkClass}>
-              <Mail size={16} />
-            </a>
+        {/* As on every zills site: the Z/LLS mark beside a link back to the hub, the copyright
+            under them. Contact links live in the Contact section and the More column above. */}
+        <div className="mt-14 flex flex-col gap-1">
+          <div className="flex items-center gap-2.5">
+            <span className="font-sans text-sm font-extrabold tracking-[-0.03em] text-fg">Z<span className="font-semibold opacity-55">/</span>LLS</span>
+            <span aria-hidden="true" className="h-3.5 w-px bg-border" />
+            <a href="https://zills.io/" className={`font-mono text-[11px] ${linkClass}`}>zills.io <span aria-hidden="true">↗</span></a>
           </div>
+          <p className="text-[11px] text-muted font-mono">© {year} {profile.name}</p>
         </div>
       </div>
     </footer>

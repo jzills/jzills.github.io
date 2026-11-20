@@ -3,8 +3,8 @@ import { experience } from '@/data/experience'
 import { skillGroups } from '@/data/skills'
 import { creativeItems } from '@/data/creative'
 import readmes from '@/data/generated/readmes.json'
-import { LAB_PATH } from '@/lib/pages'
-import { labId, slug } from '@/lib/anchors'
+import { labPieceUrl } from '@/lib/pages'
+import { slug } from '@/lib/anchors'
 
 export type SearchKind = 'Project' | 'Experience' | 'Skill' | 'Creative' | 'Section' | 'Docs'
 
@@ -16,8 +16,6 @@ export interface SearchRecord {
   body: string
   // Element id to scroll to.
   target: string
-  // Page the target lives on; defaults to the home page.
-  path?: string
   // External URL opened in a new tab instead of scrolling to target.
   href?: string
 }
@@ -60,8 +58,8 @@ const records: SearchRecord[] = [
     title: c.title,
     tags: [c.kind, ...c.tags],
     body: c.description,
-    target: labId(c.title),
-    path: LAB_PATH,
+    target: slug(c.title),
+    href: labPieceUrl(c.title),
   })),
   ...readmes.map((r): SearchRecord => ({
     kind: 'Docs',
