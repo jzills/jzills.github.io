@@ -101,7 +101,8 @@ export function Footer() {
             under them. Contact links live in the Contact section and the More column above. */}
         <div className="mt-14 flex flex-col gap-1">
           <div className="flex items-center gap-2.5">
-            <span className="font-sans text-sm font-extrabold tracking-[-0.03em] text-fg">Z<span className="font-semibold opacity-55">/</span>LLS</span>
+            {/* Clicking the mark goes to the hub too; the text link beside it is the one keyboards and screen readers get. */}
+            <a href="https://zills.io/" tabIndex={-1} aria-hidden="true" className="font-sans text-sm font-extrabold tracking-[-0.03em] text-fg transition-opacity hover:opacity-80">Z<span className="font-semibold opacity-55">/</span>LLS</a>
             <span aria-hidden="true" className="h-3.5 w-px bg-border" />
             <a href="https://zills.io/" className={`font-mono text-[11px] ${linkClass}`}>zills.io <span aria-hidden="true">↗</span></a>
           </div>
