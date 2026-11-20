@@ -17,4 +17,9 @@ describe('Footer mark', () => {
     expect(html).toMatch(/<a[^>]*href="https:\/\/zills\.io\/"[^>]*>zills\.io <span aria-hidden="true">↗<\/span><\/a>/)
     expect(text).toMatch(/Z\/LLSzills\.io ↗© \d{4} Joshua Zillwood/)
   })
+
+  it('leaves contact to the Contact section and the More column, with no repeat row', () => {
+    expect(text).not.toContain("Let's connect")
+    expect(html).not.toContain('href="mailto:')
+  })
 })

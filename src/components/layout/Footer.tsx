@@ -1,11 +1,9 @@
 import { useSyncExternalStore } from 'react'
-import { Mail } from 'lucide-react'
-import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons'
 import { profile } from '@/data/profile'
 import { projects } from '@/data/projects'
 import { LAB_URL } from '@/lib/pages'
 
-const { email, github, linkedin, resume } = profile.links
+const { github, linkedin, resume } = profile.links
 
 interface FooterLink {
   label: string
@@ -99,28 +97,15 @@ export function Footer() {
           </nav>
         </div>
 
-        <div className="mt-14 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-          {/* As on every zills site: the Z/LLS mark beside a link back to the hub, the copyright under them. */}
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2.5">
-              <span className="font-sans text-sm font-extrabold tracking-[-0.03em] text-fg">Z<span className="font-semibold opacity-55">/</span>LLS</span>
-              <span aria-hidden="true" className="h-3.5 w-px bg-border" />
-              <a href="https://zills.io/" className={`font-mono text-[11px] ${linkClass}`}>zills.io <span aria-hidden="true">↗</span></a>
-            </div>
-            <p className="text-[11px] text-muted font-mono">© {year} {profile.name}</p>
+        {/* As on every zills site: the Z/LLS mark beside a link back to the hub, the copyright
+            under them. Contact links live in the Contact section and the More column above. */}
+        <div className="mt-14 flex flex-col gap-1">
+          <div className="flex items-center gap-2.5">
+            <span className="font-sans text-sm font-extrabold tracking-[-0.03em] text-fg">Z<span className="font-semibold opacity-55">/</span>LLS</span>
+            <span aria-hidden="true" className="h-3.5 w-px bg-border" />
+            <a href="https://zills.io/" className={`font-mono text-[11px] ${linkClass}`}>zills.io <span aria-hidden="true">↗</span></a>
           </div>
-          <div className="flex items-center gap-4 text-muted">
-            <span className="text-xs font-semibold">Let's connect</span>
-            <a href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className={linkClass}>
-              <GitHubIcon size={16} />
-            </a>
-            <a href={linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className={linkClass}>
-              <LinkedInIcon size={16} />
-            </a>
-            <a href={`mailto:${email}`} aria-label="Email" className={linkClass}>
-              <Mail size={16} />
-            </a>
-          </div>
+          <p className="text-[11px] text-muted font-mono">© {year} {profile.name}</p>
         </div>
       </div>
     </footer>
