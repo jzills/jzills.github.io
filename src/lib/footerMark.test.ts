@@ -3,14 +3,18 @@ import { createElement } from 'react'
 import { renderToString } from 'react-dom/server'
 import { Footer } from '@/components/layout/Footer'
 
-// The family footer: the Z/LLS mark links back to the zills.io hub, with the copyright under it.
+// The family footer: the Z/LLS mark with the copyright under it, and a visible link back to the hub.
 describe('Footer mark', () => {
   const html = renderToString(createElement(Footer))
   const text = html.replace(/<!-- -->/g, '').replace(/<[^>]+>/g, '')
 
-  it('shows the Z/LLS mark, linked to zills.io', () => {
-    expect(html).toMatch(/<a[^>]*href="https:\/\/zills\.io\/"[^>]*>Z<span[^>]*>\/<\/span>LLS<\/a>/)
+  it('shows the Z/LLS mark as plain text, not a link', () => {
+    expect(html).toMatch(/<span[^>]*>Z<span[^>]*>\/<\/span>LLS<\/span>/)
     expect(text).not.toContain('ZILLS')
+  })
+
+  it('links back to zills.io by its domain', () => {
+    expect(html).toMatch(/<a[^>]*href="https:\/\/zills\.io\/"[^>]*>zills\.io <span aria-hidden="true">↗<\/span><\/a>/)
   })
 
   it('puts the copyright under it', () => {

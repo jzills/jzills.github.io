@@ -100,16 +100,12 @@ export function Footer() {
         </div>
 
         <div className="mt-14 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-          {/* The family mark, as on every zills site, linking back to the zills.io hub. */}
+          {/* The family mark, as on every zills site, with the copyright under it. */}
           <div className="flex flex-col gap-1">
-            <a
-              href="https://zills.io/"
-              title="zills.io"
-              className="w-fit font-sans text-sm font-extrabold tracking-[-0.03em] text-fg hover:text-accent transition-colors"
-            >Z<span className="font-semibold opacity-55">/</span>LLS</a>
+            <span className="font-sans text-sm font-extrabold tracking-[-0.03em] text-fg">Z<span className="font-semibold opacity-55">/</span>LLS</span>
             <p className="text-[11px] text-muted font-mono">© {year} {profile.name}</p>
           </div>
-          <div className="flex items-center gap-4 text-muted">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 text-muted">
             <span className="text-xs font-semibold">Let's connect</span>
             <a href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className={linkClass}>
               <GitHubIcon size={16} />
@@ -120,6 +116,9 @@ export function Footer() {
             <a href={`mailto:${email}`} aria-label="Email" className={linkClass}>
               <Mail size={16} />
             </a>
+            {/* Every zills site's footer links back to the hub by its domain. */}
+            <span aria-hidden="true" className="h-4 w-px bg-border" />
+            <a href="https://zills.io/" className={`font-mono text-[11px] ${linkClass}`}>zills.io <span aria-hidden="true">↗</span></a>
           </div>
         </div>
       </div>
