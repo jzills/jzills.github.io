@@ -3,6 +3,9 @@ import { slug } from '@/lib/anchors'
 // The Lab moved out to its own site; public/lab/index.html redirects old links there.
 export const LAB_URL = 'https://lab.zills.io/'
 
+// The full catalogue of open-source work; the Projects section shows a selection.
+export const OSS_URL = 'https://oss.zills.io/'
+
 // A Lab piece's own page, slugged from its title the same way lab.zills.io slugs it.
 export const labPieceUrl = (title: string) => `${LAB_URL}${slug(title)}/`
 
