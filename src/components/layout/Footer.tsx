@@ -56,7 +56,7 @@ export function Footer() {
   const year = useCurrentYear()
 
   return (
-    <footer className="relative border-t border-border pt-12 pb-10 text-sm">
+    <footer className="relative border-t border-border pt-12 pb-6 text-sm">
       {/* An accent line fading out at both ends marks the footer as its own band. */}
       <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
 
