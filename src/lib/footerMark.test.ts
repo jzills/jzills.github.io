@@ -15,7 +15,8 @@ describe('Footer mark', () => {
 
   it('links back to zills.io by its domain, right beside the mark, with the copyright under them', () => {
     expect(html).toMatch(/<a[^>]*href="https:\/\/zills\.io\/"[^>]*>zills\.io <span aria-hidden="true">↗<\/span><\/a>/)
-    expect(text).toMatch(/Z\/LLSzills\.io ↗© \d{4} Joshua Zillwood/)
+    expect(text).toMatch(/Z\/LLSzills\.io ↗$/)
+    expect(text).not.toContain('©')
   })
 
   it('leaves contact to the Contact section and the More column, with no repeat row', () => {
