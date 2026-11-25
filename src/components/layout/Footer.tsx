@@ -46,7 +46,7 @@ export function Footer() {
       {/* An accent line fading out at both ends marks the footer as its own band. */}
       <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
 
-      <div className="max-w-[1100px] mx-auto px-6">
+      <div className="max-w-[1200px] mx-auto px-5 sm:px-7">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-16">
           <div className="max-w-sm">
             <a href="#hero" className="font-mono text-2xl font-medium text-accent hover:text-accent-dim transition-colors">
