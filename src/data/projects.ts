@@ -25,12 +25,12 @@ export const projects: Project[] = [
     tags: ['C#', '.NET', 'Security', 'Auth'],
     keywords: ['Istio', 'Kubernetes', 'Helm', 'Docker', 'TypeScript', 'ASP.NET Core', 'Middleware', 'API', 'Request Signing', 'Service Mesh', 'ext-authz', 'Operator'],
     githubUrl: 'https://github.com/jzills/hmac-manager',
-    docsUrl: 'https://jzills.github.io/hmac-manager/',
+    docsUrl: 'https://j.zills.io/hmac-manager/',
     packages: [
       { registry: 'nuget',       url: 'https://www.nuget.org/packages/HmacManager/', title: 'dotnet add package HmacManager' },
       { registry: 'npm',         url: 'https://www.npmjs.com/package/hmac-manager', title: 'npm install hmac-manager' },
       { registry: 'dockerhub',   url: 'https://hub.docker.com/r/zills/hmac-manager', title: 'docker pull zills/hmac-manager' },
-      { registry: 'artifacthub', url: 'https://artifacthub.io/packages/helm/zills/hmac-manager', title: 'helm repo add zills https://jzills.github.io/hmac-manager\nhelm install hmac-manager zills/hmac-manager' },
+      { registry: 'artifacthub', url: 'https://artifacthub.io/packages/helm/zills/hmac-manager', title: 'helm repo add zills https://j.zills.io/hmac-manager\nhelm install hmac-manager zills/hmac-manager' },
     ],
   },
   {
@@ -39,7 +39,7 @@ export const projects: Project[] = [
     tags: ['Go', 'Kubernetes', 'CLI'],
     keywords: ['kubectl', 'k8s', 'Krew', 'Plugin', 'Terminal', 'DevOps', 'MCP'],
     githubUrl: 'https://github.com/jzills/kx',
-    docsUrl: 'https://jzills.github.io/kx/',
+    docsUrl: 'https://j.zills.io/kx/',
     packages: [
       { registry: 'pypi', url: 'https://pypi.org/project/kx-cli/', title: 'pip install kx-cli' },
       { registry: 'krew', url: 'https://krew.sigs.k8s.io/plugins/', title: 'kubectl krew install idx' },
@@ -51,7 +51,7 @@ export const projects: Project[] = [
     tags: ['AI', 'Claude', 'Go', 'CLI', 'Agent Monitoring'],
     keywords: ['Claude Code', 'AI Agents', 'Observability', 'Cost Tracking', 'Transcripts', 'TUI', 'Terminal'],
     githubUrl: 'https://github.com/jzills/snoop',
-    docsUrl: 'https://jzills.github.io/snoop/',
+    docsUrl: 'https://j.zills.io/snoop/',
   },
   {
     name: 'serilog-sinks-aspnetcore-app-signalr',
@@ -76,7 +76,7 @@ export const projects: Project[] = [
     tags: ['C#', '.NET', 'ASP.NET Core', 'Caching'],
     keywords: ['Redis', 'SQL Server', 'Cosmos DB', 'Azure', 'Memory Cache', 'Invalidation', 'MVC', 'Response Caching'],
     githubUrl: 'https://github.com/jzills/action-cache',
-    docsUrl: 'https://jzills.github.io/action-cache/',
+    docsUrl: 'https://j.zills.io/action-cache/',
     packages: [
       { registry: 'nuget', url: 'https://www.nuget.org/packages/ActionCache/', title: 'dotnet add package ActionCache' },
     ],
